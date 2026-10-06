@@ -13,6 +13,9 @@ export const K = {
   chatLock: (ip: string, c: string) => `chat:lock:${ip}:${c}`,
   chatLockG: (ip: string) => `chat:lockg:${ip}`,
   pageView: (slug: string, ip: string) => `pv:${slug}:${ip}`,
+  admLock: (email: string) => `adm:lock:${email}`,
+  admLockIp: (ip: string) => `adm:lockip:${ip}`,
+  admPending: (h: string) => `adm:pend:${h}`,
   rl: 'rl:',
   lock: (n: string) => `lock:jobs:${n}`,
 } as const

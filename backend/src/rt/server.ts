@@ -18,7 +18,14 @@ export async function buildRt() {
   io.adapter(createAdapter(pub, sub))
   setupSpace(io.of('/space'), redis)
   const chat = setupChat(io.of('/chat'), redis)
+  const stat = async (): Promise<void> => {
+    const [space, chatN] = await Promise.all([io.of('/space').local.fetchSockets(), io.of('/chat').local.fetchSockets()])
+    const k = `rt:stats:${process.pid}`
+    await redis.hset(k, { space: new Set(space.map(s => (s.data as { deviceId: string }).deviceId)).size, chat: chatN.length })
+    await redis.expire(k, 15)
+  }
   const timers = [
+    setInterval(() => void stat().catch(() => undefined), 5000),
     setInterval(() => void flushDirty(redis).catch(() => undefined), env.TEXT_FLUSH_MS),
     setInterval(() => void chat.sweep().catch(() => undefined), 10_000),
   ]

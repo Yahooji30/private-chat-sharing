@@ -25,6 +25,10 @@ export const ERR = {
   ROOM_EXISTS: 'ROOM_EXISTS',
   ROOM_BAD_AUTH: 'ROOM_BAD_AUTH',
   ROOM_LOCKED: 'ROOM_LOCKED',
+  UNAUTHORIZED: 'UNAUTHORIZED',
+  CSRF: 'CSRF',
+  CONFLICT: 'CONFLICT',
+  ACCOUNT_LOCKED: 'ACCOUNT_LOCKED',
   INTERNAL: 'INTERNAL',
 } as const
 export type ErrCode = (typeof ERR)[keyof typeof ERR]
@@ -117,3 +121,29 @@ export const chatMsgSchema = z.object({ iv: b64.max(32), ct: b64.max(LIMITS.chat
 export const chatResumeSchema = z.object({ code: roomCodeSchema, token: z.string().min(16).max(100), lastId: z.string().max(40) })
 
 export const CROCKFORD = '0123456789ABCDEFGHJKMNPQRSTVWXYZ'
+
+export const articleStatus = z.enum(['draft', 'scheduled', 'published', 'archived'])
+export type ArticleStatus = z.infer<typeof articleStatus>
+const optId = z.string().max(40).nullable().optional()
+export const articleInputSchema = z.object({
+  title: z.string().trim().min(1).max(200),
+  slug: z.string().regex(/^[a-z0-9-]{1,100}$/).optional(),
+  excerpt: z.string().max(500).default(''),
+  body: z.string().max(200_000).default(''),
+  coverMediaId: optId, ogMediaId: optId, categoryId: optId,
+  tags: z.array(z.string().trim().min(1).max(40)).max(12).default([]),
+  seoTitle: z.string().max(120).default(''),
+  seoDescription: z.string().max(300).default(''),
+  status: articleStatus.default('draft'),
+  publishAt: z.string().datetime().nullable().optional(),
+})
+export type ArticleInput = z.infer<typeof articleInputSchema>
+export const nameSlugSchema = z.object({ name: z.string().trim().min(1).max(60), slug: z.string().regex(/^[a-z0-9-]{1,80}$/).optional(), description: z.string().max(300).optional() })
+export const adminLoginSchema = z.object({ email: z.string().email().max(120), password: z.string().min(1).max(200) })
+export const adminTotpSchema = z.object({ pendingToken: z.string().min(10).max(100), code: z.string().regex(/^\d{6}$/) })
+export const passwordSchema = z.string().min(12).max(200)
+export const adminCreateSchema = z.object({ email: z.string().email().max(120), name: z.string().trim().min(1).max(60), password: passwordSchema, role: z.enum(['owner', 'admin']).default('admin') })
+export const AD_KEYS = ['top-banner', 'sidebar', 'in-article', 'footer'] as const
+export const adSlotSchema = z.object({ enabled: z.boolean(), html: z.string().max(10_000) })
+export const SITE_KEYS = ['site_name', 'tagline', 'default_og_media_id', 'social_x', 'social_facebook', 'social_instagram', 'social_youtube', 'analytics_id', 'privacy_md', 'terms_md', 'ads_enabled'] as const
+export const siteSettingsSchema = z.partialRecord(z.enum(SITE_KEYS), z.string().max(60_000))
