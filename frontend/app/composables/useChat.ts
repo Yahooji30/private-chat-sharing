@@ -106,6 +106,8 @@ export function useChat(code: string) {
   }
 
   if (import.meta.client) {
+    // closing the tab is leaving: free the slot right away instead of waiting out the resume grace
+    useEventListener(window, 'pagehide', e => { if (!e.persisted && sock?.connected) { left = true; sock.emit('chat:leave') } })
     useEventListener(window, 'offline', () => { if (phase.value === 'live') { phase.value = 'reconnecting'; sock?.disconnect() } })
     useEventListener(window, 'online', () => { if (phase.value === 'reconnecting') { resumeTries = 0; retry() } })
   }
@@ -136,7 +138,7 @@ export function useChat(code: string) {
 
   function wipe(): void { msgs.value = []; system.value = []; keyring.delete(code); token = '' }
   function leave(): void { left = true; sock?.emit('chat:leave'); sock?.disconnect(); wipe(); phase.value = 'password' }
-  function dispose(): void { left = true; sock?.disconnect(); msgs.value = [] }
+  function dispose(): void { left = true; sock?.emit('chat:leave'); sock?.disconnect(); msgs.value = [] }
 
   return { phase, error, msgs, members, typing, unlock, join, send, setTyping, leave, dispose }
 }

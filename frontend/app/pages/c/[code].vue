@@ -86,7 +86,7 @@ async function destroy(): Promise<void> {
           <button class="btn btn-accent" @click="leave">Leave<span class="hidden sm:inline">&nbsp;&amp; wipe</span></button>
         </div>
       </header>
-      <div v-if="showShare" class="p-3 border-b border-line bg-bg"><ChatShare :code="code" /></div>
+      <Modal :open="showShare" title="Invite people" @close="showShare = false"><ChatShare :code="code" /></Modal>
 
       <div ref="list" class="flex-1 overflow-y-auto scroll-thin px-3 md:px-4 py-4 space-y-1.5 transition" :class="blurred ? 'blur-md select-none' : ''" aria-live="polite" aria-label="Messages">
         <p v-if="!chat.msgs.value.length" class="text-center text-sm text-muted pt-10">You are the only one who can read this. Messages vanish when everyone leaves.</p>

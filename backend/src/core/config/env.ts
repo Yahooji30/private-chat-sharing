@@ -20,7 +20,7 @@ const schema = z.object({
   TURN_SECRET: hex.optional(),
   CHAT_MSG_CAP: z.coerce.number().default(200),
   CHAT_IDLE_TTL_S: z.coerce.number().default(86400),
-  CHAT_RESUME_GRACE_S: z.coerce.number().default(120),
+  CHAT_RESUME_GRACE_S: z.coerce.number().default(30),
   TEXT_FLUSH_MS: z.coerce.number().default(1000),
   MEDIA_DIR: z.string().default('./media'),
   REVALIDATE_SECRET: z.string().default(''),
