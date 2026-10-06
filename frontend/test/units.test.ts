@@ -36,6 +36,10 @@ describe('format helpers', () => {
   it('finds, dedupes and cleans urls', () => {
     expect(findUrls('see http://a.com, and https://b.org/x?y=1). also www.c.io! http://a.com')).toEqual(['http://a.com', 'https://b.org/x?y=1', 'www.c.io'])
     expect(findUrls('no links here')).toEqual([])
+    expect(findUrls('test.com\n\nhttp://test.com\nhttps://www/test.com')).toEqual(['test.com', 'http://test.com'])
+    expect(findUrls('mail me@site.com, file.txt, index.js, e.g. v1.2.3, 3.14, https://a.dev/p?q=1#x')).toEqual(['https://a.dev/p?q=1#x'])
+    expect(findUrls('http://localhost:3000/x 192.168.1.5:8080 (https://en.wikipedia.org/wiki/Foo_(bar)) "docs.github.com/en"')).toEqual(['http://localhost:3000/x', '192.168.1.5:8080', 'https://en.wikipedia.org/wiki/Foo_(bar)', 'docs.github.com/en'])
+    expect(findUrls('HTTP://A.com/ http://a.com')).toEqual(['HTTP://A.com/'])
     expect(hrefOf('www.c.io')).toBe('https://www.c.io'); expect(hrefOf('http://a.com')).toBe('http://a.com')
   })
   it('formats sizes, clocks and ages', () => {
