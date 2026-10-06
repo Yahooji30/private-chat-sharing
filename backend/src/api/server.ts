@@ -2,6 +2,7 @@ import cookie from '@fastify/cookie'
 import helmet from '@fastify/helmet'
 import rateLimit from '@fastify/rate-limit'
 import Fastify from 'fastify'
+import { mkdirSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { ZodError } from 'zod'
 import { env, isProd } from '../core/config/env'
@@ -56,6 +57,7 @@ export async function buildApi() {
   contentRoutes(app)
   mediaRoutes(app)
   opsRoutes(app)
+  mkdirSync(resolve(env.MEDIA_DIR), { recursive: true })
   if (!isProd) await app.register((await import('@fastify/static')).default, { root: resolve(env.MEDIA_DIR), prefix: '/media/', decorateReply: false })
   app.addHook('onClose', async () => { await redis.quit(); await sql.end() })
   return app
