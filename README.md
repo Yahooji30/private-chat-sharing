@@ -11,7 +11,9 @@ Instant text and file sharing between devices on the same network, with device l
 | `admin/` | Admin panel | 5173 (dev) | SPA, static build |
 | `backend/` | API (4000) and realtime (4001) | | |
 
-The app links out to the blog site. Its address comes from `BLOG_PUBLIC_URL` in `.env`, and the realtime address from `RT_PUBLIC_URL`.
+Each app has its own `.env.example`, `ecosystem.config.cjs` and start script.
+
+The app links out to the blog site (`NUXT_PUBLIC_BLOG_URL` in `frontend/.env`) and reaches realtime at `NUXT_PUBLIC_RT_URL`.
 
 Specs live in `docs/` (`00-MASTER.md`, `01-FEATURES.md`, `02-ARCHITECTURE.md`).
 
@@ -36,27 +38,30 @@ Deviations from the docs: plain SQL migrations instead of Drizzle, Node 22 inste
 
 Needs Node 22+, pnpm 10, PostgreSQL and Redis (`docker compose -f deploy/dev/docker-compose.yml up -d`).
 
-```
-cp .env.example .env
-pnpm install
-pnpm db:migrate
-pnpm dev                       # api :4000, realtime :4001, web :3000
-cd admin && pnpm dev           # admin :5173; first owner = ADMIN_BOOTSTRAP_EMAIL / ADMIN_BOOTSTRAP_PASSWORD from .env
-```
-Run the web process with `NUXT_PUBLIC_RT_URL=http://localhost:4001` in development so the browser reaches the realtime port directly. Change the bootstrap password before any real deployment.
-
-## Run on one PC with pm2 (no nginx)
+Every app is independent: it has its own `.env`, builds on its own and starts on its own. Nothing reads a shared `.env`.
 
 ```
-docker compose -f deploy/dev/docker-compose.yml up -d     # PostgreSQL + Redis
-copy .env.example .env                                     # Windows (use cp on Mac/Linux)
-pnpm install
+pnpm install                                   # once, at the repo root
+docker compose -f deploy/dev/docker-compose.yml up -d
+
+# 1. backend (API :4000 + realtime :4001)
+cd backend
+copy .env.example .env                         # cp on Mac/Linux; edit if needed
 pnpm db:migrate
 pnpm build
-pnpm add -g pm2
-pm2 start deploy/ecosystem.local.config.cjs
+pm2 start ecosystem.config.cjs                 # or: pnpm start:api  and  pnpm start:rt  (two terminals)
+
+# 2. app (:3000)           3. blog (:3001)           4. admin (:5173)
+cd ../frontend               cd ../blog                cd ../admin
+copy .env.example .env       copy .env.example .env    copy .env.example .env
+pnpm build                   pnpm build                pnpm build
+pm2 start ecosystem.config.cjs   (same)                (same)
 ```
-Open http://localhost:3000 (app) and http://localhost:3001 (blog). `.env` must contain `RT_PUBLIC_URL=http://localhost:4001` and `BLOG_PUBLIC_URL=http://localhost:3001` (the defaults in `.env.example`); leave `RT_PUBLIC_URL` empty when everything sits behind nginx. For the admin panel run `pnpm --filter @sync/admin dev` (http://localhost:5173). `pm2 logs`, `pm2 stop all`, `pm2 delete all` manage the processes.
+Open http://localhost:3000 (app), http://localhost:3001 (blog, public pages, legal), http://localhost:5173 (admin, first login from `ADMIN_BOOTSTRAP_*` in `backend/.env`; change that password).
+
+Each folder also has `pnpm dev` for development. Without pm2 use `pnpm start` in each folder (it loads that folder's `.env`). `pm2 logs`, `pm2 status`, `pm2 delete all` manage the processes. From the repo root, `pm2 start deploy/ecosystem.local.config.cjs` starts all five at once (each still with its own folder and `.env`).
+
+The built servers contain all their dependencies (no `node_modules` is needed to run `frontend/.output` and `blog/.output`). The app and blog read `NUXT_*` settings from their own `.env` when you build and when you start, so keep the same values for both.
 
 ## Tests
 
@@ -64,21 +69,22 @@ Open http://localhost:3000 (app) and http://localhost:3001 (blog). `.env` must c
 pnpm check                                  # typecheck all packages + backend integration + frontend unit tests
 cd frontend
 npx playwright test --project=desktop --project=mobile --project=admin   # needs `pnpm dev` and the admin dev server
-E2E_BASE_URL=http://localhost:3000 npx playwright test --project=net --project=pwa   # against the built stack (pm2 run above); start the API with RT_PUBLIC_URL= (empty) for the net project so sockets go through the test proxy
+E2E_BASE_URL=http://localhost:3000 npx playwright test --project=pwa    # against the built stack
+E2E_NET_WEB=http://127.0.0.1:3002 npx playwright test --project=net   # needs a frontend built AND started with NUXT_PUBLIC_RT_URL= (empty), here on PORT=3002, so sockets go through the test proxy
 node backend/scripts/loadtest.mjs 800 3 100 # realtime load test against a production-mode API/RT (see the script header)
 ```
 - Backend integration tests run against real PostgreSQL (`sync_test`) and Redis (db 1): access control on every admin route, sealed data at rest, no raw IPs, rate limits, socket flood, concurrent chat joins, linking, blog, media, admin.
 - Frontend unit tests cover the transfer engine with simulated peers (corrupt peer, dropped peer, resume), chat crypto and helpers.
 - The `net` project puts each browser behind its own simulated public IP (`frontend/e2e/netproxy.ts`) so the app really sees different networks: isolation, link by code, QR scan with a fake camera, link by IP, unlink, files and chat across networks, connection loss and resume, CSP.
 
-The `net` and `pwa` projects run against the built stack (`pnpm build` then the pm2 steps above). Always use `pnpm build`, it cleans stale output.
+The `net` and `pwa` projects run against built apps. Always use `pnpm build`, it cleans stale output.
 
 ## Deploy (single VPS)
 
 1. `pnpm build`, `pnpm db:migrate`.
 2. `pm2 start deploy/ecosystem.config.cjs` behind `deploy/nginx.conf`: the app host (`/`, `/api`, `/socket.io`), a blog host (blog site and `/media`), and an admin host serving `admin/dist`.
 3. Back up PostgreSQL with `deploy/backup.sh` (cron). Redis needs no persistence (`save ""`, `appendonly no`).
-4. `.env`: real `MASTER_KEY`, `IP_PEPPER`, `COOKIE_SECRET` (64 hex chars each), `PUBLIC_ORIGIN` (the app address), `BLOG_PUBLIC_URL` (the blog address), `RT_PUBLIC_URL` (empty behind nginx), and `REVALIDATE_SECRET` with `NUXT_INTERNAL_URL` (the blog's internal URL, comma separated for several) so publishing purges the blog's cached pages at once. The PM2 file passes the secret and addresses to the blog process. The blog caches in memory per worker, so a purge reaches the worker that receives it; run one blog worker, or accept a short delay on the others.
+4. per-app `.env` files. `backend/.env`: real `MASTER_KEY`, `IP_PEPPER`, `COOKIE_SECRET` (64 hex chars each), `PUBLIC_ORIGIN` (the app address), `REVALIDATE_SECRET` and `NUXT_INTERNAL_URL` (the blog's internal URL) so publishing purges the blog's cached pages at once. `frontend/.env`: `NUXT_PUBLIC_RT_URL` (empty behind nginx) and `NUXT_PUBLIC_BLOG_URL`, then build. `blog/.env`: `NUXT_PUBLIC_SITE_URL`, `NUXT_PUBLIC_APP_URL`, and `NUXT_REVALIDATE_SECRET` equal to the backend's secret. `admin/.env`: `ADMIN_API_URL`. The blog caches in memory per worker, so a purge reaches the worker that receives it; run one blog worker, or accept a short delay on the others.
 5. The `/api/dev/*` endpoints only exist outside production.
 
 ## Measured

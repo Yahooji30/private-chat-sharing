@@ -13,8 +13,9 @@ export const useApp = defineStore('app', () => {
   const ready = ref(false)
   const device = ref<Device | null>(null)
   const ip = ref('')
-  const rtUrl = ref('')
-  const blogUrl = ref('')
+  const cfg = useRuntimeConfig().public
+  const rtUrl = ref(String(cfg.rtUrl ?? '').replace(/\/$/, ''))
+  const blogUrl = ref(String(cfg.blogUrl ?? '').replace(/\/$/, ''))
   const settings = ref<Settings>({ ...DEFAULT_SETTINGS })
   const peers = ref<Peer[]>([])
   const online = ref(false)
@@ -39,8 +40,8 @@ export const useApp = defineStore('app', () => {
     spellcheck.value = ls.get('spellcheck', '0') === '1'
     applyTheme()
     matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme)
-    const me = await api<{ device: Device; ip: string; rtUrl: string; blogUrl: string; settings: Settings }>('/space/me')
-    device.value = me.device; ip.value = me.ip; rtUrl.value = me.rtUrl; blogUrl.value = me.blogUrl.replace(/\/$/, ''); settings.value = me.settings
+    const me = await api<{ device: Device; ip: string; settings: Settings }>('/space/me')
+    device.value = me.device; ip.value = me.ip; settings.value = me.settings
     ready.value = true
   }
 

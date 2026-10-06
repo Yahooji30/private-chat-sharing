@@ -9,7 +9,7 @@ const nav = [
 ]
 const active = (to: string): boolean => (to === '/' ? route.path === '/' : route.path.startsWith(to) || (to === '/chat' && route.path.startsWith('/c/')))
 const isOnline = useOnline()
-const external = computed(() => (app.blogUrl ? [{ href: `${app.blogUrl}/blog`, label: 'Blog', icon: 'file' }] : []))
+const external = computed(() => (app.blogUrl ? [{ href: `${app.blogUrl}/`, label: 'Blog', icon: 'file' }] : []))
 const chatRoute = computed(() => route.path.startsWith('/c/'))
 </script>
 

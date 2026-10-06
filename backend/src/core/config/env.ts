@@ -22,8 +22,6 @@ const schema = z.object({
   CHAT_IDLE_TTL_S: z.coerce.number().default(86400),
   CHAT_RESUME_GRACE_S: z.coerce.number().default(120),
   TEXT_FLUSH_MS: z.coerce.number().default(1000),
-  RT_PUBLIC_URL: z.string().default(''),
-  BLOG_PUBLIC_URL: z.string().default(''),
   MEDIA_DIR: z.string().default('./media'),
   REVALIDATE_SECRET: z.string().default(''),
   NUXT_INTERNAL_URL: z.string().default(''),

@@ -2,12 +2,10 @@ import { io, type Socket } from 'socket.io-client'
 
 let space: Socket | null = null
 
-/** Realtime base URL: from the backend (RT_PUBLIC_URL, read at runtime), else the build config, else in development the realtime port on this host (works from phones on the LAN too). Empty means same origin behind a reverse proxy. */
+/** Realtime base URL from NUXT_PUBLIC_RT_URL (frontend/.env); in development it defaults to the realtime port on this host (works from phones on the LAN too). Empty means same origin behind a reverse proxy. */
 function rtBase(): string {
-  const fromServer = useApp().rtUrl
-  if (fromServer) return fromServer
-  const cfg = useRuntimeConfig().public.rtUrl as string
-  if (cfg) return cfg
+  const url = useApp().rtUrl
+  if (url) return url
   return import.meta.dev ? `${location.protocol}//${location.hostname}:4001` : ''
 }
 

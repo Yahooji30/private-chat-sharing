@@ -4,12 +4,13 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "concurrently -n api,rt \"tsx watch --env-file=../.env src/api/main.ts\" \"tsx watch --env-file=../.env src/rt/main.ts\"",
+    "dev": "concurrently -n api,rt \"tsx watch --env-file=.env src/api/main.ts\" \"tsx watch --env-file=.env src/rt/main.ts\"",
     "build": "tsup",
-    "start:api": "node dist/api.js",
-    "start:rt": "node dist/rt.js",
+    "start": "node --env-file=.env dist/api.js",
+    "start:api": "node --env-file=.env dist/api.js",
+    "start:rt": "node --env-file=.env dist/rt.js",
     "typecheck": "tsc -p .",
-    "db:migrate": "tsx --env-file=../.env src/core/db/migrate.ts",
+    "db:migrate": "tsx --env-file=.env src/core/db/migrate.ts",
     "test": "vitest run"
   },
   "dependencies": {

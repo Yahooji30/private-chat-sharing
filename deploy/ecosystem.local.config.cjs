@@ -1,12 +1,13 @@
-// Run the whole app on one PC with pm2 (no nginx). From the repo root, after `pnpm build`:
-//   pm2 start deploy/ecosystem.local.config.cjs
-// App (SPA): http://localhost:3000   Blog, public pages, legal (SSR): http://localhost:3001
-// The browser finds the realtime service and the blog through RT_PUBLIC_URL and BLOG_PUBLIC_URL in .env.
+// Optional shortcut: start all apps from the repo root. Each app still uses only its own folder and its own .env.
+// Normally start them one by one instead: cd backend && pm2 start ecosystem.config.cjs (same in frontend, blog, admin).
+const path = require('node:path')
+const app = d => path.join(__dirname, '..', d)
 module.exports = {
   apps: [
-    { name: 'sync-api', script: 'backend/dist/api.js', node_args: '--env-file=.env' },
-    { name: 'sync-rt', script: 'backend/dist/rt.js', node_args: '--env-file=.env' },
-    { name: 'sync-web', script: 'frontend/.output/server/index.mjs', env: { PORT: 3000, NUXT_API_INTERNAL: 'http://127.0.0.1:4000' } },
-    { name: 'sync-blog', script: 'blog/.output/server/index.mjs', env: { PORT: 3001, NUXT_API_INTERNAL: 'http://127.0.0.1:4000', NUXT_REVALIDATE_SECRET: 'dev-revalidate-secret', NUXT_PUBLIC_SITE_URL: 'http://localhost:3001', NUXT_PUBLIC_APP_URL: 'http://localhost:3000' } },
+    { name: 'sync-api', script: 'dist/api.js', cwd: app('backend'), node_args: '--env-file=.env' },
+    { name: 'sync-rt', script: 'dist/rt.js', cwd: app('backend'), node_args: '--env-file=.env' },
+    { name: 'sync-web', script: '.output/server/index.mjs', cwd: app('frontend'), node_args: '--env-file=.env' },
+    { name: 'sync-blog', script: '.output/server/index.mjs', cwd: app('blog'), node_args: '--env-file=.env' },
+    { name: 'sync-admin', script: 'server.mjs', cwd: app('admin'), node_args: '--env-file=.env' },
   ],
 }

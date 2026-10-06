@@ -246,15 +246,16 @@ test('production build: strict security headers are served and nothing the app d
   expect(issues).toEqual([])
 })
 
-test('blog site is server rendered with real content, canonical links and sitemap', async ({ request }) => {
+test('blog site is server rendered at its root with canonical links, sitemap and old /blog redirects', async ({ request }) => {
   const blog = process.env.E2E_BLOG_URL ?? 'http://localhost:3001'
-  const html = await (await request.get(`${blog}/blog`)).text()
+  const html = await (await request.get(`${blog}/`)).text()
   expect(html).toContain('<title>')
   expect(html).toMatch(/rel="canonical"/)
   expect(html).toContain('og:title')
   expect(await (await request.get(`${blog}/sitemap.xml`)).text()).toContain('<urlset')
   expect(await (await request.get(`${blog}/privacy`)).text()).toContain('Privacy')
   expect((await request.get(`${blog}/p/does-not-exist-xyz`)).status()).toBe(404)
+  expect((await request.get(`${blog}/blog`, { maxRedirects: 0 })).status()).toBe(307)
 })
 
 test('connection loss: edits made offline sync after reconnecting, and missed text is delivered', async ({ browser }) => {

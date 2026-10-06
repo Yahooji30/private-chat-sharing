@@ -20,11 +20,14 @@ export default defineNuxtConfig({
     revalidateSecret: '', // set at runtime with NUXT_REVALIDATE_SECRET
     public: { appName, siteUrl: 'http://localhost:3001', appUrl: 'http://localhost:3000' }, // override with NUXT_PUBLIC_SITE_URL / NUXT_PUBLIC_APP_URL
   },
-  nitro: { compressPublicAssets: true, devProxy: { '/api': { target: `${api}/api`, changeOrigin: false }, '/media': { target: `${api}/media`, changeOrigin: false } } },
+  nitro: {
+    noExternals: true, // bundle every dependency into .output so the server needs no node_modules (pnpm and Windows safe)
+    compressPublicAssets: true,
+    devProxy: { '/api': { target: `${api}/api`, changeOrigin: false }, '/media': { target: `${api}/media`, changeOrigin: false } } },
   routeRules: {
     ...(isProd ? { '/**': { headers: securityHeaders } } : {}),
-    '/': { redirect: '/blog' },
-    '/blog': { swr: 600 }, '/blog/**': { swr: 600 }, '/p/**': { swr: 300 }, '/privacy': { swr: 86400 }, '/terms': { swr: 86400 },
+    '/blog': { redirect: '/' }, '/blog/**': { redirect: '/**' }, // old addresses
+    '/': { swr: 600 }, '/*': { swr: 600 }, '/_revalidate': { cache: false }, '/rss.xml': { swr: 600 }, '/sitemap.xml': { swr: 600 }, '/robots.txt': { cache: false }, '/category/**': { swr: 600 }, '/tag/**': { swr: 600 }, '/p/**': { swr: 300 }, '/privacy': { swr: 86400 }, '/terms': { swr: 86400 },
     '/api/**': { proxy: `${api}/api/**` }, '/media/**': { proxy: `${api}/media/**` },
   },
   app: {

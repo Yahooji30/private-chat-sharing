@@ -6,11 +6,11 @@
   "scripts": {
     "dev": "nuxt dev --port 3000",
     "build": "node -e \"for (const d of ['.output','node_modules/.cache/nuxt']) require('fs').rmSync(d,{recursive:true,force:true})\" && nuxt build",
-    "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "typecheck": "nuxt typecheck",
     "test": "vitest run",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "start": "node --env-file=.env .output/server/index.mjs"
   },
   "dependencies": {
     "@pinia/nuxt": "^0.11.0",

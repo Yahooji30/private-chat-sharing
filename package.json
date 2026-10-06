@@ -12,8 +12,8 @@
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
     "db:migrate": "pnpm --filter @sync/backend db:migrate",
-    "check": "pnpm typecheck && pnpm test",
-    "setup": "pnpm install && pnpm db:migrate"
+    "setup": "pnpm install && pnpm db:migrate",
+    "check": "pnpm typecheck && pnpm test"
   },
   "devDependencies": {
     "typescript": "^5.9.0"

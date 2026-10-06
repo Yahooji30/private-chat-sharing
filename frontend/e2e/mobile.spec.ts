@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 
 const BLOG = process.env.E2E_BLOG_URL ?? 'http://localhost:3001'
-for (const path of ['/', '/chat', '/public', '/public/new', '/link', `${BLOG}/blog`, `${BLOG}/privacy`]) {
+for (const path of ['/', '/chat', '/public', '/public/new', '/link', `${BLOG}/`, `${BLOG}/privacy`]) {
   test(`mobile layout has no horizontal scroll: ${path}`, async ({ page }) => {
     await page.goto(path)
     await page.waitForLoadState('networkidle')

@@ -11,7 +11,7 @@ const appUrl = String(cfg.public.appUrl).replace(/\/$/, '')
         <a :href="appUrl" class="flex items-center gap-2 mr-auto" aria-label="Open the app">
           <img src="/icon.svg" alt="" width="32" height="32" class="rounded-[10px]"><span class="text-xl font-bold tracking-tight">{{ name }}<span class="text-accent">.</span></span>
         </a>
-        <NuxtLink to="/blog" class="btn !min-h-9 text-sm">Blog</NuxtLink>
+        <NuxtLink to="/" class="btn !min-h-9 text-sm">Blog</NuxtLink>
         <a :href="appUrl" class="btn btn-accent !min-h-9 text-sm">Open the app</a>
       </div>
     </header>
