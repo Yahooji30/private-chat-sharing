@@ -56,7 +56,7 @@ const label = (i: FileItem): string => {
   switch (i.status) {
     case 'preparing': return i.hashing ? `Preparing ${Math.round((i.hashing / i.entry.size) * 100)}%` : 'Preparing...'
     case 'reselect': return 'Re-select this file to keep sharing it'
-    case 'downloading': return `${pct(i)}% · ${fmtBytes(i.speed)}/s · ${i.sources} source${i.sources === 1 ? '' : 's'}${i.speed > 0 ? ` · ${fmtDuration((i.entry.size - i.done) / i.speed)}` : ''}`
+    case 'downloading': return `${pct(i)}% · ${i.speed > 0 ? `${fmtBytes(i.speed)}/s · ` : ''}${i.sources ? `${i.sources} source${i.sources === 1 ? '' : 's'}` : 'waiting for a source'}${i.speed > 0 ? ` · ${fmtDuration((i.entry.size - i.done) / i.speed)}` : ''}`
     case 'paused': return `Paused at ${pct(i)}%`
     case 'complete': return 'On this device'
     default: return files.holderOnline(i.entry) ? 'Available' : 'Waiting for a device that has it'

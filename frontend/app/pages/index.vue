@@ -7,6 +7,9 @@ const toast = useToast()
 const sync = useTextSync()
 const ta = useTemplateRef<HTMLTextAreaElement>('ta')
 const urlsOpen = ref(false)
+const transfer = ref<'upload' | 'download' | null>(null)
+const fileStore = useFiles()
+const downloadCount = computed(() => fileStore.items.filter(i => ['remote', 'downloading', 'paused'].includes(i.status)).length)
 const now = ref(Date.now())
 let tick: ReturnType<typeof setInterval>
 onBeforeUnmount(() => clearInterval(tick))
@@ -55,8 +58,8 @@ const btn = 'btn !px-3'
         <button :class="btn" class="flex-1 sm:flex-none" aria-label="Copy" @click="copy"><Icon name="copy" :size="17" /><span class="hidden sm:inline">Copy</span></button>
         <button v-if="app.settings.urlsPanel" :class="[btn, urlsOpen ? 'btn-soft' : '']" class="flex-1 sm:flex-none" aria-label="URLs" :aria-pressed="urlsOpen" @click="urlsOpen = !urlsOpen">
           <Icon name="link" :size="17" /><span class="hidden sm:inline">URLs</span><span v-if="urls.length" class="text-xs bg-[var(--accent-btn)] text-white rounded-full px-1.5 min-w-5 text-center">{{ urls.length }}</span></button>
-        <button :class="btn" class="flex-1 sm:flex-none" aria-label="Upload files" @click="files?.pick()"><Icon name="upload" :size="17" /><span class="hidden sm:inline">Upload</span></button>
-        <button :class="btn" class="flex-1 sm:flex-none" aria-label="Download text" @click="download"><Icon name="download" :size="17" /><span class="hidden sm:inline">Download</span></button>
+        <button :class="btn" class="flex-1 sm:flex-none" aria-label="Upload files" @click="transfer = 'upload'"><Icon name="upload" :size="17" /><span class="hidden sm:inline">Upload</span></button>
+        <button :class="btn" class="flex-1 sm:flex-none" aria-label="Downloads" @click="transfer = 'download'"><Icon name="download" :size="17" /><span class="hidden sm:inline">Download</span><span v-if="downloadCount" class="text-xs bg-[var(--accent-btn)] text-white rounded-full px-1.5 min-w-5 text-center" data-testid="download-count">{{ downloadCount }}</span></button>
         <button :class="btn" class="!px-2.5" aria-label="Reload from server" @click="sync.load()"><Icon name="refresh" :size="17" /></button>
       </div>
     </div>
@@ -75,6 +78,7 @@ const btn = 'btn !px-3'
     </div>
 
     <FilesPanel ref="files" />
+    <TransferModal :open="!!transfer" :mode="transfer ?? 'upload'" @close="transfer = null" @pick="files?.pick()" @save-text="download(); transfer = null" />
 
     <div id="ad-top-banner" class="min-h-0" />
     <template #fallback>
