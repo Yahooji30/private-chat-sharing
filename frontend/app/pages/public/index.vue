@@ -21,7 +21,7 @@ async function copy(r: Row): Promise<void> { if (await copyText(`${location.orig
       <NuxtLink to="/public/new" class="btn btn-soft">Create your first page</NuxtLink></div>
     <ul v-else class="space-y-2">
       <li v-for="r in rows" :key="r.slug" class="card p-4 flex items-center gap-3">
-        <div class="min-w-0 mr-auto"><NuxtLink :to="`/p/${r.slug}`" class="font-semibold hover:underline truncate block">{{ r.title }}</NuxtLink>
+        <div class="min-w-0 mr-auto"><a :href="`/p/${r.slug}`" class="font-semibold hover:underline truncate block">{{ r.title }}</a>
           <p class="text-xs text-muted truncate">/p/{{ r.slug }} · <Icon name="eye" :size="12" class="inline" /> {{ r.views }} · {{ fmtAgo(r.updatedAt) }}<span v-if="r.status !== 'published'" class="text-accent-ink"> · unpublished</span></p></div>
         <button class="btn !px-2.5" aria-label="Copy link" @click="copy(r)"><Icon name="copy" :size="16" /></button>
         <NuxtLink :to="`/public/${r.slug}/edit`" class="btn !px-3">Edit</NuxtLink>

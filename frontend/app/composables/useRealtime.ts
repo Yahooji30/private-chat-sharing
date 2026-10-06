@@ -2,14 +2,15 @@ import { io, type Socket } from 'socket.io-client'
 
 let space: Socket | null = null
 
-/** Realtime base URL: configured, or in development the realtime port on the same host (works from phones on the LAN too). */
+/** Realtime base URL: from the backend (RT_PUBLIC_URL, read at runtime), else the build config, else in development the realtime port on this host (works from phones on the LAN too). Empty means same origin behind a reverse proxy. */
 function rtBase(): string {
+  const fromServer = useApp().rtUrl
+  if (fromServer) return fromServer
   const cfg = useRuntimeConfig().public.rtUrl as string
   if (cfg) return cfg
   return import.meta.dev ? `${location.protocol}//${location.hostname}:4001` : ''
 }
 
-/** Single shared `/space` socket for the whole app (client only). */
 export function spaceSocket(): Socket {
   if (space) return space
   space = io(`${rtBase()}/space`, { transports: ['websocket'], withCredentials: true, reconnectionDelayMax: 5000 })

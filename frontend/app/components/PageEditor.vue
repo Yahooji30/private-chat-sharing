@@ -36,7 +36,7 @@ async function submit(): Promise<void> {
   try {
     if (editing) {
       await api(`/public-pages/${props.slug}`, { method: 'PUT', body: { title: form.title, body: form.body, indexable: form.indexable }, headers: headers.value })
-      toast.ok('Saved'); await navigateTo(`/p/${props.slug}`)
+      toast.ok('Saved'); await navigateTo(`/p/${props.slug}`, { external: true })
     } else {
       done.value = await api('/public-pages', { method: 'POST', body: { title: form.title, body: form.body, indexable: form.indexable, ...(form.slug ? { slug: form.slug } : {}) } })
     }
@@ -55,7 +55,7 @@ async function copy(v: string, l: string): Promise<void> { if (await copyText(v)
       <div class="flex gap-2"><code class="flex-1 truncate px-3 py-2.5 rounded-lg bg-surface-2 border border-line text-sm font-mono text-left">{{ url }}</code><button class="btn" @click="copy(url, 'Link')"><Icon name="copy" :size="15" />Copy</button></div>
       <details class="text-left text-sm"><summary class="cursor-pointer text-muted">Edit link for other networks (keep it secret)</summary>
         <div class="flex gap-2 mt-2"><code class="flex-1 truncate px-3 py-2.5 rounded-lg bg-surface-2 border border-line text-xs font-mono">{{ editUrl }}</code><button class="btn" @click="copy(editUrl, 'Edit link')">Copy</button></div></details>
-      <div class="flex gap-2 justify-center"><NuxtLink :to="`/p/${done.slug}`" class="btn btn-accent">View page</NuxtLink><NuxtLink to="/public" class="btn">All pages</NuxtLink></div>
+      <div class="flex gap-2 justify-center"><a :href="`/p/${done.slug}`" class="btn btn-accent">View page</a><NuxtLink to="/public" class="btn">All pages</NuxtLink></div>
     </div>
     <form v-else class="space-y-4" @submit.prevent="submit">
       <h1 class="text-2xl font-bold">{{ editing ? 'Edit page' : 'New public page' }}</h1>

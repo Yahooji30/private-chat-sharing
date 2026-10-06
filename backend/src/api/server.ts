@@ -10,8 +10,7 @@ import { AppError } from '../core/lib/errors'
 import { hashIp } from '../core/lib/crypto'
 import { newRedis } from '../core/redis/client'
 import { K } from '../core/redis/keys'
-import { startCleanup } from '../jobs/cleanup'
-import { adminAuth, ensureBootstrapAdmin } from './modules/admin/auth'
+import { adminAuth } from './modules/admin/auth'
 import { contentRoutes } from './modules/admin/content'
 import { mediaRoutes } from './modules/admin/media'
 import { opsRoutes } from './modules/admin/ops'
@@ -60,12 +59,4 @@ export async function buildApi() {
   if (!isProd) await app.register((await import('@fastify/static')).default, { root: resolve(env.MEDIA_DIR), prefix: '/media/', decorateReply: false })
   app.addHook('onClose', async () => { await redis.quit(); await sql.end() })
   return app
-}
-
-if (process.argv[1]?.match(/(api|server)\.(ts|js)$/) && !process.env.VITEST) {
-  const app = await buildApi()
-  await ensureBootstrapAdmin()
-  startCleanup(app.redis)
-  await app.listen({ port: env.API_PORT, host: '0.0.0.0' })
-  for (const s of ['SIGINT', 'SIGTERM']) process.on(s, () => void app.close().then(() => process.exit(0)))
 }

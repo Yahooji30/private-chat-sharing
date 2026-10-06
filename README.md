@@ -43,9 +43,9 @@ pnpm install
 pnpm db:migrate
 pnpm build
 pnpm add -g pm2
-pm2 start deploy/ecosystem.local.cjs
+pm2 start deploy/ecosystem.local.config.cjs
 ```
-Open http://localhost:3000. For the admin panel run `pnpm --filter @sync/admin dev` (http://localhost:5173). `pm2 logs`, `pm2 stop all`, `pm2 delete all` manage the processes.
+Open http://localhost:3000. `.env` must contain `RT_PUBLIC_URL=http://localhost:4001` (the default in `.env.example`) so the browser finds the realtime service; leave it empty when everything sits behind nginx. For the admin panel run `pnpm --filter @sync/admin dev` (http://localhost:5173). `pm2 logs`, `pm2 stop all`, `pm2 delete all` manage the processes.
 
 ## Tests
 
@@ -53,7 +53,7 @@ Open http://localhost:3000. For the admin panel run `pnpm --filter @sync/admin d
 pnpm check                                  # typecheck all packages + backend integration + frontend unit tests
 cd frontend
 npx playwright test --project=desktop --project=mobile --project=admin   # needs `pnpm dev` and the admin dev server
-npx playwright test --project=net           # multi-network e2e, needs `pnpm build` and the web build served on :3100 (below)
+npx playwright test --project=net           # multi-network e2e: start the API with RT_PUBLIC_URL= (empty) so sockets go through the test proxy; needs `pnpm build` and the web build served on :3100 (below)
 E2E_BASE_URL=http://localhost:3100 npx playwright test --project=pwa     # service worker and offline, same build
 node backend/scripts/loadtest.mjs 800 3 100 # realtime load test against a production-mode API/RT (see the script header)
 ```

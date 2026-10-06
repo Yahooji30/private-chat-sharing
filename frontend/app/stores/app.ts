@@ -13,6 +13,7 @@ export const useApp = defineStore('app', () => {
   const ready = ref(false)
   const device = ref<Device | null>(null)
   const ip = ref('')
+  const rtUrl = ref('')
   const settings = ref<Settings>({ ...DEFAULT_SETTINGS })
   const peers = ref<Peer[]>([])
   const online = ref(false)
@@ -37,8 +38,8 @@ export const useApp = defineStore('app', () => {
     spellcheck.value = ls.get('spellcheck', '0') === '1'
     applyTheme()
     matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme)
-    const me = await api<{ device: Device; ip: string; settings: Settings }>('/space/me')
-    device.value = me.device; ip.value = me.ip; settings.value = me.settings
+    const me = await api<{ device: Device; ip: string; rtUrl: string; settings: Settings }>('/space/me')
+    device.value = me.device; ip.value = me.ip; rtUrl.value = me.rtUrl; settings.value = me.settings
     ready.value = true
   }
 
@@ -55,5 +56,5 @@ export const useApp = defineStore('app', () => {
   }
   function openSettings(tab: 'general' | 'link' | 'linked' = 'general'): void { settingsTab.value = tab; settingsOpen.value = true }
 
-  return { ready, device, ip, settings, peers, online, hasConnected, theme, autoDownload, spellcheck, settingsOpen, settingsTab, load, saveSettings, setLocal, rename, setTheme, toggleTheme, openSettings }
+  return { ready, device, ip, rtUrl, settings, peers, online, hasConnected, theme, autoDownload, spellcheck, settingsOpen, settingsTab, load, saveSettings, setLocal, rename, setTheme, toggleTheme, openSettings }
 })
