@@ -73,7 +73,7 @@ export function useChat(code: string) {
     sock = s
     s.on('connect_error', e => {
       if (e.message === 'full') { phase.value = 'full'; first?.reject(new Error('Room is full (4/4).')) }
-      else if (first) first.reject(new Error('Could not join. The link or ticket expired.'))
+      else if (first) first.reject(new Error(e.message === 'unauthorized' ? 'Could not join. The server rejected the ticket, try again.' : 'Cannot reach the chat server. Check that the realtime service is running.'))
       else if (phase.value === 'reconnecting') retry()
     })
     s.on('chat:members', (m: { count: number; slots: boolean[]; palette: number[]; slot?: number; color?: number; resumeToken?: string; lastId?: string }) => {

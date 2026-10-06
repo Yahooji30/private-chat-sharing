@@ -46,7 +46,8 @@ export function setupChat(ns: Namespace, redis: Redis): { sweep: () => Promise<v
     const none: Pick<Data, 'replay'> = { replay: [] }
     const auth = socket.handshake.auth as Record<string, unknown>
     if (typeof auth.ticket === 'string') {
-      const code = await redis.getdel(K.chatTicket(sha256(auth.ticket)))
+      const tk = K.chatTicket(sha256(auth.ticket))
+      const code = ((await redis.multi().get(tk).del(tk).exec()) ?? [])[0]?.[1] as string | null | undefined
       if (!code) return null
       const token = randomToken()
       const r = await evalLua(redis, CHAT_JOIN, keys(code), [sha256(token), env.CHAT_IDLE_TTL_S, LIMITS.chatMaxMembers, JSON.stringify(shuffled())]) as [number, string?]

@@ -30,7 +30,8 @@ export function linkRoutes(app: FastifyInstance): void {
 
   app.post('/api/link/redeem', { ...SPACE, config: { space: true, ...redeemLimit } }, async req => {
     const { code } = linkRedeemSchema.parse(req.body)
-    const raw = await app.redis.getdel(K.link(sha256(code)))
+    const lk = K.link(sha256(code))
+    const raw = ((await app.redis.multi().get(lk).del(lk).exec()) ?? [])[0]?.[1] as string | null | undefined
     if (!raw) throw new AppError(ERR.LINK_INVALID, 'Code is invalid or expired', 400)
     const { spaceId } = JSON.parse(raw) as { spaceId: string }
     await sql`update devices set space_id = ${spaceId}, linked_at = now() where id = ${req.ctx.device.id}`

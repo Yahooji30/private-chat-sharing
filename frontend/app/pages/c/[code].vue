@@ -12,7 +12,6 @@ const blurred = ref(false)
 const showShare = ref(false)
 const listEl = useTemplateRef<HTMLElement>('list')
 const palette = ['#cf3f3f', '#2563eb', '#15803d', '#7e22ce']
-const soft = ['#fdeeee', '#e8f0fe', '#e7f6ec', '#f3e8fd']
 const mineIsCreator = computed(() => { try { return !!localStorage.getItem(`sync:chat:manage:${code}`) } catch { return false } })
 
 onMounted(() => { if (hasKeys(code)) void chat.join() })
@@ -95,7 +94,7 @@ async function destroy(): Promise<void> {
           <p v-if="m.slot < 0" class="text-center text-xs text-muted py-1">{{ m.text }}</p>
           <div v-else class="flex" :class="m.mine ? 'justify-end' : 'justify-start'">
             <div class="max-w-[82%] md:max-w-[60%] px-3.5 py-2 rounded-2xl whitespace-pre-wrap break-words anim-pop"
-              :class="m.mine ? 'rounded-br-md text-white' : 'rounded-bl-md'" :style="m.mine ? { background: palette[color(m.slot)] } : { background: soft[color(m.slot)], color: '#1b1b1f', borderLeft: `3px solid ${palette[color(m.slot)]}` }">{{ m.text }}</div>
+              :class="m.mine ? 'rounded-br-md text-white' : 'rounded-bl-md text-white'" :style="{ background: palette[color(m.slot)] }">{{ m.text }}</div>
           </div>
         </template>
         <div v-if="chat.typing.value.size" class="flex gap-1 px-2 py-2" aria-label="Someone is typing"><span v-for="n in 3" :key="n" class="size-2 rounded-full bg-muted animate-bounce" :style="{ animationDelay: `${n * 120}ms` }" /></div>
