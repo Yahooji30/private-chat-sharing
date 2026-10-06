@@ -2,6 +2,7 @@
 import { LIMITS } from '@sync/shared'
 const props = defineProps<{ slug?: string; token?: string }>()
 const toast = useToast()
+const app = useApp()
 const editing = !!props.slug
 const form = reactive({ title: '', body: '', slug: '', indexable: false })
 const tab = ref<'write' | 'preview'>('write')
@@ -36,13 +37,13 @@ async function submit(): Promise<void> {
   try {
     if (editing) {
       await api(`/public-pages/${props.slug}`, { method: 'PUT', body: { title: form.title, body: form.body, indexable: form.indexable }, headers: headers.value })
-      toast.ok('Saved'); await navigateTo(`/p/${props.slug}`, { external: true })
+      toast.ok('Saved'); await navigateTo(`${app.blogUrl}/p/${props.slug}`, { external: true })
     } else {
       done.value = await api('/public-pages', { method: 'POST', body: { title: form.title, body: form.body, indexable: form.indexable, ...(form.slug ? { slug: form.slug } : {}) } })
     }
   } catch (e) { toast.err((e as Error).message) } finally { busy.value = false }
 }
-const url = computed(() => (done.value ? `${location.origin}/p/${done.value.slug}` : ''))
+const url = computed(() => (done.value ? `${app.blogUrl || location.origin}/p/${done.value.slug}` : ''))
 const editUrl = computed(() => (done.value?.editToken ? `${location.origin}/public/${done.value.slug}/edit?k=${done.value.editToken}` : ''))
 async function copy(v: string, l: string): Promise<void> { if (await copyText(v)) toast.ok(`${l} copied`) }
 </script>
@@ -55,7 +56,7 @@ async function copy(v: string, l: string): Promise<void> { if (await copyText(v)
       <div class="flex gap-2"><code class="flex-1 truncate px-3 py-2.5 rounded-lg bg-surface-2 border border-line text-sm font-mono text-left">{{ url }}</code><button class="btn" @click="copy(url, 'Link')"><Icon name="copy" :size="15" />Copy</button></div>
       <details class="text-left text-sm"><summary class="cursor-pointer text-muted">Edit link for other networks (keep it secret)</summary>
         <div class="flex gap-2 mt-2"><code class="flex-1 truncate px-3 py-2.5 rounded-lg bg-surface-2 border border-line text-xs font-mono">{{ editUrl }}</code><button class="btn" @click="copy(editUrl, 'Edit link')">Copy</button></div></details>
-      <div class="flex gap-2 justify-center"><a :href="`/p/${done.slug}`" class="btn btn-accent">View page</a><NuxtLink to="/public" class="btn">All pages</NuxtLink></div>
+      <div class="flex gap-2 justify-center"><a :href="`${app.blogUrl}/p/${done.slug}`" class="btn btn-accent">View page</a><NuxtLink to="/public" class="btn">All pages</NuxtLink></div>
     </div>
     <form v-else class="space-y-4" @submit.prevent="submit">
       <h1 class="text-2xl font-bold">{{ editing ? 'Edit page' : 'New public page' }}</h1>

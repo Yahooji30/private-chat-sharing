@@ -7,7 +7,7 @@
   },
   "packageManager": "pnpm@10.34.6",
   "scripts": {
-    "dev": "pnpm -r --parallel --filter @sync/backend --filter @sync/frontend --filter @sync/admin dev",
+    "dev": "pnpm -r --parallel --filter @sync/backend --filter @sync/frontend --filter @sync/blog --filter @sync/admin dev",
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",

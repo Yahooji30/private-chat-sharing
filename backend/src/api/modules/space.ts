@@ -15,6 +15,7 @@ export function spaceRoutes(app: FastifyInstance): void {
   app.get('/api/space/me', SPACE, async req => ({
     appName: env.APP_NAME,
     rtUrl: env.RT_PUBLIC_URL,
+    blogUrl: env.BLOG_PUBLIC_URL,
     device: req.ctx.device,
     ip: displayIp(req.ip),
     settings: await getSettings(req.ctx.spaceId),

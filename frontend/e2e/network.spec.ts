@@ -242,19 +242,19 @@ test('production build: strict security headers are served and nothing the app d
   await expect(p.getByRole('dialog').locator('img')).toBeVisible()
   await p.getByRole('dialog').getByRole('button', { name: 'Close' }).click()
   await p.getByRole('button', { name: 'Toggle theme' }).click()
-  for (const path of ['/chat', '/public', '/public/new', '/blog', '/privacy', '/terms', '/link']) { await p.goto(path); await p.waitForLoadState('networkidle') }
+  for (const path of ['/chat', '/public', '/public/new', '/link']) { await p.goto(path); await p.waitForLoadState('networkidle') }
   expect(issues).toEqual([])
 })
 
-test('home page is server rendered with real content for search engines', async ({ browser }) => {
-  const net = await network()
-  const p = await deviceOn(browser, net)
-  const html = await (await p.request.get(`${net.url}/`)).text()
-  expect(html).toContain('Share between your devices in three steps')
+test('blog site is server rendered with real content, canonical links and sitemap', async ({ request }) => {
+  const blog = process.env.E2E_BLOG_URL ?? 'http://localhost:3001'
+  const html = await (await request.get(`${blog}/blog`)).text()
   expect(html).toContain('<title>')
   expect(html).toMatch(/rel="canonical"/)
   expect(html).toContain('og:title')
-  expect(html).toContain('manifest')
+  expect(await (await request.get(`${blog}/sitemap.xml`)).text()).toContain('<urlset')
+  expect(await (await request.get(`${blog}/privacy`)).text()).toContain('Privacy')
+  expect((await request.get(`${blog}/p/does-not-exist-xyz`)).status()).toBe(404)
 })
 
 test('connection loss: edits made offline sync after reconnecting, and missed text is delivered', async ({ browser }) => {
@@ -321,6 +321,8 @@ test('public pages: only the owning network or the secret link can edit', async 
   await keyed.getByPlaceholder('My page').fill('Edited from afar')
   await keyed.getByRole('button', { name: 'Save changes' }).click()
   await expect(keyed.getByRole('heading', { name: 'Edited from afar' })).toBeVisible()
-  const viewer = await deviceOn(browser, away, `/p/${slug}`)
+  const viewer = await (await browser.newContext()).newPage()
+  await viewer.goto(`${process.env.E2E_BLOG_URL ?? 'http://localhost:3001'}/p/${slug}`)
   await expect(viewer.getByRole('heading', { name: 'Edited from afar' })).toBeVisible()
+  await viewer.context().close()
 })

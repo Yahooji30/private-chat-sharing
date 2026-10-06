@@ -21,7 +21,7 @@ async function report(): Promise<void> {
     <h1 class="text-3xl md:text-4xl font-bold tracking-tight">{{ page.title }}</h1>
     <p class="text-sm text-muted mt-2">Updated {{ fmtAgo(page.updatedAt) }} · {{ page.views }} view{{ page.views === 1 ? '' : 's' }}</p>
     <div class="prose-page mt-4 break-words" v-html="page.html" />
-    <div class="mt-10 pt-4 border-t border-line flex items-center text-sm text-muted"><NuxtLink to="/" class="hover:underline">Made with {{ cfg.public.appName }}</NuxtLink>
+    <div class="mt-10 pt-4 border-t border-line flex items-center text-sm text-muted"><a :href="String(cfg.public.appUrl)" class="hover:underline">Made with {{ cfg.public.appName }}</a>
       <button class="ml-auto hover:underline" @click="report">Report</button></div>
   </article>
 </template>

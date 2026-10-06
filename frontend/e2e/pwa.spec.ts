@@ -35,12 +35,3 @@ test('PWA: with the service worker active, client routes still render their own 
   await expect(page.getByRole('heading', { name: /Private chat that/ })).toBeVisible()
   await expect(page.getByText('You are offline')).toBeVisible()
 })
-
-test('PWA: server rendered pages are not replaced by the app shell', async ({ page }) => {
-  await page.goto('/')
-  await page.evaluate(async () => { await navigator.serviceWorker.ready })
-  await page.reload()
-  await page.goto('/privacy')
-  await expect(page.getByRole('heading', { name: 'Privacy', exact: true })).toBeVisible()
-  expect(await (await page.request.get('/privacy')).text()).toContain('Privacy')
-})

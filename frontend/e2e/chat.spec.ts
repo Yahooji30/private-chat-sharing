@@ -42,6 +42,8 @@ test('secure chat: create, join with password, messages relay, wrong password fa
   await expect(c.getByText('second message')).toHaveCount(0)
 })
 
+const BLOG = process.env.E2E_BLOG_URL ?? 'http://localhost:3001'
+
 test('public page: publish, view anonymously, edit via token, delete', async ({ browser }) => {
   const a = await device(browser, '/chat')
   await a.goto('/public/new')

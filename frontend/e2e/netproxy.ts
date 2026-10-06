@@ -2,7 +2,7 @@ import http from 'node:http'
 import type { AddressInfo } from 'node:net'
 import httpProxy from 'http-proxy'
 
-const API = 'http://127.0.0.1:4000', RT = 'http://127.0.0.1:4001', WEB = process.env.E2E_NET_WEB ?? 'http://127.0.0.1:3100'
+const API = 'http://127.0.0.1:4000', RT = 'http://127.0.0.1:4001', WEB = process.env.E2E_NET_WEB ?? 'http://127.0.0.1:3000'
 
 export interface Network { ip: string; url: string; close: () => Promise<void> }
 

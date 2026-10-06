@@ -2,6 +2,17 @@
 
 Instant text and file sharing between devices on the same network, with device linking (code, QR, IP), public pages, an end-to-end encrypted private chat, a blog and an admin panel. Mobile first and installable as a PWA.
 
+## Apps
+
+| Folder | What | Port | Rendering |
+|---|---|---|---|
+| `frontend/` | The app: text, files, linking, chat, public page editor, settings | 3000 | SPA (no server rendering) |
+| `blog/` | Blog, public pages (`/p/<slug>`), privacy and terms, sitemap, RSS | 3001 | SSR for SEO |
+| `admin/` | Admin panel | 5173 (dev) | SPA, static build |
+| `backend/` | API (4000) and realtime (4001) | | |
+
+The app links out to the blog site. Its address comes from `BLOG_PUBLIC_URL` in `.env`, and the realtime address from `RT_PUBLIC_URL`.
+
 Specs live in `docs/` (`00-MASTER.md`, `01-FEATURES.md`, `02-ARCHITECTURE.md`).
 
 ## What is in it
@@ -45,7 +56,7 @@ pnpm build
 pnpm add -g pm2
 pm2 start deploy/ecosystem.local.config.cjs
 ```
-Open http://localhost:3000. `.env` must contain `RT_PUBLIC_URL=http://localhost:4001` (the default in `.env.example`) so the browser finds the realtime service; leave it empty when everything sits behind nginx. For the admin panel run `pnpm --filter @sync/admin dev` (http://localhost:5173). `pm2 logs`, `pm2 stop all`, `pm2 delete all` manage the processes.
+Open http://localhost:3000 (app) and http://localhost:3001 (blog). `.env` must contain `RT_PUBLIC_URL=http://localhost:4001` and `BLOG_PUBLIC_URL=http://localhost:3001` (the defaults in `.env.example`); leave `RT_PUBLIC_URL` empty when everything sits behind nginx. For the admin panel run `pnpm --filter @sync/admin dev` (http://localhost:5173). `pm2 logs`, `pm2 stop all`, `pm2 delete all` manage the processes.
 
 ## Tests
 
@@ -53,22 +64,21 @@ Open http://localhost:3000. `.env` must contain `RT_PUBLIC_URL=http://localhost:
 pnpm check                                  # typecheck all packages + backend integration + frontend unit tests
 cd frontend
 npx playwright test --project=desktop --project=mobile --project=admin   # needs `pnpm dev` and the admin dev server
-npx playwright test --project=net           # multi-network e2e: start the API with RT_PUBLIC_URL= (empty) so sockets go through the test proxy; needs `pnpm build` and the web build served on :3100 (below)
-E2E_BASE_URL=http://localhost:3100 npx playwright test --project=pwa     # service worker and offline, same build
+E2E_BASE_URL=http://localhost:3000 npx playwright test --project=net --project=pwa   # against the built stack (pm2 run above); start the API with RT_PUBLIC_URL= (empty) for the net project so sockets go through the test proxy
 node backend/scripts/loadtest.mjs 800 3 100 # realtime load test against a production-mode API/RT (see the script header)
 ```
 - Backend integration tests run against real PostgreSQL (`sync_test`) and Redis (db 1): access control on every admin route, sealed data at rest, no raw IPs, rate limits, socket flood, concurrent chat joins, linking, blog, media, admin.
 - Frontend unit tests cover the transfer engine with simulated peers (corrupt peer, dropped peer, resume), chat crypto and helpers.
 - The `net` project puts each browser behind its own simulated public IP (`frontend/e2e/netproxy.ts`) so the app really sees different networks: isolation, link by code, QR scan with a fake camera, link by IP, unlink, files and chat across networks, connection loss and resume, CSP.
 
-Serve the production web build for the `net` and `pwa` projects: `pnpm build && (cd frontend && PORT=3100 node .output/server/index.mjs)` with the API and realtime services running. Always use `pnpm build` (it cleans stale output).
+The `net` and `pwa` projects run against the built stack (`pnpm build` then the pm2 steps above). Always use `pnpm build`, it cleans stale output.
 
 ## Deploy (single VPS)
 
 1. `pnpm build`, `pnpm db:migrate`.
-2. `pm2 start deploy/ecosystem.config.cjs` behind `deploy/nginx.conf` (public site, `/api`, `/socket.io`, `/media`, and the admin host serving `admin/dist`).
+2. `pm2 start deploy/ecosystem.config.cjs` behind `deploy/nginx.conf`: the app host (`/`, `/api`, `/socket.io`), a blog host (blog site and `/media`), and an admin host serving `admin/dist`.
 3. Back up PostgreSQL with `deploy/backup.sh` (cron). Redis needs no persistence (`save ""`, `appendonly no`).
-4. `.env`: real `MASTER_KEY`, `IP_PEPPER`, `COOKIE_SECRET` (64 hex chars each), `NUXT_PUBLIC_SITE_URL`, and `REVALIDATE_SECRET` for the API with `NUXT_INTERNAL_URL` (comma separated web URLs) so publishing purges cached pages at once. The web process reads the same secret as `NUXT_REVALIDATE_SECRET` (the PM2 file maps it). To share the page cache between PM2 web workers, run `pnpm build` with `NUXT_CACHE_REDIS_URL` set (for example `redis://127.0.0.1:6379/2`) and keep it set when starting.
+4. `.env`: real `MASTER_KEY`, `IP_PEPPER`, `COOKIE_SECRET` (64 hex chars each), `PUBLIC_ORIGIN` (the app address), `BLOG_PUBLIC_URL` (the blog address), `RT_PUBLIC_URL` (empty behind nginx), and `REVALIDATE_SECRET` with `NUXT_INTERNAL_URL` (the blog's internal URL, comma separated for several) so publishing purges the blog's cached pages at once. The PM2 file passes the secret and addresses to the blog process. The blog caches in memory per worker, so a purge reaches the worker that receives it; run one blog worker, or accept a short delay on the others.
 5. The `/api/dev/*` endpoints only exist outside production.
 
 ## Measured

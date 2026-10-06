@@ -1,10 +1,7 @@
 <script setup lang="ts">
 import { findUrls } from '~/utils/format'
 
-const cfg = useRuntimeConfig()
-const pageTitle = `${cfg.public.appName}: share text and files across your devices`
-useSeoMeta({ title: pageTitle, description: 'Type on one device and see it on every device on your network. Share text and files instantly and privately, with no sign-up.', ogTitle: pageTitle, ogType: 'website', ogUrl: String(cfg.public.siteUrl) })
-useHead({ link: [{ rel: 'canonical', href: String(cfg.public.siteUrl) }] })
+useHead({ title: `${useRuntimeConfig().public.appName}: share text and files across your devices` })
 const app = useApp()
 const toast = useToast()
 const sync = useTextSync()

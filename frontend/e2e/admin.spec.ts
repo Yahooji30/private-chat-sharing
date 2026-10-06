@@ -4,6 +4,7 @@ import { expect, test, type Page } from '@playwright/test'
 
 const ADMIN = process.env.E2E_ADMIN_URL ?? 'http://localhost:5173'
 const SITE = process.env.E2E_BASE_URL ?? 'http://localhost:3000'
+const BLOG = process.env.E2E_BLOG_URL ?? 'http://localhost:3001'
 const EMAIL = process.env.E2E_ADMIN_EMAIL ?? 'admin@example.com'
 const PASSWORD = process.env.E2E_ADMIN_PASSWORD ?? 'ChangeMe-12345'
 
@@ -69,9 +70,9 @@ test('write an article with an image, publish it, see it on the site within seco
   await expect(page).toHaveURL(/\/articles\/[A-Za-z0-9]+$/)
 
   const visitor = await (await browser.newContext()).newPage()
-  const res = await visitor.goto(`${SITE}/blog/e2e-article-${stamp}`)
+  const res = await visitor.goto(`${BLOG}/blog/e2e-article-${stamp}`)
   expect(res?.status()).toBe(200)
-  const source = await (await visitor.request.get(`${SITE}/blog/e2e-article-${stamp}`)).text()
+  const source = await (await visitor.request.get(`${BLOG}/blog/e2e-article-${stamp}`)).text()
   expect(source).toContain('Some <strong>bold</strong> text')
   expect(source).toContain('application/ld+json')
   expect(source).toContain('"@type":"Article"')
@@ -83,13 +84,13 @@ test('write an article with an image, publish it, see it on the site within seco
   await expect(visitor.locator('article img').first()).toHaveAttribute('width', '1800')
   await expect(visitor.getByRole('navigation', { name: 'Table of contents' })).toBeVisible()
 
-  await visitor.goto(`${SITE}/blog`)
+  await visitor.goto(`${BLOG}/blog`)
   await expect(visitor.getByRole('link', { name: title }).first()).toBeVisible()
-  await visitor.goto(`${SITE}/blog/tag/playwright`)
+  await visitor.goto(`${BLOG}/blog/tag/playwright`)
   await expect(visitor.getByRole('link', { name: title }).first()).toBeVisible()
-  expect(await (await visitor.request.get(`${SITE}/sitemap.xml`)).text()).toContain(`/blog/e2e-article-${stamp}`)
-  expect(await (await visitor.request.get(`${SITE}/rss.xml`)).text()).toContain(title)
-  expect(await (await visitor.request.get(`${SITE}/robots.txt`)).text()).toContain('Disallow: /c/')
+  expect(await (await visitor.request.get(`${BLOG}/sitemap.xml`)).text()).toContain(`/blog/e2e-article-${stamp}`)
+  expect(await (await visitor.request.get(`${BLOG}/rss.xml`)).text()).toContain(title)
+  expect(await (await visitor.request.get(`${BLOG}/robots.txt`)).text()).toContain('Sitemap:')
 
   await page.goto(`${ADMIN}/articles`)
   await page.getByLabel('Search').fill(`${stamp}`)
@@ -97,7 +98,7 @@ test('write an article with an image, publish it, see it on the site within seco
   await page.locator(`[data-title="${title}"] a`).click()
   await page.getByRole('button', { name: 'Archive' }).click()
   await expect(page.getByText('Archived', { exact: true })).toBeVisible()
-  await expect.poll(async () => (await visitor.request.get(`${SITE}/blog/e2e-article-${stamp}`)).status(), { timeout: 10_000 }).toBe(404)
+  await expect.poll(async () => (await visitor.request.get(`${BLOG}/blog/e2e-article-${stamp}`)).status(), { timeout: 10_000 }).toBe(404)
   await visitor.context().close()
 })
 
@@ -135,7 +136,7 @@ test('moderation: a reported public page appears in the queue and unpublishing m
   await author.getByPlaceholder('my-page').fill(slug)
   await author.getByRole('button', { name: 'Publish' }).click()
   await expect(author.getByText('Your page is live')).toBeVisible()
-  await author.goto(`${SITE}/p/${slug}`)
+  await author.goto(`${BLOG}/p/${slug}`)
   await author.waitForLoadState('networkidle')
   author.once('dialog', d => void d.accept('spam and abuse'))
   await author.getByRole('button', { name: 'Report' }).click()
@@ -160,6 +161,6 @@ test('site settings: legal text saved in admin renders on the public site', asyn
   await page.getByRole('button', { name: 'Save' }).click()
   await expect(page.getByText('Settings saved')).toBeVisible()
   const v = await (await browser.newContext()).newPage()
-  await expect.poll(async () => (await v.request.get(`${SITE}/privacy`)).text(), { timeout: 10_000 }).toContain('Custom privacy')
+  await expect.poll(async () => (await v.request.get(`${BLOG}/privacy`)).text(), { timeout: 10_000 }).toContain('Custom privacy')
   await v.close()
 })

@@ -10,7 +10,9 @@ const csp = [
 ].join('; ')
 const securityHeaders = { 'Content-Security-Policy': csp, 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'strict-origin-when-cross-origin', 'Permissions-Policy': 'camera=(self), microphone=(), geolocation=()', 'X-Frame-Options': 'DENY' }
 
+// The interactive app is a pure SPA (no server rendering). Blog, public pages and legal pages are the separate SSR site in ../blog.
 export default defineNuxtConfig({
+  ssr: false,
   compatibilityDate: '2025-07-15',
   devtools: { enabled: false },
   modules: ['@pinia/nuxt', '@vueuse/nuxt', '@vite-pwa/nuxt'],
@@ -19,20 +21,14 @@ export default defineNuxtConfig({
   vite: { plugins: [tailwindcss() as unknown as never] },
   runtimeConfig: {
     apiInternal: process.env.NUXT_API_INTERNAL ?? 'http://127.0.0.1:4000',
-    public: { appName, rtUrl: '', siteUrl: process.env.NUXT_PUBLIC_SITE_URL ?? 'http://localhost:3000' },
-    revalidateSecret: '', // set at runtime with NUXT_REVALIDATE_SECRET
+    public: { appName, rtUrl: '' },
   },
   nitro: {
-    compressPublicAssets: true,
-    // shared page cache so one purge reaches every web worker (set NUXT_CACHE_REDIS_URL at build time); the key prefix changes per build so a new release never serves HTML that points at old assets
-    ...(process.env.NUXT_CACHE_REDIS_URL ? { storage: { cache: { driver: 'redis', url: process.env.NUXT_CACHE_REDIS_URL, base: `webcache-${Date.now().toString(36)}` } } } : {}), prerender: { routes: ['/', '/200.html'], failOnError: false }, devProxy: { '/api': { target: 'http://127.0.0.1:4000/api', changeOrigin: false }, '/media': { target: 'http://127.0.0.1:4000/media', changeOrigin: false } } },
+    prerender: { routes: ['/200.html'], failOnError: false },
+    devProxy: { '/api': { target: 'http://127.0.0.1:4000/api', changeOrigin: false } },
+  },
   routeRules: {
     ...(isProd ? { '/**': { headers: securityHeaders } } : {}),
-    '/': { swr: 3600 },
-    '/settings': { ssr: false }, '/public/**': { ssr: false }, '/link': { ssr: false }, '/chat': { ssr: false }, '/c/**': { ssr: false },
-    '/p/**': { swr: 300 },
-    '/blog/**': { swr: 600 }, '/blog': { swr: 600 }, '/privacy': { swr: 86400 }, '/terms': { swr: 86400 },
-    '/media/**': { proxy: `${process.env.NUXT_API_INTERNAL ?? 'http://127.0.0.1:4000'}/media/**` },
     '/api/**': { proxy: `${process.env.NUXT_API_INTERNAL ?? 'http://127.0.0.1:4000'}/api/**` },
   },
   app: {
@@ -65,7 +61,7 @@ export default defineNuxtConfig({
       share_target: { action: '/?share=1', method: 'GET', params: { title: 'title', text: 'text', url: 'url' } },
     },
     workbox: {
-      navigateFallback: '/200.html', navigateFallbackDenylist: [/^\/api/, /^\/socket\.io/, /^\/blog/, /^\/p\//, /^\/privacy/, /^\/terms/, /^\/media/, /\.xml$/, /^\/robots\.txt/, /^\/_/],
+      navigateFallback: '/200.html', navigateFallbackDenylist: [/^\/api/, /^\/socket\.io/, /^\/media/],
       // the module lists the SPA shell as the clean url "200" which the server does not serve; precache the real file
       manifestTransforms: [entries => ({ manifest: entries.map(e => (e.url === '200' ? { ...e, url: '200.html' } : e)), warnings: [] })],
       globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],

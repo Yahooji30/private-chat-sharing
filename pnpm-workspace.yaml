@@ -3,6 +3,7 @@ packages:
   - backend
   - frontend
   - admin
+  - blog
 onlyBuiltDependencies:
   - '@node-rs/argon2'
   - esbuild
