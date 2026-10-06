@@ -1,0 +1,12 @@
+packages:
+  - shared
+  - backend
+  - frontend
+onlyBuiltDependencies:
+  - '@node-rs/argon2'
+  - esbuild
+  - sharp
+  - vue-demi
+  - '@parcel/watcher'
+  - unrs-resolver
+  - '@tailwindcss/oxide'

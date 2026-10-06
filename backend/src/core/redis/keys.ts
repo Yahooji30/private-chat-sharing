@@ -1,0 +1,18 @@
+export const K = {
+  ipCache: (h: string) => `rs:ip:${h}`,
+  devCache: (h: string) => `rs:dev:${h}`,
+  text: (s: string) => `sp:${s}:text`,
+  dirty: 'sp:dirty',
+  link: (h: string) => `link:${h}`,
+  linkN: (s: string) => `link:n:${s}`,
+  chatSlots: (c: string) => `chat:${c}:slots`,
+  chatMsgs: (c: string) => `chat:${c}:msgs`,
+  chatMeta: (c: string) => `chat:${c}:meta`,
+  chatGrace: 'chat:grace',
+  chatTicket: (h: string) => `chat:ticket:${h}`,
+  chatLock: (ip: string, c: string) => `chat:lock:${ip}:${c}`,
+  chatLockG: (ip: string) => `chat:lockg:${ip}`,
+  pageView: (slug: string, ip: string) => `pv:${slug}:${ip}`,
+  rl: 'rl:',
+  lock: (n: string) => `lock:jobs:${n}`,
+} as const
