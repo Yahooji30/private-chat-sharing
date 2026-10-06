@@ -1,0 +1,26 @@
+{
+  "name": "sync",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "packageManager": "pnpm@10.34.6",
+  "scripts": {
+    "dev": "pnpm -r --parallel --filter @sync/backend --filter @sync/frontend dev",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "db:migrate": "pnpm --filter @sync/backend db:migrate",
+    "check": "pnpm typecheck && pnpm test"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "simple-git": ">=4.0.1",
+      "@simple-git/argv-parser": ">=2.0.1"
+    }
+  }
+}

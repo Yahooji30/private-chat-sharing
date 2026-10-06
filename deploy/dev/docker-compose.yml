@@ -1,0 +1,9 @@
+services:
+  postgres:
+    image: postgres:17
+    environment: { POSTGRES_USER: sync_app, POSTGRES_PASSWORD: sync_dev, POSTGRES_DB: sync }
+    ports: ["127.0.0.1:5432:5432"]
+  redis:
+    image: redis:7
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    ports: ["127.0.0.1:6379:6379"]

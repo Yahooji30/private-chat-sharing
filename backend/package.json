@@ -1,0 +1,49 @@
+{
+  "name": "@sync/backend",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -n api,rt \"tsx watch --env-file=../.env src/api/server.ts\" \"tsx watch --env-file=../.env src/rt/server.ts\"",
+    "build": "tsup",
+    "start:api": "node dist/api.js",
+    "start:rt": "node dist/rt.js",
+    "typecheck": "tsc -p .",
+    "db:migrate": "tsx --env-file=../.env src/core/db/migrate.ts",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@fastify/cookie": "^11.0.0",
+    "@fastify/helmet": "^13.0.0",
+    "@fastify/multipart": "^10.1.2",
+    "@fastify/rate-limit": "^10.0.0",
+    "@fastify/static": "^10.1.5",
+    "@node-rs/argon2": "^2.0.0",
+    "@socket.io/redis-adapter": "^8.3.0",
+    "@socket.io/redis-emitter": "^5.1.0",
+    "@sync/shared": "workspace:*",
+    "fastify": "^5.0.0",
+    "file-type": "^22.1.1",
+    "ioredis": "^5.4.0",
+    "markdown-it": "^14.1.0",
+    "otplib": "^13.5.0",
+    "pino": "^9.0.0",
+    "postgres": "^3.4.0",
+    "qrcode": "^1.5.4",
+    "sanitize-html": "^2.13.0",
+    "sharp": "^0.35.5",
+    "socket.io": "^4.8.0",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/markdown-it": "^14.1.0",
+    "@types/node": "^22.0.0",
+    "@types/qrcode": "^1.5.6",
+    "@types/sanitize-html": "^2.13.0",
+    "concurrently": "^9.0.0",
+    "socket.io-client": "^4.8.0",
+    "tsup": "^8.3.0",
+    "tsx": "^4.19.0",
+    "vitest": "^3.2.0"
+  }
+}

@@ -147,3 +147,12 @@ vite.config.ts.timestamp-*
 
 # Turbo Repo
 .turbo
+!.env.example
+
+# build and test output
+frontend/.output/
+frontend/test-results/
+frontend/playwright-report/
+backend/dist/
+backend/media/
+admin/dist/
