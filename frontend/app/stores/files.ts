@@ -33,6 +33,7 @@ export const useFiles = defineStore('files', () => {
   const find = (id: string): FileItem | undefined => items.value.find(i => i.entry.fileId === id)
   const info = (e: FileEntry): EntryInfo => ({ fileId: e.fileId, size: e.size, blockSize: e.blockSize, rootHash: e.rootHash })
   const peerIds = (): string[] => app.peers.filter(p => !p.self).map(p => p.deviceId)
+  const peerSync = (): { id: string; since: number }[] => app.peers.filter(p => !p.self).map(p => ({ id: p.deviceId, since: p.since }))
   const holderOnline = (e: FileEntry): boolean => e.holders.some(h => peerIds().includes(h))
 
   function patch(id: string, p: Partial<FileItem>): void {
@@ -88,7 +89,7 @@ export const useFiles = defineStore('files', () => {
       failed: (id, r) => toast.err(`${find(id)?.entry.name ?? 'File'}: ${r}`),
     })
     sock.on('rtc:signal', (m: { from: string; data: { sdp?: RTCSessionDescriptionInit; ice?: RTCIceCandidateInit } }) => void mesh.onSignal(m.from, m.data))
-    sock.on('presence:list', () => mesh.sync(peerIds()))
+    sock.on('presence:list', () => mesh.sync(peerSync()))
     sock.on('files:added', (l: FileEntry[]) => void addEntries(l))
     sock.on('files:ready', (m: { fileId: string; rootHash: string }) => {
       const it = find(m.fileId)
@@ -105,8 +106,8 @@ export const useFiles = defineStore('files', () => {
     })
     sock.on('files:removed', (m: { fileId: string }) => void dropLocal(m.fileId))
     sock.on('files:cleared', () => { for (const i of [...items.value]) void dropLocal(i.entry.fileId) })
-    sock.on('connect', () => { void reload(); mesh.sync(peerIds()) })
-    setInterval(() => { mesh.sync(peerIds()); engine.announcePartial(); engine.resumeAll() }, 10_000)
+    sock.on('connect', () => { void reload(); mesh.sync(peerSync()) })
+    setInterval(() => { mesh.sync(peerSync()); engine.announcePartial(); engine.resumeAll() }, 10_000)
     window.addEventListener('pagehide', () => { for (const i of items.value) if (i.status === 'downloading') engine.pause(i.entry.fileId) })
     await reload()
   }
@@ -117,7 +118,7 @@ export const useFiles = defineStore('files', () => {
     const ids = new Set(list.map(e => e.fileId))
     for (const i of [...items.value]) if (!ids.has(i.entry.fileId)) await dropLocal(i.entry.fileId)
     await addEntries(list)
-    mesh.sync(peerIds())
+    mesh.sync(peerSync())
   }
 
   async function dropLocal(id: string): Promise<void> {

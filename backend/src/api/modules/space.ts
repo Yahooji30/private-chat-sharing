@@ -1,5 +1,5 @@
 import type { FastifyInstance } from 'fastify'
-import { deviceRenameSchema, settingsSchema } from '@sync/shared'
+import { DEFAULT_SETTINGS, deviceRenameSchema, settingsSchema } from '@sync/shared'
 import { env } from '../../core/config/env'
 import { spaceEmitter, spaceRoom } from '../../core/emitter'
 import { listFiles } from '../../core/files'
@@ -46,9 +46,12 @@ export function spaceRoutes(app: FastifyInstance): void {
       const id = req.ctx.spaceId
       await sql`delete from file_entries where space_id = ${id}`
       await sql`delete from space_text where space_id = ${id}`
+      await sql`delete from space_settings where space_id = ${id}`
+      await sql`delete from public_pages where owner_space_id = ${id}`
       await app.redis.del(K.text(id), K.linkN(id))
       const ns = spaceEmitter(app.redis).to(spaceRoom(id))
       ns.emit('files:cleared', {})
+      ns.emit('settings:changed', DEFAULT_SETTINGS)
       ns.emit('text:changed', { content: '', rev: 0, by: 'reset' })
       return { ok: true }
     })

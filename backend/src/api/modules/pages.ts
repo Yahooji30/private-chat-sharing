@@ -4,6 +4,7 @@ import { sql } from '../../core/db/client'
 import { AppError } from '../../core/lib/errors'
 import { base32, hashIp, randomToken, safeEqualHex, sha256 } from '../../core/lib/crypto'
 import { renderMarkdown } from '../../core/lib/markdown'
+import { revalidate } from '../../core/lib/revalidate'
 import { K } from '../../core/redis/keys'
 import { SPACE } from '../plugins/context'
 
@@ -58,12 +59,14 @@ export function pageRoutes(app: FastifyInstance): void {
     const body = b.body ?? p.body_md
     await sql`update public_pages set title = ${b.title ?? p.title}, body_md = ${body}, body_html = ${renderMarkdown(body)},
       indexable = ${b.indexable ?? p.indexable}, updated_at = now() where id = ${p.id}`
+    await revalidate()
     return { ok: true }
   })
 
   app.delete<{ Params: { slug: string } }>('/api/public-pages/:slug', SPACE, async req => {
     const p = await owned(req.params.slug, req.ctx.spaceId, req.headers['x-edit-token'])
     await sql`delete from public_pages where id = ${p.id}`
+    await revalidate()
     return { ok: true }
   })
 

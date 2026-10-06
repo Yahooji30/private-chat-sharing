@@ -17,10 +17,11 @@ export function setupSpace(ns: Namespace, redis: Redis): void {
 
   const presence = async (spaceId: string): Promise<void> => {
     const socks = await ns.in(spaceRoom(spaceId)).fetchSockets()
-    const byDevice = new Map<string, { deviceId: string; name: string; type: string }>()
+    const byDevice = new Map<string, { deviceId: string; name: string; type: string; since: number }>()
     for (const s of socks) {
-      const d = s.data as Data & { name: string; type: string }
-      byDevice.set(d.deviceId, { deviceId: d.deviceId, name: d.name, type: d.type })
+      const d = s.data as Data & { name: string; type: string; since: number }
+      const prev = byDevice.get(d.deviceId)
+      byDevice.set(d.deviceId, { deviceId: d.deviceId, name: d.name, type: d.type, since: Math.max(prev?.since ?? 0, d.since) })
     }
     const ids = [...byDevice.keys()]
     const names = ids.length ? await sql<{ id: string; name: string }[]>`select id, name from devices where id in ${sql(ids)}` : []
@@ -41,7 +42,7 @@ export function setupSpace(ns: Namespace, redis: Redis): void {
       const cookie = parseCookie(socket.handshake.headers.cookie, 'sid_dev')
       const r = await resolveSpace(redis, clientIp(socket), cookie, socket.handshake.headers['user-agent'] ?? '')
       if (!r) return next(new Error('unauthorized'))
-      Object.assign(socket.data, { ipHash: hashIp(clientIp(socket)) ?? '', spaceId: r.spaceId, deviceId: r.device.id, name: r.device.name, type: r.device.type })
+      Object.assign(socket.data, { since: Date.now(), ipHash: hashIp(clientIp(socket)) ?? '', spaceId: r.spaceId, deviceId: r.device.id, name: r.device.name, type: r.device.type })
       next()
     } catch { next(new Error('unauthorized')) }
   })

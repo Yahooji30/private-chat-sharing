@@ -55,7 +55,7 @@ Serve the production web build for the `net` and `pwa` projects: `pnpm build && 
 1. `pnpm build`, `pnpm db:migrate`.
 2. `pm2 start deploy/ecosystem.config.cjs` behind `deploy/nginx.conf` (public site, `/api`, `/socket.io`, `/media`, and the admin host serving `admin/dist`).
 3. Back up PostgreSQL with `deploy/backup.sh` (cron). Redis needs no persistence (`save ""`, `appendonly no`).
-4. `.env`: real `MASTER_KEY`, `IP_PEPPER`, `COOKIE_SECRET` (64 hex chars each), `NUXT_PUBLIC_SITE_URL`, and the same `REVALIDATE_SECRET` for the API and web process with `NUXT_INTERNAL_URL` set so publishing purges cached pages at once.
+4. `.env`: real `MASTER_KEY`, `IP_PEPPER`, `COOKIE_SECRET` (64 hex chars each), `NUXT_PUBLIC_SITE_URL`, and `REVALIDATE_SECRET` for the API with `NUXT_INTERNAL_URL` (comma separated web URLs) so publishing purges cached pages at once. The web process reads the same secret as `NUXT_REVALIDATE_SECRET` (the PM2 file maps it). To share the page cache between PM2 web workers, run `pnpm build` with `NUXT_CACHE_REDIS_URL` set (for example `redis://127.0.0.1:6379/2`) and keep it set when starting.
 5. The `/api/dev/*` endpoints only exist outside production.
 
 ## Measured

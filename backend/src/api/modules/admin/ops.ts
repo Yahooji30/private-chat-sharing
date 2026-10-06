@@ -60,14 +60,14 @@ export function opsRoutes(app: FastifyInstance): void {
     if (!r.length) throw new AppError(ERR.NOT_FOUND, 'Page not found', 404)
     await sql`update page_reports set resolved_at = now() where page_id = (select id from public_pages where slug = ${req.params.slug}) and resolved_at is null`
     await audit(req.admin, 'page.unpublish', req.params.slug)
-    revalidate()
+    await revalidate()
     return { ok: true }
   })
   app.delete<{ Params: { slug: string } }>('/api/admin/public-pages/:slug', async req => {
     const r = await sql`delete from public_pages where slug = ${req.params.slug} returning id`
     if (!r.length) throw new AppError(ERR.NOT_FOUND, 'Page not found', 404)
     await audit(req.admin, 'page.delete', req.params.slug)
-    revalidate()
+    await revalidate()
     return { ok: true }
   })
 
@@ -81,7 +81,7 @@ export function opsRoutes(app: FastifyInstance): void {
       if (k === 'privacy_md' || k === 'terms_md') await sql`insert into site_settings (key, value) values (${k.replace('_md', '_html')}, ${renderMarkdown(v)}) on conflict (key) do update set value = excluded.value`
     }
     await audit(req.admin, 'site.update', Object.keys(b).join(','))
-    revalidate()
+    await revalidate()
     return { ok: true }
   })
 }

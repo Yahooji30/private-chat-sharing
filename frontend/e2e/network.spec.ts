@@ -18,7 +18,7 @@ async function deviceOn(browser: Browser, net: Network, path = '/'): Promise<Pag
   await ctx.addInitScript(() => { delete (window as unknown as Record<string, unknown>).showSaveFilePicker })
   const p = await ctx.newPage()
   await p.goto(path)
-  await p.waitForSelector('textarea, input')
+  await p.waitForSelector('main')
   await p.waitForLoadState('networkidle')
   return p
 }
@@ -298,4 +298,29 @@ test('connection loss in chat: the dropped member resumes the same seat and rece
   await say(b, 'back again')
   await expect(a.getByText('back again')).toBeVisible()
   await expect(a.getByText('2/4 in room')).toBeVisible()
+})
+
+test('public pages: only the owning network or the secret link can edit', async ({ browser }) => {
+  const [home, away] = [await network(), await network()]
+  const owner = await deviceOn(browser, home, '/public/new')
+  const slug = `own-${Date.now()}`
+  await owner.getByPlaceholder('My page').fill('Owned page')
+  await owner.getByPlaceholder(/Hello/).fill('content')
+  await owner.getByPlaceholder('my-page').fill(slug)
+  await owner.getByRole('button', { name: 'Publish' }).click()
+  await expect(owner.getByText('Your page is live')).toBeVisible()
+  await owner.getByText('Edit link for other networks').click()
+  const editUrl = new URL((await owner.locator('details code').innerText()).trim())
+
+  const stranger = await deviceOn(browser, away, `/public/${slug}/edit`)
+  await expect(stranger.getByText('Not allowed')).toBeVisible()
+  expect((await stranger.request.put(`${away.url}/api/public-pages/${slug}`, { data: { title: 'hijack' } })).status()).toBe(403)
+  expect((await stranger.request.delete(`${away.url}/api/public-pages/${slug}`)).status()).toBe(403)
+  const keyed = await deviceOn(browser, away, editUrl.pathname + editUrl.search)
+  await expect(keyed.getByPlaceholder('My page')).toHaveValue('Owned page')
+  await keyed.getByPlaceholder('My page').fill('Edited from afar')
+  await keyed.getByRole('button', { name: 'Save changes' }).click()
+  await expect(keyed.getByRole('heading', { name: 'Edited from afar' })).toBeVisible()
+  const viewer = await deviceOn(browser, away, `/p/${slug}`)
+  await expect(viewer.getByRole('heading', { name: 'Edited from afar' })).toBeVisible()
 })

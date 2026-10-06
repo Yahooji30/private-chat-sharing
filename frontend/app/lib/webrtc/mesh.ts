@@ -9,7 +9,7 @@ export interface MeshHooks {
   onBlocked(peer: string): void
 }
 
-interface Link { pc: RTCPeerConnection; dc?: RTCDataChannel; queue: RTCIceCandidateInit[]; opened: boolean; timer?: ReturnType<typeof setTimeout> }
+interface Link { since: number; pc: RTCPeerConnection; dc?: RTCDataChannel; queue: RTCIceCandidateInit[]; opened: boolean; timer?: ReturnType<typeof setTimeout> }
 
 /** One RTCPeerConnection + ordered reliable DataChannel per remote device. The lower device id initiates. */
 export class Mesh implements Transport {
@@ -32,15 +32,20 @@ export class Mesh implements Transport {
     if (dc?.readyState === 'open') dc.send(encodeFrame(h, payload) as unknown as ArrayBuffer)
   }
 
-  sync(online: string[]): void {
-    const want = new Set(online.filter(p => p !== this.me))
-    for (const p of want) if (!this.links.has(p) && this.me < p) this.connect(p)
+  /** `since` changes whenever a device reconnects (reload, network change): links made before that are dead, replace them. */
+  sync(online: { id: string; since: number }[]): void {
+    const want = new Map(online.filter(p => p.id !== this.me).map(p => [p.id, p.since]))
+    for (const [p, since] of want) {
+      const l = this.links.get(p)
+      if (l && since > l.since) this.drop(p)
+      if (!this.links.has(p) && this.me < p) this.connect(p, since)
+    }
     for (const p of [...this.links.keys()]) if (!want.has(p)) this.drop(p)
   }
 
-  private connect(peer: string): Link {
+  private connect(peer: string, since = Date.now()): Link {
     const pc = new RTCPeerConnection({ iceServers: this.ice })
-    const l: Link = { pc, queue: [], opened: false }
+    const l: Link = { since, pc, queue: [], opened: false }
     this.links.set(peer, l)
     pc.onicecandidate = e => { if (e.candidate) this.hooks.signal(peer, { ice: e.candidate.toJSON() }) }
     pc.onconnectionstatechange = () => {

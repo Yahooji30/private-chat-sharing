@@ -71,7 +71,7 @@ export function contentRoutes(app: FastifyInstance): void {
         : await sql`insert into tags (id, slug, name) values (${id}, ${slug}, ${b.name}) on conflict (slug) do nothing returning id`
       if (!r.length) throw new AppError(ERR.CONFLICT, `A ${label} with that slug exists`, 409)
       await audit(req.admin, `${label}.create`, slug)
-      revalidate()
+      await revalidate()
       return { id, slug }
     })
     app.put<{ Params: { id: string } }>(`/api/admin/${path}/:id`, async req => {
@@ -86,14 +86,14 @@ export function contentRoutes(app: FastifyInstance): void {
         throw e
       }
       await audit(req.admin, `${label}.update`, req.params.id)
-      revalidate()
+      await revalidate()
       return { ok: true }
     })
     app.delete<{ Params: { id: string } }>(`/api/admin/${path}/:id`, async req => {
       const r = await sql`delete from ${t} where id = ${req.params.id} returning id`
       if (!r.length) throw new AppError(ERR.NOT_FOUND, `${label} not found`, 404)
       await audit(req.admin, `${label}.delete`, req.params.id)
-      revalidate()
+      await revalidate()
       return { ok: true }
     })
   }

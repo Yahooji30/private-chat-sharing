@@ -1,7 +1,7 @@
 import { DEFAULT_SETTINGS, type Settings } from '@sync/shared'
 
 export interface Device { id: string; name: string; type: string; linked: boolean }
-export interface Peer { deviceId: string; name: string; type: string; self: boolean }
+export interface Peer { deviceId: string; name: string; type: string; self: boolean; since: number }
 type ThemePref = 'system' | 'light' | 'dark'
 
 const ls = {

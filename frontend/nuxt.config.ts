@@ -20,9 +20,12 @@ export default defineNuxtConfig({
   runtimeConfig: {
     apiInternal: process.env.NUXT_API_INTERNAL ?? 'http://127.0.0.1:4000',
     public: { appName, rtUrl: '', siteUrl: process.env.NUXT_PUBLIC_SITE_URL ?? 'http://localhost:3000' },
-    revalidateSecret: process.env.REVALIDATE_SECRET ?? '',
+    revalidateSecret: '', // set at runtime with NUXT_REVALIDATE_SECRET
   },
-  nitro: { compressPublicAssets: true, prerender: { routes: ['/', '/200.html'], failOnError: false }, devProxy: { '/api': { target: 'http://127.0.0.1:4000/api', changeOrigin: false }, '/media': { target: 'http://127.0.0.1:4000/media', changeOrigin: false } } },
+  nitro: {
+    compressPublicAssets: true,
+    // shared page cache so one purge reaches every web worker (set NUXT_CACHE_REDIS_URL at build time); the key prefix changes per build so a new release never serves HTML that points at old assets
+    ...(process.env.NUXT_CACHE_REDIS_URL ? { storage: { cache: { driver: 'redis', url: process.env.NUXT_CACHE_REDIS_URL, base: `webcache-${Date.now().toString(36)}` } } } : {}), prerender: { routes: ['/', '/200.html'], failOnError: false }, devProxy: { '/api': { target: 'http://127.0.0.1:4000/api', changeOrigin: false }, '/media': { target: 'http://127.0.0.1:4000/media', changeOrigin: false } } },
   routeRules: {
     ...(isProd ? { '/**': { headers: securityHeaders } } : {}),
     '/': { swr: 3600 },
@@ -64,7 +67,7 @@ export default defineNuxtConfig({
     workbox: {
       navigateFallback: '/200.html', navigateFallbackDenylist: [/^\/api/, /^\/socket\.io/, /^\/blog/, /^\/p\//, /^\/privacy/, /^\/terms/, /^\/media/, /\.xml$/, /^\/robots\.txt/, /^\/_/],
       // the module lists the SPA shell as the clean url "200" which the server does not serve; precache the real file
-      manifestTransforms: [(entries: { url: string }[]) => ({ manifest: entries.map(e => (e.url === '200' ? { ...e, url: '200.html' } : e)), warnings: [] as string[] })],
+      manifestTransforms: [entries => ({ manifest: entries.map(e => (e.url === '200' ? { ...e, url: '200.html' } : e)), warnings: [] })],
       globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
       runtimeCaching: [{ urlPattern: ({ url }: { url: URL }) => /^\/api\/(space\/me|settings|text)$/.test(url.pathname), handler: 'NetworkFirst', options: { cacheName: 'api-meta', networkTimeoutSeconds: 3 } }],
     },

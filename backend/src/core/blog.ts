@@ -137,19 +137,19 @@ export async function saveArticle(id: string | null, raw: unknown, adminId: stri
     await tx`delete from article_tags where article_id = ${articleId}`
     for (const t of tagIds) await tx`insert into article_tags (article_id, tag_id) values (${articleId}, ${t}) on conflict do nothing`
   })
-  revalidate()
+  await revalidate()
   return articleId
 }
 
 export async function deleteArticle(id: string): Promise<void> {
   const r = await sql`delete from articles where id = ${id} returning id`
   if (!r.length) throw new AppError('NOT_FOUND', 'Article not found', 404)
-  revalidate()
+  await revalidate()
 }
 
 /** Cron: scheduled articles whose time has come become published. */
 export async function publishDue(): Promise<number> {
   const r = await sql`update articles set status = 'published', published_at = coalesce(publish_at, now()), updated_at = now() where status = 'scheduled' and publish_at <= now() returning id`
-  if (r.length) revalidate()
+  if (r.length) await revalidate()
   return r.length
 }
