@@ -8,6 +8,7 @@ import { getSettings, putSettings } from '../../core/settings'
 import { invalidateDevice } from '../../core/space'
 import { readText } from '../../core/text'
 import { createHmac } from 'node:crypto'
+import { K } from '../../core/redis/keys'
 import { SPACE } from '../plugins/context'
 
 export function spaceRoutes(app: FastifyInstance): void {
@@ -30,9 +31,23 @@ export function spaceRoutes(app: FastifyInstance): void {
     const { name } = deviceRenameSchema.parse(req.body)
     await sql`update devices set name = ${name} where id = ${req.ctx.device.id}`
     await invalidateDevice(app.redis, req.ctx.device.id)
+    spaceEmitter(app.redis).to(spaceRoom(req.ctx.spaceId)).emit('presence:rename', { deviceId: req.ctx.device.id, name })
     return { name }
   })
   app.get('/api/rtc/ice', SPACE, req => iceServers(req.ctx.device.id))
+  if (env.NODE_ENV !== 'production') {
+    // Dev/test only: wipes the caller's text and files so e2e runs start clean.
+    app.post('/api/dev/reset', SPACE, async req => {
+      const id = req.ctx.spaceId
+      await sql`delete from file_entries where space_id = ${id}`
+      await sql`delete from space_text where space_id = ${id}`
+      await app.redis.del(K.text(id))
+      const ns = spaceEmitter(app.redis).to(spaceRoom(id))
+      ns.emit('files:cleared', {})
+      ns.emit('text:changed', { content: '', rev: 0, by: 'reset' })
+      return { ok: true }
+    })
+  }
   app.get('/api/health', async () => {
     const [pg, redis] = await Promise.all([sql`select 1`.then(() => true, () => false), app.redis.ping().then(() => true, () => false)])
     return { ok: pg && redis, pg, redis, uptime: Math.round(process.uptime()), rssMb: Math.round(process.memoryUsage().rss / 1048576) }

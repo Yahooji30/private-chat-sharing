@@ -21,6 +21,9 @@ export function setupSpace(ns: Namespace, redis: Redis): void {
       const d = s.data as Data & { name: string; type: string }
       byDevice.set(d.deviceId, { deviceId: d.deviceId, name: d.name, type: d.type })
     }
+    const ids = [...byDevice.keys()]
+    const names = ids.length ? await sql<{ id: string; name: string }[]>`select id, name from devices where id in ${sql(ids)}` : []
+    for (const n of names) { const d = byDevice.get(n.id); if (d) d.name = n.name }
     const list = [...byDevice.values()]
     for (const s of socks) {
       const self = (s.data as Data).deviceId
