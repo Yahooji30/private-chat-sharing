@@ -41,7 +41,7 @@ export function spaceRoutes(app: FastifyInstance): void {
       const id = req.ctx.spaceId
       await sql`delete from file_entries where space_id = ${id}`
       await sql`delete from space_text where space_id = ${id}`
-      await app.redis.del(K.text(id))
+      await app.redis.del(K.text(id), K.linkN(id))
       const ns = spaceEmitter(app.redis).to(spaceRoom(id))
       ns.emit('files:cleared', {})
       ns.emit('text:changed', { content: '', rev: 0, by: 'reset' })

@@ -13,11 +13,12 @@ export default defineNuxtConfig({
     apiInternal: process.env.NUXT_API_INTERNAL ?? 'http://127.0.0.1:4000',
     public: { appName, rtUrl: '' },
   },
-  nitro: { devProxy: { '/api': { target: 'http://127.0.0.1:4000/api', changeOrigin: false } } },
+  nitro: { prerender: { routes: ['/'], failOnError: false }, devProxy: { '/api': { target: 'http://127.0.0.1:4000/api', changeOrigin: false } } },
   routeRules: {
     '/': { ssr: false },
     '/settings': { ssr: false }, '/public/**': { ssr: false }, '/link': { ssr: false }, '/chat': { ssr: false }, '/c/**': { ssr: false },
     '/p/**': { swr: 300 },
+    '/api/**': { proxy: `${process.env.NUXT_API_INTERNAL ?? 'http://127.0.0.1:4000'}/api/**` },
   },
   app: {
     head: {
@@ -51,7 +52,7 @@ export default defineNuxtConfig({
     workbox: {
       navigateFallback: '/', navigateFallbackDenylist: [/^\/api/, /^\/socket\.io/],
       globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
-      runtimeCaching: [{ urlPattern: /^\/api\/(space\/me|settings)/, handler: 'NetworkFirst', options: { cacheName: 'api-meta', networkTimeoutSeconds: 3 } }],
+      runtimeCaching: [{ urlPattern: ({ url }: { url: URL }) => /^\/api\/(space\/me|settings|text)$/.test(url.pathname), handler: 'NetworkFirst', options: { cacheName: 'api-meta', networkTimeoutSeconds: 3 } }],
     },
     client: { installPrompt: true },
     devOptions: { enabled: false },

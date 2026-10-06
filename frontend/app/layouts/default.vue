@@ -8,6 +8,7 @@ const nav = [
   { to: '/public', label: 'Public Pages', icon: 'globe' },
 ]
 const active = (to: string): boolean => (to === '/' ? route.path === '/' : route.path.startsWith(to) || (to === '/chat' && route.path.startsWith('/c/')))
+const isOnline = useOnline()
 const chatRoute = computed(() => route.path.startsWith('/c/'))
 </script>
 
@@ -34,7 +35,7 @@ const chatRoute = computed(() => route.path.startsWith('/c/'))
     </header>
 
     <main class="flex-1 w-full mx-auto max-w-6xl px-3 md:px-4" :class="chatRoute ? '' : 'pb-24 md:pb-6'">
-      <div v-if="!app.online && app.ready" class="mb-2 rounded-xl bg-warn/20 border border-warn/50 text-sm px-3 py-2 flex items-center gap-2" role="status">
+      <div v-if="!isOnline || (!app.online && app.ready)" class="mb-2 rounded-xl bg-warn/20 border border-warn/50 text-sm px-3 py-2 flex items-center gap-2" role="status">
         <Icon name="wifi" :size="16" /> You are offline. Changes will sync when you reconnect.
       </div>
       <slot />

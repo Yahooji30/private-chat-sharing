@@ -1,5 +1,4 @@
-import { expect, test } from '@playwright/test'
-import { device } from './helpers'
+import { device, expect, test } from './helpers'
 
 test('secure chat: create, join with password, messages relay, wrong password fails, wipe on leave', async ({ browser }) => {
   const a = await device(browser, '/chat')

@@ -1,6 +1,5 @@
-import { expect, test } from '@playwright/test'
 import { createHash, randomBytes } from 'node:crypto'
-import { device, twoDevices } from './helpers'
+import { device, expect, test, twoDevices } from './helpers'
 
 test('text typed on one device appears on the other, and URLs are detected', async ({ browser }) => {
   const [a, b] = await twoDevices(browser)
@@ -72,6 +71,7 @@ test('a large file can be paused, resumed after reload, and completes', async ({
 test('link code from one device is redeemed on another through the link page', async ({ browser }) => {
   const a = await device(browser)
   await a.waitForSelector('textarea')
+  await a.evaluate(() => fetch('/api/dev/reset', { method: 'POST' }))
   await a.getByRole('button', { name: 'Settings' }).click()
   await a.getByRole('tab', { name: 'Link Device' }).click()
   await a.getByRole('tab', { name: 'Share Link' }).click()
