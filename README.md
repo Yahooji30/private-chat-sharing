@@ -34,6 +34,19 @@ cd admin && pnpm dev           # admin :5173; first owner = ADMIN_BOOTSTRAP_EMAI
 ```
 Run the web process with `NUXT_PUBLIC_RT_URL=http://localhost:4001` in development so the browser reaches the realtime port directly. Change the bootstrap password before any real deployment.
 
+## Run on one PC with pm2 (no nginx)
+
+```
+docker compose -f deploy/dev/docker-compose.yml up -d     # PostgreSQL + Redis
+copy .env.example .env                                     # Windows (use cp on Mac/Linux)
+pnpm install
+pnpm db:migrate
+pnpm build
+pnpm add -g pm2
+pm2 start deploy/ecosystem.local.cjs
+```
+Open http://localhost:3000. For the admin panel run `pnpm --filter @sync/admin dev` (http://localhost:5173). `pm2 logs`, `pm2 stop all`, `pm2 delete all` manage the processes.
+
 ## Tests
 
 ```

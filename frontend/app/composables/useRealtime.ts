@@ -2,11 +2,17 @@ import { io, type Socket } from 'socket.io-client'
 
 let space: Socket | null = null
 
+/** Realtime base URL: configured, or in development the realtime port on the same host (works from phones on the LAN too). */
+function rtBase(): string {
+  const cfg = useRuntimeConfig().public.rtUrl as string
+  if (cfg) return cfg
+  return import.meta.dev ? `${location.protocol}//${location.hostname}:4001` : ''
+}
+
 /** Single shared `/space` socket for the whole app (client only). */
 export function spaceSocket(): Socket {
   if (space) return space
-  const rt = useRuntimeConfig().public.rtUrl as string
-  space = io(`${rt || ''}/space`, { transports: ['websocket'], withCredentials: true, reconnectionDelayMax: 5000 })
+  space = io(`${rtBase()}/space`, { transports: ['websocket'], withCredentials: true, reconnectionDelayMax: 5000 })
   const app = useApp()
   space.on('connect', () => { app.online = true; app.hasConnected = true })
   space.on('disconnect', reason => { app.online = false; if (reason === 'io server disconnect') space?.connect() })
@@ -26,6 +32,5 @@ export function emitAck<T = { ok?: boolean; error?: string }>(ev: string, data: 
 }
 
 export function chatSocket(auth: Record<string, unknown>): Socket {
-  const rt = useRuntimeConfig().public.rtUrl as string
-  return io(`${rt || ''}/chat`, { transports: ['websocket'], withCredentials: true, auth, reconnection: false })
+  return io(`${rtBase()}/chat`, { transports: ['websocket'], withCredentials: true, auth, reconnection: false })
 }
