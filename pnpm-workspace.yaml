@@ -2,6 +2,7 @@ packages:
   - shared
   - backend
   - frontend
+  - admin
 onlyBuiltDependencies:
   - '@node-rs/argon2'
   - esbuild

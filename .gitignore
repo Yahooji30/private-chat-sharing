@@ -154,3 +154,5 @@ frontend/.output/
 frontend/test-results/
 frontend/playwright-report/
 backend/dist/
+backend/media/
+admin/dist/

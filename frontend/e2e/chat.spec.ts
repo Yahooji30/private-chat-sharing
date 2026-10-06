@@ -1,5 +1,7 @@
 import { device, expect, test } from './helpers'
 
+test.beforeEach(async ({ request }) => { await request.post('/api/dev/reset-admin-locks') })
+
 test('secure chat: create, join with password, messages relay, wrong password fails, wipe on leave', async ({ browser }) => {
   const a = await device(browser, '/chat')
   await a.goto('/chat')

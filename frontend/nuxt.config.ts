@@ -11,13 +11,16 @@ export default defineNuxtConfig({
   vite: { plugins: [tailwindcss() as unknown as never] },
   runtimeConfig: {
     apiInternal: process.env.NUXT_API_INTERNAL ?? 'http://127.0.0.1:4000',
-    public: { appName, rtUrl: '' },
+    public: { appName, rtUrl: '', siteUrl: process.env.NUXT_PUBLIC_SITE_URL ?? 'http://localhost:3000' },
+    revalidateSecret: process.env.REVALIDATE_SECRET ?? '',
   },
-  nitro: { prerender: { routes: ['/'], failOnError: false }, devProxy: { '/api': { target: 'http://127.0.0.1:4000/api', changeOrigin: false } } },
+  nitro: { prerender: { routes: ['/'], failOnError: false }, devProxy: { '/api': { target: 'http://127.0.0.1:4000/api', changeOrigin: false }, '/media': { target: 'http://127.0.0.1:4000/media', changeOrigin: false } } },
   routeRules: {
     '/': { ssr: false },
     '/settings': { ssr: false }, '/public/**': { ssr: false }, '/link': { ssr: false }, '/chat': { ssr: false }, '/c/**': { ssr: false },
     '/p/**': { swr: 300 },
+    '/blog/**': { swr: 600 }, '/blog': { swr: 600 }, '/privacy': { swr: 86400 }, '/terms': { swr: 86400 },
+    '/media/**': { proxy: `${process.env.NUXT_API_INTERNAL ?? 'http://127.0.0.1:4000'}/media/**` },
     '/api/**': { proxy: `${process.env.NUXT_API_INTERNAL ?? 'http://127.0.0.1:4000'}/api/**` },
   },
   app: {

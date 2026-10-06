@@ -6,7 +6,7 @@ export class ApiFailure extends Error {
 
 export async function api<T>(path: string, opts: { method?: string; body?: unknown; headers?: Record<string, string> } = {}): Promise<T> {
   try {
-    return await $fetch<T>(`/api${path}`, { method: (opts.method ?? 'GET') as 'GET', body: opts.body as Record<string, unknown>, headers: opts.headers, credentials: 'include' })
+    return (await $fetch(`/api${path}`, { method: (opts.method ?? 'GET') as 'GET', body: opts.body as Record<string, unknown>, headers: opts.headers, credentials: 'include' })) as T
   } catch (e) {
     const r = (e as { data?: ApiError; status?: number; statusCode?: number })
     throw new ApiFailure(r.data?.error?.code ?? 'NETWORK', r.data?.error?.message ?? 'Network error. Check your connection.', r.status ?? r.statusCode ?? 0)

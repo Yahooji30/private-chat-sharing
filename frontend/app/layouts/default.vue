@@ -6,6 +6,7 @@ const nav = [
   { to: '/', label: 'Home', icon: 'home' },
   { to: '/chat', label: 'Secure Chat', icon: 'chat' },
   { to: '/public', label: 'Public Pages', icon: 'globe' },
+  { to: '/blog', label: 'Blog', icon: 'file' },
 ]
 const active = (to: string): boolean => (to === '/' ? route.path === '/' : route.path.startsWith(to) || (to === '/chat' && route.path.startsWith('/c/')))
 const isOnline = useOnline()
@@ -47,7 +48,7 @@ const chatRoute = computed(() => route.path.startsWith('/c/'))
     </footer>
 
     <nav v-if="!chatRoute" class="md:hidden fixed bottom-0 inset-x-0 z-30 bg-surface/95 backdrop-blur border-t border-line pb-safe" aria-label="Main">
-      <div class="grid grid-cols-4 px-2 pt-1.5">
+      <div class="grid grid-cols-5 px-2 pt-1.5">
         <NuxtLink v-for="n in nav" :key="n.to" :to="n.to" class="flex flex-col items-center gap-0.5 py-1.5 rounded-xl text-[11px] font-medium"
           :class="active(n.to) ? 'text-accent-ink' : 'text-muted'">
           <span class="px-4 py-1 rounded-full transition" :class="active(n.to) ? 'bg-accent-soft' : ''"><Icon :name="n.icon" :size="20" /></span>{{ n.label.replace('Secure ', '').replace(' Pages', '') }}

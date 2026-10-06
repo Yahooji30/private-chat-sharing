@@ -37,6 +37,11 @@ export function spaceRoutes(app: FastifyInstance): void {
   app.get('/api/rtc/ice', SPACE, req => iceServers(req.ctx.device.id))
   if (env.NODE_ENV !== 'production') {
     // Dev/test only: wipes the caller's text and files so e2e runs start clean.
+    app.post('/api/dev/reset-admin-locks', async () => {
+      const keys = [...await app.redis.keys('adm:lock*'), ...await app.redis.keys('chat:lock*'), ...await app.redis.keys('rl:*')]
+      if (keys.length) await app.redis.del(...keys)
+      return { cleared: keys.length }
+    })
     app.post('/api/dev/reset', SPACE, async req => {
       const id = req.ctx.spaceId
       await sql`delete from file_entries where space_id = ${id}`
