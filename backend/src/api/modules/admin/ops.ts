@@ -1,5 +1,5 @@
 import type { FastifyInstance } from 'fastify'
-import { AD_KEYS, adSlotSchema, ERR, SITE_KEYS, siteSettingsSchema } from '@sync/shared'
+import { ERR, SITE_KEYS, siteSettingsSchema } from '@sync/shared'
 import { sql } from '../../../core/db/client'
 import { AppError } from '../../../core/lib/errors'
 import { renderMarkdown } from '../../../core/lib/markdown'
@@ -68,16 +68,6 @@ export function opsRoutes(app: FastifyInstance): void {
     if (!r.length) throw new AppError(ERR.NOT_FOUND, 'Page not found', 404)
     await audit(req.admin, 'page.delete', req.params.slug)
     revalidate()
-    return { ok: true }
-  })
-
-  // ---- ad slots ----
-  app.get('/api/admin/ad-slots', async () => (await sql<{ key: string; enabled: boolean; html: string }[]>`select key, enabled, html from ad_slots order by key`))
-  app.put<{ Params: { key: string } }>('/api/admin/ad-slots/:key', async req => {
-    if (!(AD_KEYS as readonly string[]).includes(req.params.key)) throw new AppError(ERR.NOT_FOUND, 'Unknown slot', 404)
-    const b = adSlotSchema.parse(req.body)
-    await sql`insert into ad_slots (key, enabled, html) values (${req.params.key}, ${b.enabled}, ${b.html}) on conflict (key) do update set enabled = excluded.enabled, html = excluded.html`
-    await audit(req.admin, 'ads.update', req.params.key)
     return { ok: true }
   })
 

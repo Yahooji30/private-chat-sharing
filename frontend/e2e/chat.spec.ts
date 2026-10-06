@@ -4,7 +4,6 @@ test.beforeEach(async ({ request }) => { await request.post('/api/dev/reset-admi
 
 test('secure chat: create, join with password, messages relay, wrong password fails, wipe on leave', async ({ browser }) => {
   const a = await device(browser, '/chat')
-  await a.goto('/chat')
   await a.getByPlaceholder('At least 8 characters').fill('correct horse battery')
   await a.getByRole('button', { name: 'Create secure room' }).click()
   await a.waitForURL(/\/c\/[A-Z0-9]+$/)

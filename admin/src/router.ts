@@ -11,7 +11,6 @@ const routes = [
   { path: '/tags', name: 'tags', component: () => import('./pages/Taxonomy.vue'), props: { kind: 'tags' } },
   { path: '/library', name: 'media', component: () => import('./pages/Media.vue') },
   { path: '/reports', name: 'reports', component: () => import('./pages/Reports.vue') },
-  { path: '/ads', name: 'ads', component: () => import('./pages/Ads.vue') },
   { path: '/settings', name: 'settings', component: () => import('./pages/Settings.vue') },
   { path: '/admins', name: 'admins', component: () => import('./pages/Admins.vue'), meta: { owner: true } },
   { path: '/audit', name: 'audit', component: () => import('./pages/Audit.vue') },

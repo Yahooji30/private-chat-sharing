@@ -2,7 +2,8 @@ import type { Namespace, Socket } from 'socket.io'
 import type { Redis } from 'ioredis'
 import { EV, fileMetaSchema, fileIdSchema, fileReadySchema, rtcSignalSchema, textUpdateSchema } from '@sync/shared'
 import { sql } from '../core/db/client'
-import { deviceRoom, spaceRoom } from '../core/emitter'
+import { deviceRoom, ipRoom, spaceRoom } from '../core/emitter'
+import { hashIp } from '../core/lib/crypto'
 import { addFile, addHolder, clearFiles, markReady, removeFile } from '../core/files'
 import { resolveSpace } from '../core/space'
 import { writeText } from '../core/text'
@@ -40,7 +41,7 @@ export function setupSpace(ns: Namespace, redis: Redis): void {
       const cookie = parseCookie(socket.handshake.headers.cookie, 'sid_dev')
       const r = await resolveSpace(redis, clientIp(socket), cookie, socket.handshake.headers['user-agent'] ?? '')
       if (!r) return next(new Error('unauthorized'))
-      Object.assign(socket.data, { spaceId: r.spaceId, deviceId: r.device.id, name: r.device.name, type: r.device.type })
+      Object.assign(socket.data, { ipHash: hashIp(clientIp(socket)) ?? '', spaceId: r.spaceId, deviceId: r.device.id, name: r.device.name, type: r.device.type })
       next()
     } catch { next(new Error('unauthorized')) }
   })
@@ -48,7 +49,7 @@ export function setupSpace(ns: Namespace, redis: Redis): void {
   ns.on('connection', (socket: Socket) => {
     const { spaceId, deviceId } = socket.data as Data
     const allow = limiter(socket)
-    void socket.join([spaceRoom(spaceId), deviceRoom(deviceId)])
+    void socket.join([spaceRoom(spaceId), deviceRoom(deviceId), ipRoom((socket.data as { ipHash: string }).ipHash)])
     void sql`update devices set last_seen_at = now() where id = ${deviceId}`.catch(() => undefined)
     schedulePresence(spaceId)
     socket.on('disconnect', () => schedulePresence(spaceId))

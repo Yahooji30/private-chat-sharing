@@ -16,6 +16,7 @@ export const useApp = defineStore('app', () => {
   const settings = ref<Settings>({ ...DEFAULT_SETTINGS })
   const peers = ref<Peer[]>([])
   const online = ref(false)
+  const hasConnected = ref(false)
   const theme = ref<ThemePref>('system')
   const autoDownload = ref(true)
   const spellcheck = ref(false)
@@ -54,5 +55,5 @@ export const useApp = defineStore('app', () => {
   }
   function openSettings(tab: 'general' | 'link' | 'linked' = 'general'): void { settingsTab.value = tab; settingsOpen.value = true }
 
-  return { ready, device, ip, settings, peers, online, theme, autoDownload, spellcheck, settingsOpen, settingsTab, load, saveSettings, setLocal, rename, setTheme, toggleTheme, openSettings }
+  return { ready, device, ip, settings, peers, online, hasConnected, theme, autoDownload, spellcheck, settingsOpen, settingsTab, load, saveSettings, setLocal, rename, setTheme, toggleTheme, openSettings }
 })

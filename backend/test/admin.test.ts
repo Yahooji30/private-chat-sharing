@@ -222,18 +222,6 @@ describe('admin ops', () => {
     expect(st.articles.published).toBeGreaterThan(0)
   })
 
-  it('ads: slots respect the global flag and the per-space opt-out', async () => {
-    const dev = client('94.5.5.5', 'adviewerviewer001')
-    expect((await t.call(dev, 'GET', '/api/ads')).body.enabled).toBe(false)
-    expect((await call(s, 'PUT', '/api/admin/ad-slots/top-banner', { enabled: true, html: '<b>ad</b>' })).status).toBe(200)
-    expect((await call(s, 'PUT', '/api/admin/ad-slots/bogus', { enabled: true, html: 'x' })).status).toBe(404)
-    expect((await t.call(dev, 'GET', '/api/ads')).body.enabled).toBe(false)
-    await call(s, 'PUT', '/api/admin/site-settings', { ads_enabled: 'true' })
-    expect((await t.call(dev, 'GET', '/api/ads')).body).toEqual({ enabled: true, slots: { 'top-banner': '<b>ad</b>' } })
-    await t.call(dev, 'PUT', '/api/settings', { adsDisabled: true })
-    expect((await t.call(dev, 'GET', '/api/ads')).body.enabled).toBe(false)
-  })
-
   it('site settings: public subset hides legal markdown and renders legal html', async () => {
     expect((await call(s, 'PUT', '/api/admin/site-settings', { site_name: 'Acme Sync', privacy_md: '# Privacy\n\n<script>x</script>ok', unknown_key: 'x' })).status).toBe(400)
     expect((await call(s, 'PUT', '/api/admin/site-settings', { site_name: 'Acme Sync', privacy_md: '# Privacy\n\n<script>x</script>ok' })).status).toBe(200)

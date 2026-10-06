@@ -6,7 +6,7 @@ const lock = useScrollLock(import.meta.client ? document.body : null)
 watch(() => props.open, async v => {
   lock.value = v
   if (v) { await nextTick(); panel.value?.focus() }
-}, { immediate: false })
+}, { immediate: true })
 onBeforeUnmount(() => { lock.value = false })
 </script>
 

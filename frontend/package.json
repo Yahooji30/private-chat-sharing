@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "nuxt dev --port 3000",
-    "build": "nuxt build",
+    "build": "rm -rf .output node_modules/.cache/nuxt && nuxt build",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "typecheck": "nuxt typecheck",
@@ -28,9 +28,11 @@
   "devDependencies": {
     "@playwright/test": "1.56.1",
     "@tailwindcss/vite": "^4.1.0",
+    "@types/http-proxy": "^1.17.17",
     "@types/qrcode": "^1.5.5",
     "@vite-pwa/nuxt": "^1.0.0",
     "happy-dom": "^18.0.0",
+    "http-proxy": "^1.18.1",
     "otplib": "^13.5.0",
     "sharp": "^0.35.5",
     "tailwindcss": "^4.1.0",

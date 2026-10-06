@@ -1,14 +1,18 @@
 <script setup lang="ts">
 import { findUrls } from '~/utils/format'
 
-useHead({ title: `${useRuntimeConfig().public.appName} - share text and files across your devices` })
+const cfg = useRuntimeConfig()
+const pageTitle = `${cfg.public.appName}: share text and files across your devices`
+useSeoMeta({ title: pageTitle, description: 'Type on one device and see it on every device on your network. Share text and files instantly and privately, with no sign-up.', ogTitle: pageTitle, ogType: 'website', ogUrl: String(cfg.public.siteUrl) })
+useHead({ link: [{ rel: 'canonical', href: String(cfg.public.siteUrl) }] })
 const app = useApp()
 const toast = useToast()
 const sync = useTextSync()
 const ta = useTemplateRef<HTMLTextAreaElement>('ta')
 const urlsOpen = ref(false)
 const now = ref(Date.now())
-setInterval(() => { now.value = Date.now() }, 15_000)
+let tick: ReturnType<typeof setInterval>
+onBeforeUnmount(() => clearInterval(tick))
 
 const urls = computed(() => (app.settings.urlsPanel ? findUrls(sync.text.value) : []))
 watch(() => urls.value.length, (n, o) => { if (n > 0 && o === 0 && app.settings.urlsAutoExpand) urlsOpen.value = true; if (n === 0) urlsOpen.value = false })
@@ -16,6 +20,7 @@ const fontClass = computed(() => ({ sans: 'font-sans', serif: 'font-serif', mono
 const statusText = computed(() => ({ idle: 'Start typing...', saving: 'Saving...', saved: sync.text.value ? 'Saved' : 'Start typing...', offline: 'Offline' })[sync.state.value])
 
 onMounted(async () => {
+  tick = setInterval(() => { now.value = Date.now() }, 15_000)
   sync.bind(() => ta.value)
   try { await sync.load() } catch { sync.state.value = 'offline' }
   const q = useRoute().query
@@ -43,6 +48,7 @@ const btn = 'btn !px-3'
 
 <template>
   <div class="pt-2 md:pt-3">
+    <ClientOnly>
     <div class="flex items-center gap-3 mb-3 flex-wrap">
       <div class="flex items-center gap-2 mr-auto min-w-0">
         <h1 class="text-lg md:text-xl text-ink/80 truncate" :class="sync.state.value === 'offline' ? 'text-accent-ink' : ''">{{ statusText }}</h1>
@@ -51,7 +57,7 @@ const btn = 'btn !px-3'
       <div class="flex gap-1.5 md:gap-2 w-full sm:w-auto" role="toolbar" aria-label="Text actions">
         <button :class="btn" class="flex-1 sm:flex-none" aria-label="Copy" @click="copy"><Icon name="copy" :size="17" /><span class="hidden sm:inline">Copy</span></button>
         <button v-if="app.settings.urlsPanel" :class="[btn, urlsOpen ? 'btn-soft' : '']" class="flex-1 sm:flex-none" aria-label="URLs" :aria-pressed="urlsOpen" @click="urlsOpen = !urlsOpen">
-          <Icon name="link" :size="17" /><span class="hidden sm:inline">URLs</span><span v-if="urls.length" class="text-xs bg-accent text-white rounded-full px-1.5 min-w-5 text-center">{{ urls.length }}</span></button>
+          <Icon name="link" :size="17" /><span class="hidden sm:inline">URLs</span><span v-if="urls.length" class="text-xs bg-[var(--accent-btn)] text-white rounded-full px-1.5 min-w-5 text-center">{{ urls.length }}</span></button>
         <button :class="btn" class="flex-1 sm:flex-none" aria-label="Upload files" @click="files?.pick()"><Icon name="upload" :size="17" /><span class="hidden sm:inline">Upload</span></button>
         <button :class="btn" class="flex-1 sm:flex-none" aria-label="Download text" @click="download"><Icon name="download" :size="17" /><span class="hidden sm:inline">Download</span></button>
         <button :class="btn" class="!px-2.5" aria-label="Reload from server" @click="sync.load()"><Icon name="refresh" :size="17" /></button>
@@ -74,9 +80,19 @@ const btn = 'btn !px-3'
     <FilesPanel ref="files" />
 
     <div id="ad-top-banner" class="min-h-0" />
-    <section class="mt-6 text-center text-sm text-muted max-w-2xl mx-auto px-2 space-y-1.5">
-      <p>Everything you type is shared with devices on your network. Use <button class="underline" @click="app.openSettings('link')">Link Device</button> to connect a phone on mobile data.</p>
-      <p>Files go directly between devices and are never stored on our servers.</p>
+    <template #fallback>
+      <div aria-hidden="true"><div class="h-[92px] sm:h-[52px] mb-0 flex items-start"><div class="h-8 w-40 rounded-lg bg-surface-2" /></div><div class="h-[46dvh] md:h-[52dvh] min-h-60 rounded-2xl bg-surface border border-line" /><div class="h-14" /></div>
+    </template>
+    </ClientOnly>
+
+    <section class="mt-10 max-w-3xl mx-auto px-1" aria-labelledby="how">
+      <h2 id="how" class="text-2xl font-bold tracking-tight text-center">Share between your devices in three steps</h2>
+      <ol class="mt-5 grid sm:grid-cols-3 gap-3 text-sm">
+        <li class="card p-4"><span class="size-8 rounded-full bg-accent-soft text-accent-ink grid place-items-center font-bold mb-2">1</span><strong>Open this page</strong><p class="text-muted mt-1">On any device on the same Wi-Fi or network. No sign-up, no install needed.</p></li>
+        <li class="card p-4"><span class="size-8 rounded-full bg-accent-soft text-accent-ink grid place-items-center font-bold mb-2">2</span><strong>Type or drop files</strong><p class="text-muted mt-1">Text appears everywhere instantly. Files go straight from device to device and are never stored on our servers.</p></li>
+        <li class="card p-4"><span class="size-8 rounded-full bg-accent-soft text-accent-ink grid place-items-center font-bold mb-2">3</span><strong>Link other networks</strong><p class="text-muted mt-1">Scan a QR code or enter a short code to bring a phone on mobile data into the same space.</p></li>
+      </ol>
+      <p class="text-center text-sm text-muted mt-5">Need privacy? <NuxtLink to="/chat" class="text-accent-ink underline">Start an encrypted chat room</NuxtLink> that disappears when everyone leaves. Anyone on your network shares the space, so avoid putting secrets in the shared text on public Wi-Fi.</p>
     </section>
   </div>
 </template>

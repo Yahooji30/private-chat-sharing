@@ -29,6 +29,9 @@ export async function buildApi() {
     trustProxy: env.TRUST_PROXY === 'true' ? true : env.TRUST_PROXY, bodyLimit: 256 * 1024,
   })
   app.decorate('redis', redis)
+  const routeTable: string[] = []
+  app.addHook('onRoute', r => { for (const m of [r.method].flat()) routeTable.push(`${m} ${r.url}`) })
+  app.decorate('routeTable', routeTable)
   await app.register(helmet, { contentSecurityPolicy: false })
   await app.register(cookie, { secret: env.COOKIE_SECRET })
   await app.register(rateLimit, {

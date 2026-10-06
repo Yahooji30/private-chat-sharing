@@ -7,7 +7,7 @@ import { resolveSpace, type Resolved } from '../../core/space'
 
 declare module 'fastify' {
   interface FastifyRequest { ctx: Resolved }
-  interface FastifyInstance { redis: Redis }
+  interface FastifyInstance { redis: Redis; routeTable: string[] }
   interface FastifyContextConfig { space?: boolean }
 }
 

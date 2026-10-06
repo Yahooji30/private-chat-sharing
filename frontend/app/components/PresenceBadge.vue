@@ -1,13 +1,15 @@
 <script setup lang="ts">
 const app = useApp()
 const open = ref(false)
+const mounted = ref(false)
+onMounted(() => { mounted.value = true })
 const icons: Record<string, string> = { phone: 'phone', tablet: 'tablet', desktop: 'desktop' }
 onClickOutside(useTemplateRef('root'), () => { open.value = false })
 </script>
 
 <template>
-  <div v-if="app.ready" ref="root" class="relative">
-    <button class="btn !px-2.5 gap-1.5" :aria-expanded="open" aria-label="Devices online" @click="open = !open">
+  <div v-if="mounted && app.ready" ref="root" class="relative">
+    <button class="btn !px-2.5 gap-1.5" :aria-expanded="open" :aria-label="`Devices online: ${Math.max(app.peers.length, app.online ? 1 : 0)}`" @click="open = !open">
       <span class="size-2 rounded-full" :class="app.online ? 'bg-ok' : 'bg-muted'" />
       <Icon name="users" :size="16" /><span class="text-sm tabular-nums">{{ Math.max(app.peers.length, app.online ? 1 : 0) }}</span>
     </button>

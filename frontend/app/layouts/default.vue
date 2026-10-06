@@ -17,7 +17,7 @@ const chatRoute = computed(() => route.path.startsWith('/c/'))
   <div class="min-h-dvh flex flex-col">
     <header class="sticky top-0 z-30 bg-bg/85 backdrop-blur border-b border-line/60 md:border-0" :style="{ paddingTop: 'var(--safe-t)' }">
       <div class="mx-auto max-w-6xl px-4 h-14 md:h-16 flex items-center gap-3">
-        <NuxtLink to="/" class="flex items-center gap-2 mr-auto md:mr-6" aria-label="Home">
+        <NuxtLink to="/" class="flex items-center gap-2 mr-auto md:mr-6">
           <img src="/icon.svg" alt="" width="34" height="34" class="rounded-[10px]">
           <span class="text-xl font-bold tracking-tight">{{ name }}<span class="text-accent">.</span></span>
         </NuxtLink>
@@ -36,7 +36,7 @@ const chatRoute = computed(() => route.path.startsWith('/c/'))
     </header>
 
     <main class="flex-1 w-full mx-auto max-w-6xl px-3 md:px-4" :class="chatRoute ? '' : 'pb-24 md:pb-6'">
-      <div v-if="!isOnline || (!app.online && app.ready)" class="mb-2 rounded-xl bg-warn/20 border border-warn/50 text-sm px-3 py-2 flex items-center gap-2" role="status">
+      <div v-if="!isOnline || (app.hasConnected && !app.online)" class="mb-2 rounded-xl bg-warn/20 border border-warn/50 text-sm px-3 py-2 flex items-center gap-2" role="status">
         <Icon name="wifi" :size="16" /> You are offline. Changes will sync when you reconnect.
       </div>
       <slot />
@@ -59,7 +59,7 @@ const chatRoute = computed(() => route.path.startsWith('/c/'))
       </div>
     </nav>
 
-    <SettingsModal />
+    <LazySettingsModal v-if="app.settingsOpen" />
     <ToastHost />
   </div>
 </template>

@@ -1,27 +1,25 @@
 # Sync
 
-Instant text and file sharing between devices on the same network, with device linking, public pages and an end-to-end encrypted private chat. Installable as a PWA, mobile first.
+Instant text and file sharing between devices on the same network, with device linking (code, QR, IP), public pages, an end-to-end encrypted private chat, a blog and an admin panel. Mobile first and installable as a PWA.
 
 Specs live in `docs/` (`00-MASTER.md`, `01-FEATURES.md`, `02-ARCHITECTURE.md`).
 
-## What is built
+## What is in it
 
-| Area | Status |
+| Area | Notes |
 |---|---|
-| Network space by hashed IP, device cookie, presence | done |
-| Live text sync, saved state, URLs panel, copy/download/clear | done |
-| P2P file sharing: block hashing, resumable multi-source download, OPFS storage, zip, preview | done |
-| Device linking: 8 character code, QR (show and scan), share link, IP link, unlink | done |
-| Settings (theme, font, URLs panel, auto-download, spellcheck, ads toggle stored) | done |
-| Public pages (markdown, sanitized, edit token, reports, view counter) | done |
-| Secure chat: password rooms, max 4, E2EE, no history for joiners, wipe when empty, resume | done |
-| PWA: manifest, icons, service worker, offline shell, share target | done |
-| Blog: articles, categories, tags, scheduling, search, SEO (JSON-LD, sitemap, robots, RSS), instant cache purge | done |
-| Media library: webp variants (480/960/1600), alt text, delete protection | done |
-| Admin panel: login with lockout and optional TOTP 2FA, CSRF, article editor with live preview, taxonomy, media, reports moderation, ad slots, site settings, admins, audit log, dashboard counts | done |
-| Ads: slots managed in admin, rendered only when enabled site-wide and not hidden by the visitor, never in chat | done |
+| Network space | A space per public IP (hashed, never stored raw), device cookie, presence list with device names |
+| Live text | Real-time sync, saved state, offline queue, last write wins, URLs panel, copy/download/clear |
+| Files | Peer to peer over WebRTC, 1 MiB blocks hashed and verified, multi-source, resumable after reload, OPFS storage, preview, zip all. Nothing is stored on the server |
+| Linking | 8 character code, QR (show and camera scan), share link, IP address; linked devices list, unlink. Online devices are moved into the new space at once |
+| Secure chat | Password rooms, max 4, E2EE (PBKDF2 + AES-GCM in the browser), ciphertext only in Redis, no history for joiners, wiped when empty, resume after a drop |
+| Public pages | Markdown, sanitized, edit token, reports, view counter |
+| Blog | Articles, categories, tags, scheduling, search, SEO (JSON-LD, sitemap, robots, RSS), cache purge on publish |
+| Admin | Sign in with lockout and optional 2FA, CSRF, article editor with live preview, media library, taxonomy, moderation, legal text and site settings, admins, audit log, dashboard counts |
+| PWA | Manifest, icons, service worker, offline shell, share target |
+| Ads | Not part of this module. The home page keeps `#ad-top-banner`, the layout `#ad-footer`, and the per-space "hide ads" setting is stored |
 
-Deviations from the spec: plain SQL migrations instead of Drizzle, Node 22 instead of 24.
+Deviations from the docs: plain SQL migrations instead of Drizzle, Node 22 instead of 24, admin Media page at `/library` (because `/media` serves images).
 
 ## Run locally
 
@@ -32,19 +30,42 @@ cp .env.example .env
 pnpm install
 pnpm db:migrate
 pnpm dev                       # api :4000, realtime :4001, web :3000
-cd admin && pnpm dev           # admin panel :5173 (first owner comes from ADMIN_BOOTSTRAP_EMAIL / ADMIN_BOOTSTRAP_PASSWORD in .env)
+cd admin && pnpm dev           # admin :5173; first owner = ADMIN_BOOTSTRAP_EMAIL / ADMIN_BOOTSTRAP_PASSWORD from .env
 ```
-Set `NUXT_PUBLIC_RT_URL=http://localhost:4001` for the web process in development so the browser talks to the realtime port directly.
+Run the web process with `NUXT_PUBLIC_RT_URL=http://localhost:4001` in development so the browser reaches the realtime port directly. Change the bootstrap password before any real deployment.
 
 ## Tests
 
 ```
-pnpm --filter @sync/backend test          # integration: real PostgreSQL + Redis (DB sync_test, redis db 1)
-pnpm --filter @sync/frontend test         # transfer engine with simulated peers, crypto, helpers
-cd frontend && npx playwright test --project=desktop --project=mobile --project=admin   # e2e: real browsers, WebRTC, chat, blog + admin flows (needs `pnpm dev` and the admin dev server running)
-E2E_BASE_URL=http://localhost:3100 npx playwright test --project=pwa   # against `nuxt build` + preview
+pnpm check                                  # typecheck all packages + backend integration + frontend unit tests
+cd frontend
+npx playwright test --project=desktop --project=mobile --project=admin   # needs `pnpm dev` and the admin dev server
+npx playwright test --project=net           # multi-network e2e, needs `pnpm build` and the web build served on :3100 (below)
+E2E_BASE_URL=http://localhost:3100 npx playwright test --project=pwa     # service worker and offline, same build
+node backend/scripts/loadtest.mjs 800 3 100 # realtime load test against a production-mode API/RT (see the script header)
 ```
+- Backend integration tests run against real PostgreSQL (`sync_test`) and Redis (db 1): access control on every admin route, sealed data at rest, no raw IPs, rate limits, socket flood, concurrent chat joins, linking, blog, media, admin.
+- Frontend unit tests cover the transfer engine with simulated peers (corrupt peer, dropped peer, resume), chat crypto and helpers.
+- The `net` project puts each browser behind its own simulated public IP (`frontend/e2e/netproxy.ts`) so the app really sees different networks: isolation, link by code, QR scan with a fake camera, link by IP, unlink, files and chat across networks, connection loss and resume, CSP.
+
+Serve the production web build for the `net` and `pwa` projects: `pnpm build && (cd frontend && PORT=3100 node .output/server/index.mjs)` with the API and realtime services running. Always use `pnpm build` (it cleans stale output).
 
 ## Deploy (single VPS)
 
-`pnpm build`, `pnpm db:migrate`, then `pm2 start deploy/ecosystem.config.cjs` behind `deploy/nginx.conf`. Back up PostgreSQL with `pg_dump`. Redis needs no persistence (`save ""`, `appendonly no`). Build the admin with `pnpm --filter @sync/admin build` and serve `admin/dist` on the admin host. Set `NUXT_INTERNAL_URL` and `REVALIDATE_SECRET` (same value for the API and the web process) so publishing purges cached pages at once. Set real `MASTER_KEY`, `IP_PEPPER`, `COOKIE_SECRET` (64 hex chars each) in `.env`.
+1. `pnpm build`, `pnpm db:migrate`.
+2. `pm2 start deploy/ecosystem.config.cjs` behind `deploy/nginx.conf` (public site, `/api`, `/socket.io`, `/media`, and the admin host serving `admin/dist`).
+3. Back up PostgreSQL with `deploy/backup.sh` (cron). Redis needs no persistence (`save ""`, `appendonly no`).
+4. `.env`: real `MASTER_KEY`, `IP_PEPPER`, `COOKIE_SECRET` (64 hex chars each), `NUXT_PUBLIC_SITE_URL`, and the same `REVALIDATE_SECRET` for the API and web process with `NUXT_INTERNAL_URL` set so publishing purges cached pages at once.
+5. The `/api/dev/*` endpoints only exist outside production.
+
+## Measured
+
+- Lighthouse (mobile, throttled, production build): performance 95 to 96, accessibility 100, SEO 100 on `/` and `/blog` (`/chat` is intentionally `noindex`). No layout shift.
+- Load test, production-mode services: 2400 sockets in 800 spaces plus 100 chat rooms of 4, zero errors; text relay p99 141 ms, chat relay p99 13 ms; realtime process 331 MB RSS.
+- `pnpm audit --prod`: two advisories remain (`braces`, `node-forge`), both inside Nuxt's build and dev tooling chain with no patched release; they are not part of the runtime server bundle.
+
+## Known limits
+
+- Mobile coverage is Chromium device emulation. iOS Safari and real phones were not available for testing.
+- Peer to peer across strict NATs needs a TURN relay (`TURN_ENABLED`, coturn); it is off by default.
+- Devices behind the same public IP share a space, including on public Wi-Fi and mobile carriers.

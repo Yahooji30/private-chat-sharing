@@ -36,7 +36,6 @@ async function copy(): Promise<void> { if (await copyText(url)) toast.ok('Link c
       <h1 class="text-3xl md:text-5xl font-bold tracking-tight leading-tight">{{ art.title }}</h1>
       <p class="text-sm text-muted mt-3"><span v-if="art.author">{{ art.author }} · </span><time :datetime="art.publishedAt ?? ''">{{ fmtDate(art.publishedAt) }}</time> · {{ art.readingMin }} min read</p>
       <BlogCover v-if="art.cover" :cover="art.cover" eager class="mt-6" />
-      <AdSlot slot="in-article" />
       <details v-if="art.toc.length" class="lg:hidden card p-4 mt-6" :open="tocOpen" @toggle="tocOpen = ($event.target as HTMLDetailsElement).open"><summary class="font-semibold cursor-pointer">On this page</summary>
         <ul class="mt-2 space-y-1.5 text-sm"><li v-for="t in art.toc" :key="t.id" :class="t.level === 3 ? 'pl-4' : ''"><a :href="`#${t.id}`" class="text-accent-ink hover:underline" @click="tocOpen = false">{{ t.text }}</a></li></ul></details>
       <div class="prose-page prose-article mt-6 text-[1.05rem]" v-html="art.html" />
@@ -48,7 +47,6 @@ async function copy(): Promise<void> { if (await copyText(url)) toast.ok('Link c
     <aside class="hidden lg:block"><div class="sticky top-24 space-y-4">
       <nav v-if="art.toc.length" class="card p-4" aria-label="Table of contents"><p class="font-semibold mb-2 text-sm">On this page</p>
         <ul class="space-y-1.5 text-sm"><li v-for="t in art.toc" :key="t.id" :class="t.level === 3 ? 'pl-3' : ''"><a :href="`#${t.id}`" class="text-muted hover:text-accent-ink">{{ t.text }}</a></li></ul></nav>
-      <AdSlot slot="sidebar" :height="250" />
     </div></aside>
   </article>
 </template>

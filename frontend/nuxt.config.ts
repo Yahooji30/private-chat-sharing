@@ -1,6 +1,14 @@
 import tailwindcss from '@tailwindcss/vite'
 
 const appName = process.env.NUXT_PUBLIC_APP_NAME ?? 'Sync'
+const isProd = process.env.NODE_ENV === 'production'
+const rtUrl = process.env.NUXT_PUBLIC_RT_URL ?? ''
+// Nuxt inlines its hydration payload, so scripts need 'unsafe-inline'. Everything else stays on this origin.
+const csp = [
+  "default-src 'self'", "script-src 'self' 'unsafe-inline'", "style-src 'self' 'unsafe-inline'", "img-src 'self' data: blob:", "media-src 'self' blob:", "font-src 'self' data:",
+  `connect-src 'self' ws: wss: ${rtUrl}`.trim(), "worker-src 'self' blob:", "frame-src blob:", "object-src 'none'", "base-uri 'self'", "form-action 'self'", "frame-ancestors 'none'",
+].join('; ')
+const securityHeaders = { 'Content-Security-Policy': csp, 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'strict-origin-when-cross-origin', 'Permissions-Policy': 'camera=(self), microphone=(), geolocation=()', 'X-Frame-Options': 'DENY' }
 
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
@@ -14,9 +22,10 @@ export default defineNuxtConfig({
     public: { appName, rtUrl: '', siteUrl: process.env.NUXT_PUBLIC_SITE_URL ?? 'http://localhost:3000' },
     revalidateSecret: process.env.REVALIDATE_SECRET ?? '',
   },
-  nitro: { prerender: { routes: ['/'], failOnError: false }, devProxy: { '/api': { target: 'http://127.0.0.1:4000/api', changeOrigin: false }, '/media': { target: 'http://127.0.0.1:4000/media', changeOrigin: false } } },
+  nitro: { compressPublicAssets: true, prerender: { routes: ['/', '/200.html'], failOnError: false }, devProxy: { '/api': { target: 'http://127.0.0.1:4000/api', changeOrigin: false }, '/media': { target: 'http://127.0.0.1:4000/media', changeOrigin: false } } },
   routeRules: {
-    '/': { ssr: false },
+    ...(isProd ? { '/**': { headers: securityHeaders } } : {}),
+    '/': { swr: 3600 },
     '/settings': { ssr: false }, '/public/**': { ssr: false }, '/link': { ssr: false }, '/chat': { ssr: false }, '/c/**': { ssr: false },
     '/p/**': { swr: 300 },
     '/blog/**': { swr: 600 }, '/blog': { swr: 600 }, '/privacy': { swr: 86400 }, '/terms': { swr: 86400 },
@@ -53,7 +62,9 @@ export default defineNuxtConfig({
       share_target: { action: '/?share=1', method: 'GET', params: { title: 'title', text: 'text', url: 'url' } },
     },
     workbox: {
-      navigateFallback: '/', navigateFallbackDenylist: [/^\/api/, /^\/socket\.io/],
+      navigateFallback: '/200.html', navigateFallbackDenylist: [/^\/api/, /^\/socket\.io/, /^\/blog/, /^\/p\//, /^\/privacy/, /^\/terms/, /^\/media/, /\.xml$/, /^\/robots\.txt/, /^\/_/],
+      // the module lists the SPA shell as the clean url "200" which the server does not serve; precache the real file
+      manifestTransforms: [(entries: { url: string }[]) => ({ manifest: entries.map(e => (e.url === '200' ? { ...e, url: '200.html' } : e)), warnings: [] as string[] })],
       globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
       runtimeCaching: [{ urlPattern: ({ url }: { url: URL }) => /^\/api\/(space\/me|settings|text)$/.test(url.pathname), handler: 'NetworkFirst', options: { cacheName: 'api-meta', networkTimeoutSeconds: 3 } }],
     },

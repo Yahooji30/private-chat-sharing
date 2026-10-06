@@ -3,7 +3,7 @@ import { Emitter } from '@socket.io/redis-emitter'
 import { ERR, linkIpSchema, linkRedeemSchema } from '@sync/shared'
 import { env } from '../../core/config/env'
 import { sql } from '../../core/db/client'
-import { deviceRoom, spaceRoom } from '../../core/emitter'
+import { deviceRoom, ipRoom, spaceRoom } from '../../core/emitter'
 import { AppError } from '../../core/lib/errors'
 import { base32, hashIp, sha256 } from '../../core/lib/crypto'
 import { isPrivateOrReserved, normalizeIp } from '../../core/lib/ip'
@@ -71,6 +71,7 @@ export function linkRoutes(app: FastifyInstance): void {
     await sql`insert into space_ips (ip_hash, space_id, kind) values (${h}, ${req.ctx.spaceId}, 'alias')
       on conflict (ip_hash) do update set space_id = excluded.space_id, kind = 'alias'`
     await invalidateIp(app.redis, h)
+    space().in(ipRoom(h)).disconnectSockets()
     space().to(spaceRoom(req.ctx.spaceId)).emit('link:joined', {})
     return { ok: true }
   })
@@ -86,7 +87,8 @@ export function linkRoutes(app: FastifyInstance): void {
     if (!/^[0-9a-f]{16}$/.test(req.params.id)) throw new AppError(ERR.BAD_REQUEST, 'Bad id', 400)
     const rows = await sql<{ ip_hash: string }[]>`delete from space_ips where space_id = ${req.ctx.spaceId} and kind = 'alias' and ip_hash like ${req.params.id + '%'} returning ip_hash`
     if (!rows.length) throw new AppError(ERR.NOT_FOUND, 'Network not found', 404)
-    for (const r of rows) await invalidateIp(app.redis, r.ip_hash)
+    for (const r of rows) { await invalidateIp(app.redis, r.ip_hash); space().in(ipRoom(r.ip_hash)).disconnectSockets() }
+    space().to(spaceRoom(req.ctx.spaceId)).emit('link:joined', {})
     return { ok: true }
   })
 }

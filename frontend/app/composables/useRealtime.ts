@@ -8,11 +8,14 @@ export function spaceSocket(): Socket {
   const rt = useRuntimeConfig().public.rtUrl as string
   space = io(`${rt || ''}/space`, { transports: ['websocket'], withCredentials: true, reconnectionDelayMax: 5000 })
   const app = useApp()
-  space.on('connect', () => { app.online = true })
+  space.on('connect', () => { app.online = true; app.hasConnected = true })
   space.on('disconnect', reason => { app.online = false; if (reason === 'io server disconnect') space?.connect() })
   space.on('presence:list', (l: Peer[]) => { app.peers = l })
   space.on('presence:rename', (m: { deviceId: string; name: string }) => { app.peers = app.peers.map(p => (p.deviceId === m.deviceId ? { ...p, name: m.name } : p)) })
   space.on('settings:changed', (s: typeof app.settings) => { app.settings = s })
+  // browsers can hold a dead socket for ~45 s after the network drops: react to the OS signal at once
+  window.addEventListener('offline', () => { app.online = false; space?.disconnect() })
+  window.addEventListener('online', () => { space?.connect() })
   space.on('link:revoked', () => { location.href = '/' })
   space.on('link:joined', () => { window.dispatchEvent(new Event('sync:linked-changed')) })
   return space

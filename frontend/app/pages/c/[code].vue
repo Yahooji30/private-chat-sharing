@@ -11,7 +11,7 @@ const blurOn = ref(false)
 const blurred = ref(false)
 const showShare = ref(false)
 const listEl = useTemplateRef<HTMLElement>('list')
-const palette = ['#e85a5a', '#3b82f6', '#16a34a', '#9333ea']
+const palette = ['#cf3f3f', '#2563eb', '#15803d', '#7e22ce']
 const soft = ['#fdeeee', '#e8f0fe', '#e7f6ec', '#f3e8fd']
 const mineIsCreator = computed(() => { try { return !!localStorage.getItem(`sync:chat:manage:${code}`) } catch { return false } })
 

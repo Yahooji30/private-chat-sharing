@@ -2,8 +2,6 @@ import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { getPublic, listCategories, listPublic, rssData, sitemapData, tagArchive } from '../../core/blog'
 import { sql } from '../../core/db/client'
-import { getSettings } from '../../core/settings'
-import { SPACE } from '../plugins/context'
 
 const cache = { config: { rateLimit: { max: 120, timeWindow: '1 minute' } } }
 const pageQ = z.object({ page: z.coerce.number().int().min(1).max(500).optional(), category: z.string().max(80).optional(), tag: z.string().max(80).optional(), q: z.string().max(100).optional() })
@@ -20,15 +18,7 @@ export function blogRoutes(app: FastifyInstance): void {
   app.get('/api/sitemap-data', cache, () => sitemapData())
 
   app.get('/api/site', async () => {
-    const rows = await sql<{ key: string; value: string }[]>`select key, value from site_settings where key not in ('privacy_md', 'terms_md', 'ads_enabled')`
+    const rows = await sql<{ key: string; value: string }[]>`select key, value from site_settings where key not in ('privacy_md', 'terms_md')`
     return Object.fromEntries(rows.map(r => [r.key, r.value]))
-  })
-
-  app.get('/api/ads', SPACE, async req => {
-    const [flag] = await sql<{ value: string }[]>`select value from site_settings where key = 'ads_enabled'`
-    const mine = await getSettings(req.ctx.spaceId)
-    if (flag?.value !== 'true' || mine.adsDisabled) return { enabled: false, slots: {} }
-    const rows = await sql<{ key: string; html: string }[]>`select key, html from ad_slots where enabled = true and html <> ''`
-    return { enabled: true, slots: Object.fromEntries(rows.map(r => [r.key, r.html])) }
   })
 }

@@ -152,18 +152,8 @@ test('moderation: a reported public page appears in the queue and unpublishing m
   await author.context().close()
 })
 
-test('ads and site settings: toggles persist and legal text renders on the site', async ({ page, browser }) => {
+test('site settings: legal text saved in admin renders on the public site', async ({ page, browser }) => {
   await signIn(page)
-  await page.goto(`${ADMIN}/ads`)
-  await page.getByLabel('HTML for footer').fill('<p id="e2e-ad">Sponsored</p>')
-  await page.getByLabel('Enable footer').check()
-  await page.getByLabel('HTML for footer').locator('xpath=..').getByRole('button', { name: 'Save slot' }).click()
-  await expect(page.getByText('Saved', { exact: true })).toBeVisible()
-  const global = page.getByRole('checkbox', { name: /Show ads site-wide/ })
-  await page.waitForLoadState('networkidle')
-  if (await global.isChecked()) { await global.uncheck(); await expect(page.getByText('Ads disabled')).toBeVisible() }
-  await global.check()
-  await expect(page.getByText('Ads enabled')).toBeVisible()
   await page.goto(`${ADMIN}/settings`)
   await page.getByRole('tab', { name: 'legal' }).click()
   await page.getByLabel('Privacy policy (Markdown)').fill('# Custom privacy\n\nWe keep nothing.')
@@ -171,11 +161,5 @@ test('ads and site settings: toggles persist and legal text renders on the site'
   await expect(page.getByText('Settings saved')).toBeVisible()
   const v = await (await browser.newContext()).newPage()
   await expect.poll(async () => (await v.request.get(`${SITE}/privacy`)).text(), { timeout: 10_000 }).toContain('Custom privacy')
-  await v.goto(`${SITE}/blog`)
-  await expect(v.locator('#e2e-ad')).toBeVisible()
-  await page.goto(`${ADMIN}/ads`)
-  await expect(page.getByRole('checkbox', { name: /Show ads site-wide/ })).toBeChecked()
-  await page.getByRole('checkbox', { name: /Show ads site-wide/ }).uncheck()
-  await expect(page.getByText('Ads disabled')).toBeVisible()
   await v.close()
 })

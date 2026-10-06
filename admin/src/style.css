@@ -1,6 +1,6 @@
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
-:root { --bg: #f6f6f7; --surface: #fff; --surface-2: #f1f1f3; --line: #e5e5e8; --text: #1b1b1f; --muted: #6b6b76; --accent: #e85a5a; --accent-soft: #fdeeee; --accent-ink: #c53b3b; --ok: #3fa56b; --warn: #d99a1b; }
+:root { --bg: #f6f6f7; --surface: #fff; --surface-2: #f1f1f3; --line: #e5e5e8; --text: #1b1b1f; --muted: #6b6b76; --accent: #e85a5a; --accent-btn: #cf3f3f; --accent-soft: #fdeeee; --accent-ink: #c53b3b; --ok: #3fa56b; --warn: #d99a1b; }
 .dark { --bg: #111113; --surface: #1a1a1e; --surface-2: #232328; --line: #2d2d34; --text: #f2f2f4; --muted: #9a9aa6; --accent: #f06b6b; --accent-soft: #3a2224; --accent-ink: #ff8c8c; }
 @theme inline { --color-bg: var(--bg); --color-surface: var(--surface); --color-surface-2: var(--surface-2); --color-line: var(--line); --color-ink: var(--text); --color-muted: var(--muted); --color-accent: var(--accent); --color-accent-soft: var(--accent-soft); --color-accent-ink: var(--accent-ink); --color-ok: var(--ok); --color-warn: var(--warn); --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif; }
 html { background: var(--bg); color: var(--text); font-family: var(--font-sans); color-scheme: light; }
@@ -11,7 +11,7 @@ body { min-height: 100dvh; }
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; min-height: 38px; padding: 0 .85rem; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); font-weight: 500; font-size: .875rem; white-space: nowrap; transition: background .15s, transform .05s; }
 .btn:hover { background: var(--surface-2); } .btn:active { transform: scale(.97); } .btn[disabled] { opacity: .5; pointer-events: none; }
-.btn-accent { background: var(--accent); border-color: var(--accent); color: #fff; } .btn-accent:hover { background: var(--accent-ink); }
+.btn-accent { background: var(--accent-btn); border-color: var(--accent-btn); color: #fff; } .btn-accent:hover { background: #b93232; border-color: #b93232; }
 .btn-danger { color: var(--accent-ink); }
 .input { width: 100%; min-height: 40px; padding: .5rem .75rem; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); font-size: 16px; }
 @media (min-width: 768px) { .input { font-size: 14px; } }

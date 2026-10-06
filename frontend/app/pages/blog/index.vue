@@ -30,6 +30,5 @@ const rest = computed(() => (page.value === 1 ? (data.value?.items.slice(1) ?? [
     <BlogCard v-if="featured" :post="featured" big class="mb-5" />
     <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5"><BlogCard v-for="p in rest" :key="p.slug" :post="p" /></div>
     <BlogPager v-if="data" :page="data.page" :pages="data.pages" base="/blog" />
-    <AdSlot slot="footer" />
   </div>
 </template>

@@ -105,6 +105,11 @@ export function useChat(code: string) {
     })
   }
 
+  if (import.meta.client) {
+    useEventListener(window, 'offline', () => { if (phase.value === 'live') { phase.value = 'reconnecting'; sock?.disconnect() } })
+    useEventListener(window, 'online', () => { if (phase.value === 'reconnecting') { resumeTries = 0; retry() } })
+  }
+
   function retry(): void {
     if (left || !token) { phase.value = 'lost'; return }
     if (++resumeTries > 8) { phase.value = 'lost'; wipe(); return }
