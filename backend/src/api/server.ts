@@ -13,10 +13,12 @@ import { newRedis } from '../core/redis/client'
 import { K } from '../core/redis/keys'
 import { adminAuth } from './modules/admin/auth'
 import { contentRoutes } from './modules/admin/content'
+import { adminEngageRoutes } from './modules/admin/engage'
 import { mediaRoutes } from './modules/admin/media'
 import { opsRoutes } from './modules/admin/ops'
 import { blogRoutes } from './modules/blog'
 import { chatRoutes } from './modules/chat'
+import { engageRoutes } from './modules/engage'
 import { linkRoutes } from './modules/link'
 import { pageRoutes } from './modules/pages'
 import { spaceRoutes } from './modules/space'
@@ -53,8 +55,10 @@ export async function buildApi() {
   pageRoutes(app)
   chatRoutes(app)
   blogRoutes(app)
+  engageRoutes(app)
   adminAuth(app)
   contentRoutes(app)
+  adminEngageRoutes(app)
   mediaRoutes(app)
   opsRoutes(app)
   mkdirSync(resolve(env.MEDIA_DIR), { recursive: true })

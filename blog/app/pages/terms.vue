@@ -1,6 +1,6 @@
 <script setup lang="ts">
-useHead({ title: 'Terms' })
 const name = useRuntimeConfig().public.appName
+await usePageSeo('terms', { title: `Terms | ${name}`, description: `The terms of using ${name}.`, path: '/terms' })
 const { data: site } = await useBlogFetch<Record<string, string>>('site', () => '/site')
 const custom = computed(() => site.value?.terms_html ?? '')
 </script>

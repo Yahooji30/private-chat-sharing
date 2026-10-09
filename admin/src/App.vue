@@ -12,7 +12,8 @@ const open = ref(false)
 const dark = ref(document.documentElement.classList.contains('dark'))
 const nav = computed(() => [
   { to: '/', label: 'Dashboard', icon: 'dash' }, { to: '/articles', label: 'Articles', icon: 'file' }, { to: '/categories', label: 'Categories', icon: 'folder' }, { to: '/tags', label: 'Tags', icon: 'tag' },
-  { to: '/library', label: 'Media', icon: 'image' }, { to: '/reports', label: 'Reports', icon: 'flag' }, { to: '/settings', label: 'Site settings', icon: 'cog' },
+  { to: '/library', label: 'Media', icon: 'image' }, { to: '/reports', label: 'Reports', icon: 'flag' },
+  { to: '/faqs', label: 'FAQ', icon: 'help' }, { to: '/feedback', label: 'Feedback', icon: 'inbox' }, { to: '/seo', label: 'SEO', icon: 'search' }, { to: '/settings', label: 'Site settings', icon: 'cog' },
   ...(auth.me?.role === 'owner' ? [{ to: '/admins', label: 'Admins', icon: 'users' }] : []), { to: '/audit', label: 'Audit log', icon: 'list' }, { to: '/account', label: 'Account', icon: 'user' },
 ])
 const active = (to: string): boolean => (to === '/' ? route.path === '/' : route.path.startsWith(to))

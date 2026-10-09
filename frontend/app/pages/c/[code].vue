@@ -81,7 +81,7 @@ async function destroy(): Promise<void> {
           <p class="text-xs text-muted flex items-center gap-1.5"><span class="flex gap-0.5"><span v-for="(on, i) in chat.members.slots" :key="i" class="size-2 rounded-full" :style="{ background: on ? palette[color(i)] : 'var(--line)' }" /></span>{{ chat.members.count }}/4 in room<span v-if="chat.phase.value === 'reconnecting'" class="text-warn"> · reconnecting...</span></p></div>
         <div class="ml-auto flex gap-1.5">
           <button class="btn !px-2.5" :aria-pressed="blurOn" :class="blurOn ? 'btn-soft' : ''" aria-label="Blur when tab loses focus" title="Blur when tab loses focus" @click="blurOn = !blurOn"><Icon name="mask" :size="17" /></button>
-          <button class="btn !px-2.5" aria-label="Invite" @click="showShare = !showShare"><Icon name="share" :size="17" /></button>
+          <button class="btn !px-2.5 sm:!px-3" aria-label="Invite" data-testid="invite" @click="showShare = !showShare"><Icon name="share" :size="17" /><span class="hidden sm:inline">Invite</span></button>
           <button v-if="mineIsCreator" class="btn !px-2.5" aria-label="Delete room" @click="destroy"><Icon name="trash" :size="17" /></button>
           <button class="btn btn-accent" @click="leave">Leave<span class="hidden sm:inline">&nbsp;&amp; wipe</span></button>
         </div>

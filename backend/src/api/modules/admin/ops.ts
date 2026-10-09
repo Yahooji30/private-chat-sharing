@@ -41,6 +41,7 @@ export function opsRoutes(app: FastifyInstance): void {
       chatRoomsTotal: await one(sql`select count(*)::int as n from chat_rooms`),
       publicPages: await one(sql`select count(*)::int as n from public_pages where status = 'published'`),
       openReports: await one(sql`select count(*)::int as n from page_reports where resolved_at is null`),
+      newFeedback: await one(sql`select count(*)::int as n from feedback where status = 'new'`),
       articles: Object.fromEntries(byStatus.map(r => [r.status, r.n])),
     }
   })
@@ -77,6 +78,7 @@ export function opsRoutes(app: FastifyInstance): void {
     const b = siteSettingsSchema.parse(req.body)
     for (const [k, v] of Object.entries(b)) {
       if (!(SITE_KEYS as readonly string[]).includes(k)) continue
+      if (k === 'chat_share_message' && v.length > 500) throw new AppError(ERR.BAD_REQUEST, 'Invite message is too long (500 characters max)', 400)
       await sql`insert into site_settings (key, value) values (${k}, ${v}) on conflict (key) do update set value = excluded.value`
       if (k === 'privacy_md' || k === 'terms_md') await sql`insert into site_settings (key, value) values (${k.replace('_md', '_html')}, ${renderMarkdown(v)}) on conflict (key) do update set value = excluded.value`
     }

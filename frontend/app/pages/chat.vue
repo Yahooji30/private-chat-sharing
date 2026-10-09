@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { strength } from '~/lib/crypto/chat'
-useHead({ title: 'Secure Chat', meta: [{ name: 'robots', content: 'noindex' }] })
+useAppSeo('chat', { title: 'Secure Chat', description: 'Start a private, end-to-end encrypted chat room in seconds. Password protected, up to four people, no accounts and no history.' })
 const toast = useToast()
 const pw = ref('')
 const custom = ref('')
