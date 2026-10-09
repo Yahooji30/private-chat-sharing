@@ -1,14 +1,15 @@
 <script setup lang="ts">
 const route = useRoute()
+// remount per page so the canonical and prev/next tags follow ?page=
+definePageMeta({ key: r => r.fullPath })
 const page = computed(() => Math.max(1, Number(route.query.page) || 1))
 const cfg = useRuntimeConfig()
 const { data } = await useBlogFetch<ListResult>('blog:list', () => `/blog/articles?page=${page.value}`)
 const { data: cats } = await useBlogFetch<{ slug: string; name: string; count: number }[]>('blog:cats', () => '/blog/categories')
-const title = `Blog | ${cfg.public.appName}`
-useSeoMeta({ title, description: `Guides, tips and news from ${cfg.public.appName}.`, ogTitle: title, ogType: 'website' })
+await usePageSeo('blog', { title: `Blog | ${cfg.public.appName}`, description: `Guides, tips and news from ${cfg.public.appName}.`, path: page.value > 1 ? `/?page=${page.value}` : '/', adminCanonical: page.value === 1 })
 const links = computed(() => {
   const base = `${cfg.public.siteUrl}/`
-  const l: Record<string, string>[] = [{ rel: 'canonical', href: `${base}${page.value > 1 ? `?page=${page.value}` : ''}` }, { rel: 'alternate', type: 'application/rss+xml', title: 'RSS', href: '/rss.xml' }]
+  const l: Record<string, string>[] = [{ rel: 'alternate', type: 'application/rss+xml', title: 'RSS', href: '/rss.xml' }]
   if (page.value > 1) l.push({ rel: 'prev', href: page.value > 2 ? `${base}?page=${page.value - 1}` : base })
   if (data.value && page.value < data.value.pages) l.push({ rel: 'next', href: `${base}?page=${page.value + 1}` })
   return l

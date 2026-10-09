@@ -1,6 +1,6 @@
 <script setup lang="ts">
-useHead({ title: 'Privacy' })
 const name = useRuntimeConfig().public.appName
+await usePageSeo('privacy', { title: `Privacy | ${name}`, description: `How ${name} handles your data: no raw IP addresses, encrypted text, peer-to-peer files and end-to-end encrypted chat.`, path: '/privacy' })
 const { data: site } = await useBlogFetch<Record<string, string>>('site', () => '/site')
 const custom = computed(() => site.value?.privacy_html ?? '')
 </script>

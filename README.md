@@ -7,7 +7,7 @@ Instant text and file sharing between devices on the same network, with device l
 | Folder | What | Port | Rendering |
 |---|---|---|---|
 | `frontend/` | The app: text, files, linking, chat, public page editor, settings | 3000 | SPA (no server rendering) |
-| `blog/` | Blog, public pages (`/p/<slug>`), privacy and terms, sitemap, RSS | 3001 | SSR for SEO |
+| `blog/` | Blog, features, FAQ, feedback, public pages (`/p/<slug>`), privacy and terms, sitemap, RSS | 3001 | SSR for SEO |
 | `admin/` | Admin panel | 5173 (dev) | SPA, static build |
 | `backend/` | API (4000) and realtime (4001) | | |
 
@@ -28,7 +28,12 @@ Specs live in `docs/` (`00-MASTER.md`, `01-FEATURES.md`, `02-ARCHITECTURE.md`).
 | Secure chat | Password rooms, max 4, E2EE (PBKDF2 + AES-GCM in the browser), ciphertext only in Redis, no history for joiners, wiped when empty, resume after a drop |
 | Public pages | Markdown, sanitized, edit token, reports, view counter |
 | Blog | Articles, categories, tags, scheduling, search, SEO (JSON-LD, sitemap, robots, RSS), cache purge on publish |
-| Admin | Sign in with lockout and optional 2FA, CSRF, article editor with live preview, media library, taxonomy, moderation, legal text and site settings, admins, audit log, dashboard counts |
+| Admin | Sign in with lockout and optional 2FA, CSRF, article editor with live preview, media library, taxonomy, moderation, legal text and site settings, admins, audit log, dashboard counts, plus the FAQ, feedback and SEO managers below |
+| FAQ | `/faq` on the blog site. Questions are written in the admin (Markdown answers, groups, ordering with up and down buttons, hide or show). Rendered on the server with `FAQPage` structured data |
+| Features | `/features` on the blog site: what the product does, with `WebApplication` structured data |
+| Feedback | `/feedback` form (star rating, message, optional name and email; honeypot and 5 per hour per network). Admin inbox with new/read/archived, average rating, and a per-message switch to show it publicly (name, rating and message only, never the email) |
+| SEO per page | Admin > SEO edits title, description, keywords, social title/description/image, canonical and noindex for the app home and secure chat pages and for the blog, features, FAQ, feedback, privacy and terms pages. The blog site renders them on the server; the app injects them into its first HTML (`frontend/server/plugins/seo.ts`) so crawlers and link previews see them. Noindex pages leave the sitemap. Articles keep their own SEO fields |
+| Chat invite message | The Invite sheet in a chat room sends a ready-made message with the room link through WhatsApp, Telegram, email, SMS, the phone's share sheet or copy. Wording is editable in Admin > Site settings (`{link}` marks where the link goes); the default is "I have sent you a secret message. Please click on this link, use the password ** and read the message." The password is never part of it |
 | PWA | Manifest, icons, service worker, offline shell, share target |
 | Ads | Not part of this module. The home page keeps `#ad-top-banner`, the layout `#ad-footer`, and the per-space "hide ads" setting is stored |
 

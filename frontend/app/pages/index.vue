@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { findUrls } from '~/utils/format'
 
-useHead({ title: `${useRuntimeConfig().public.appName}: share text and files across your devices` })
+useAppSeo('home', { title: `${useRuntimeConfig().public.appName}: share text and files across your devices` })
 const app = useApp()
 const toast = useToast()
 const sync = useTextSync()

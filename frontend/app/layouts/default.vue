@@ -10,6 +10,8 @@ const nav = [
 const active = (to: string): boolean => (to === '/' ? route.path === '/' : route.path.startsWith(to) || (to === '/chat' && route.path.startsWith('/c/')))
 const isOnline = useOnline()
 const external = computed(() => (app.blogUrl ? [{ href: `${app.blogUrl}/`, label: 'Blog', icon: 'file' }] : []))
+// content pages live on the SEO site; the phone's bottom bar is full, so these two get a place in the desktop bar and the footer
+const more = computed(() => (app.blogUrl ? [{ href: `${app.blogUrl}/features`, label: 'Features', icon: 'check' }, { href: `${app.blogUrl}/faq`, label: 'FAQ', icon: 'alert' }] : []))
 const chatRoute = computed(() => route.path.startsWith('/c/'))
 </script>
 
@@ -26,7 +28,7 @@ const chatRoute = computed(() => route.path.startsWith('/c/'))
             :class="active(n.to) ? 'bg-accent-soft text-accent-ink border-accent/40' : 'border-transparent text-ink/80 hover:bg-surface-2'">
             <Icon :name="n.icon" :size="16" />{{ n.label }}
           </NuxtLink>
-          <a v-for="e in external" :key="e.href" :href="e.href" class="px-3.5 h-10 inline-flex items-center gap-2 rounded-xl border border-transparent text-[0.95rem] font-medium text-ink/80 hover:bg-surface-2"><Icon :name="e.icon" :size="16" />{{ e.label }}</a>
+          <a v-for="e in [...more, ...external]" :key="e.href" :href="e.href" class="px-3.5 h-10 inline-flex items-center gap-2 rounded-xl border border-transparent text-[0.95rem] font-medium text-ink/80 hover:bg-surface-2"><Icon :name="e.icon" :size="16" />{{ e.label }}</a>
         </nav>
         <PresenceBadge />
         <button class="btn !px-0 w-10" aria-label="Toggle theme" @click="app.toggleTheme()">
@@ -36,15 +38,15 @@ const chatRoute = computed(() => route.path.startsWith('/c/'))
       </div>
     </header>
 
-    <main class="flex-1 w-full mx-auto max-w-6xl px-3 md:px-4" :class="chatRoute ? '' : 'pb-24 md:pb-6'">
+    <main class="flex-1 w-full mx-auto max-w-6xl px-3 md:px-4" :class="chatRoute ? '' : 'pb-6'">
       <div v-if="!isOnline || (app.hasConnected && !app.online)" class="mb-2 rounded-xl bg-warn/20 border border-warn/50 text-sm px-3 py-2 flex items-center gap-2" role="status">
         <Icon name="wifi" :size="16" /> You are offline. Changes will sync when you reconnect.
       </div>
       <slot />
     </main>
 
-    <footer class="hidden md:block text-center text-xs text-muted py-4">
-      <template v-if="app.blogUrl"><a :href="`${app.blogUrl}/privacy`" class="hover:underline">Privacy</a> · <a :href="`${app.blogUrl}/terms`" class="hover:underline">Terms</a></template>
+    <footer class="text-center text-xs text-muted pt-2 pb-24 md:py-4" :class="chatRoute ? 'hidden' : ''">
+      <template v-if="app.blogUrl"><a :href="`${app.blogUrl}/features`" class="hover:underline">Features</a> · <a :href="`${app.blogUrl}/faq`" class="hover:underline">FAQ</a> · <a :href="`${app.blogUrl}/feedback`" class="hover:underline">Feedback</a> · <a :href="`${app.blogUrl}/privacy`" class="hover:underline">Privacy</a> · <a :href="`${app.blogUrl}/terms`" class="hover:underline">Terms</a></template>
       <div id="ad-footer" />
     </footer>
 

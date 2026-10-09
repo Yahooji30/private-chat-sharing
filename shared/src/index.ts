@@ -143,5 +143,60 @@ export const adminLoginSchema = z.object({ email: z.string().email().max(120), p
 export const adminTotpSchema = z.object({ pendingToken: z.string().min(10).max(100), code: z.string().regex(/^\d{6}$/) })
 export const passwordSchema = z.string().min(12).max(200)
 export const adminCreateSchema = z.object({ email: z.string().email().max(120), name: z.string().trim().min(1).max(60), password: passwordSchema, role: z.enum(['owner', 'admin']).default('admin') })
-export const SITE_KEYS = ['site_name', 'tagline', 'default_og_media_id', 'social_x', 'social_facebook', 'social_instagram', 'social_youtube', 'analytics_id', 'privacy_md', 'terms_md'] as const
+export const SITE_KEYS = ['site_name', 'tagline', 'default_og_media_id', 'social_x', 'social_facebook', 'social_instagram', 'social_youtube', 'analytics_id', 'chat_share_message', 'privacy_md', 'terms_md'] as const
 export const siteSettingsSchema = z.partialRecord(z.enum(SITE_KEYS), z.string().max(60_000))
+
+// ---- FAQ, feedback, per-page SEO, chat invite message ----
+export const faqInputSchema = z.object({
+  question: z.string().trim().min(3).max(300),
+  answer: z.string().trim().min(1).max(5000),
+  category: z.string().trim().max(60).default(''),
+  published: z.boolean().default(true),
+})
+export type FaqInput = z.infer<typeof faqInputSchema>
+export const faqReorderSchema = z.object({ ids: z.array(z.string().max(40)).min(1).max(500) })
+
+export const FEEDBACK_STATUS = ['new', 'read', 'archived'] as const
+export const feedbackInputSchema = z.object({
+  name: z.string().trim().max(60).default(''),
+  email: z.union([z.literal(''), z.string().trim().email().max(120)]).default(''),
+  rating: z.number().int().min(1).max(5),
+  message: z.string().trim().min(5).max(2000),
+  /** honeypot: real visitors never fill this in */
+  website: z.string().max(200).optional(),
+})
+export const feedbackUpdateSchema = z.object({ status: z.enum(FEEDBACK_STATUS).optional(), public: z.boolean().optional() })
+
+/** Every page whose search-engine tags the admin can edit. `site` = which web app serves it. */
+export const SEO_PAGES = [
+  { key: 'home', label: 'App: Home', site: 'app', path: '/' },
+  { key: 'chat', label: 'App: Secure chat', site: 'app', path: '/chat' },
+  { key: 'blog', label: 'Site: Blog', site: 'site', path: '/' },
+  { key: 'features', label: 'Site: Features', site: 'site', path: '/features' },
+  { key: 'faq', label: 'Site: FAQ', site: 'site', path: '/faq' },
+  { key: 'feedback', label: 'Site: Feedback', site: 'site', path: '/feedback' },
+  { key: 'privacy', label: 'Site: Privacy', site: 'site', path: '/privacy' },
+  { key: 'terms', label: 'Site: Terms', site: 'site', path: '/terms' },
+] as const
+export type SeoKey = (typeof SEO_PAGES)[number]['key']
+export const SEO_KEYS = SEO_PAGES.map(p => p.key) as [SeoKey, ...SeoKey[]]
+export const seoInputSchema = z.object({
+  title: z.string().trim().max(120).default(''),
+  description: z.string().trim().max(320).default(''),
+  keywords: z.string().trim().max(300).default(''),
+  ogTitle: z.string().trim().max(120).default(''),
+  ogDescription: z.string().trim().max(320).default(''),
+  ogMediaId: z.string().max(40).nullable().optional(),
+  canonical: z.union([z.literal(''), z.string().trim().max(300).regex(/^https?:\/\/\S+$/, 'Must start with http:// or https://')]).default(''),
+  noindex: z.boolean().default(false),
+})
+export type SeoInput = z.infer<typeof seoInputSchema>
+/** What the public `GET /api/seo` returns per page (only pages the admin has filled in). */
+export interface SeoEntry { title: string; description: string; keywords: string; ogTitle: string; ogDescription: string; ogImage: string; canonical: string; noindex: boolean }
+
+export const DEFAULT_CHAT_SHARE_MESSAGE = 'I have sent you a secret message. Please click on this link, use the password ** and read the message.'
+/** Builds the text that is sent through WhatsApp and friends: the admin's template plus the room link on its own line. */
+export function chatShareText(template: string | undefined, link: string): string {
+  const t = (template ?? '').trim() || DEFAULT_CHAT_SHARE_MESSAGE
+  return t.includes('{link}') ? t.replaceAll('{link}', link) : `${t}\n\n${link}`
+}
