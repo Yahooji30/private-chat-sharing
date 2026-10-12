@@ -31,7 +31,7 @@ async function del(r: Row): Promise<void> {
 
 <template>
   <div class="space-y-4">
-    <div class="flex items-center gap-3"><h1 class="text-2xl font-bold mr-auto">Articles</h1><button class="btn btn-accent" data-testid="new-article" @click="router.push('/articles/new')">New article</button></div>
+    <div class="flex items-center gap-3"><h1 class="text-2xl font-semibold mr-auto">Articles</h1><button class="btn btn-accent" data-testid="new-article" @click="router.push('/articles/new')">New article</button></div>
     <div class="grid sm:grid-cols-3 gap-2">
       <input v-model="f.q" class="input" placeholder="Search title" aria-label="Search">
       <select v-model="f.status" class="input" aria-label="Status"><option value="">All statuses</option><option>draft</option><option>scheduled</option><option>published</option><option>archived</option></select>

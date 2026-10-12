@@ -49,7 +49,7 @@ const meter = (n: number, max: number): string => (n === 0 ? 'text-muted' : n > 
 
 <template>
   <div class="space-y-4 max-w-4xl">
-    <h1 class="text-2xl font-bold">SEO</h1>
+    <h1 class="text-2xl font-semibold">SEO</h1>
     <p class="text-sm text-muted">What search engines and social networks show for each page. Anything left empty uses the page's built-in text, so you only fill in what you want to change.</p>
 
     <div v-for="g in groups" :key="g[0]"><p class="label text-muted">{{ g[0] }}</p>

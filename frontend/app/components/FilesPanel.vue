@@ -49,8 +49,8 @@ async function openPreview(i: FileItem): Promise<void> {
   if (i.entry.mime.startsWith('text/')) view.text = (await files.previewText(i.entry.fileId)) ?? ''
   else view.url = (await files.previewUrl(i.entry.fileId)) ?? ''
 }
-async function confirmClear(): Promise<void> { if (confirm('Remove all shared files from every device?')) await files.clearAll() }
-async function confirmRemove(i: FileItem): Promise<void> { if (confirm(`Remove ${i.entry.name} from every device?`)) await files.remove(i.entry.fileId) }
+async function confirmClear(): Promise<void> { if (await confirmDialog('Remove all files?', 'Every shared file is removed from all of your devices.', { confirmLabel: 'Remove all' })) await files.clearAll() }
+async function confirmRemove(i: FileItem): Promise<void> { if (await confirmDialog('Remove this file?', `${i.entry.name} is removed from every device.`, { confirmLabel: 'Remove' })) await files.remove(i.entry.fileId) }
 
 const label = (i: FileItem): string => {
   switch (i.status) {

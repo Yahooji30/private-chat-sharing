@@ -34,9 +34,9 @@ async function send(): Promise<void> {
   if (!await chat.send(t)) { draft.value = t; toast.err('Message not sent') }
 }
 function onKey(e: KeyboardEvent): void { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void send() } }
-function leave(): void { if (confirm('Leave and wipe this chat from your screen?')) { chat.leave(); void navigateTo('/chat') } }
+async function leave(): Promise<void> { if (await confirmDialog('Leave this chat?', 'The conversation is wiped from your screen. Others stay in the room.', { confirmLabel: 'Leave and wipe' })) { chat.leave(); void navigateTo('/chat') } }
 async function destroy(): Promise<void> {
-  if (!confirm('Delete this room for everyone?')) return
+  if (!await confirmDialog('Delete this room?', 'The room and its messages are deleted for everyone in it.', { confirmLabel: 'Delete room' })) return
   try {
     const manageToken = localStorage.getItem(`sync:chat:manage:${code}`) ?? ''
     await api(`/chat/rooms/${code}/manage`, { method: 'POST', body: { action: 'delete', manageToken } })

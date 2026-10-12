@@ -3,17 +3,18 @@ import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import { api } from '../api'
 import MediaGrid, { type MediaItem } from '../components/MediaGrid.vue'
+import RichEditor from '../components/RichEditor.vue'
 import { confirmDialog, fail, ok } from '../ui'
 
 const route = useRoute(), router = useRouter()
 const isNew = computed(() => route.params.id === 'new')
 const id = ref<string | null>(isNew.value ? null : String(route.params.id))
 const f = reactive({ title: '', slug: '', excerpt: '', body: '', coverMediaId: null as string | null, ogMediaId: null as string | null, categoryId: '' as string | null, tags: [] as string[], seoTitle: '', seoDescription: '', status: 'draft', publishAt: '' })
-const slugLocked = ref(false), tagInput = ref(''), html = ref(''), saving = ref(false), dirty = ref(false), loaded = ref(isNew.value)
+const slugLocked = ref(false), tagInput = ref(''), saving = ref(false), dirty = ref(false), loaded = ref(isNew.value)
 const cats = ref<{ id: string; name: string }[]>([]), allTags = ref<{ name: string }[]>([])
 const picker = ref<null | 'cover' | 'og' | 'inline'>(null)
 const covers = reactive<Record<string, string>>({})
-const ta = ref<HTMLTextAreaElement | null>(null)
+const rich = ref<InstanceType<typeof RichEditor> | null>(null)
 const scheduling = ref(false)
 
 const slugify = (s: string): string => s.normalize('NFKD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80)
@@ -58,34 +59,17 @@ onMounted(load)
 
 watch(() => f.title, t => { if (!slugLocked.value) f.slug = slugify(t) })
 watch(f, () => { if (loaded.value) dirty.value = true }, { deep: true })
-let prevT: ReturnType<typeof setTimeout>
-watch(() => f.body, b => { clearTimeout(prevT); prevT = setTimeout(async () => { try { html.value = (await api<{ html: string }>('/admin/articles/preview', { method: 'POST', body: { body: b } })).html } catch { /* preview is best effort */ } }, 500) })
 const auto = setInterval(() => { if (dirty.value && f.status === 'draft' && f.title.trim()) void save('draft', true) }, 20_000)
 const beforeUnload = (e: BeforeUnloadEvent): void => { if (dirty.value) e.preventDefault() }
 window.addEventListener('beforeunload', beforeUnload)
 onBeforeUnmount(() => { clearInterval(auto); window.removeEventListener('beforeunload', beforeUnload) })
 onBeforeRouteLeave(async () => (dirty.value ? await confirmDialog('Leave without saving?', 'You have unsaved changes in this article.') : true))
 
-function wrap(before: string, after = before, placeholder = 'text'): void {
-  const el = ta.value; if (!el) return
-  const { selectionStart: s, selectionEnd: e } = el
-  const sel = f.body.slice(s, e) || placeholder
-  f.body = f.body.slice(0, s) + before + sel + after + f.body.slice(e)
-  requestAnimationFrame(() => { el.focus(); el.setSelectionRange(s + before.length, s + before.length + sel.length) })
-}
-function linePrefix(p: string): void {
-  const el = ta.value; if (!el) return
-  const start = f.body.lastIndexOf('\n', el.selectionStart - 1) + 1
-  f.body = f.body.slice(0, start) + p + f.body.slice(start)
-  requestAnimationFrame(() => el.focus())
-}
-const tools: [string, () => void, string][] = [['B', () => wrap('**'), 'Bold'], ['I', () => wrap('*'), 'Italic'], ['H2', () => linePrefix('## '), 'Heading 2'], ['H3', () => linePrefix('### '), 'Heading 3'],
-  ['Link', () => wrap('[', '](https://)', 'link text'), 'Link'], ['List', () => linePrefix('- '), 'List'], ['Code', () => wrap('`'), 'Code'], ['Quote', () => linePrefix('> '), 'Quote'], ['Image', () => { picker.value = 'inline' }, 'Insert image']]
 function chosen(m: MediaItem): void {
   const url = `/media/${m.variants.at(-1)?.path}`
   if (picker.value === 'cover') f.coverMediaId = m.id
   else if (picker.value === 'og') f.ogMediaId = m.id
-  else { const el = ta.value, at = el?.selectionStart ?? f.body.length; f.body = `${f.body.slice(0, at)}![${m.alt || m.filename}](${url})${f.body.slice(at)}` }
+  else rich.value?.insertImage(url, m.alt || m.filename)
   covers[m.id] = `/media/${m.variants.find(v => v.w >= 480)?.path ?? m.variants[0]?.path}`
   picker.value = null
 }
@@ -98,7 +82,7 @@ function addTag(): void {
 <template>
   <div class="space-y-4">
     <div class="flex flex-wrap items-center gap-2">
-      <h1 class="text-2xl font-bold mr-auto">{{ isNew && !id ? 'New article' : 'Edit article' }} <span class="badge align-middle">{{ f.status }}</span></h1>
+      <h1 class="text-2xl font-semibold mr-auto">{{ isNew && !id ? 'New article' : 'Edit article' }} <span class="badge align-middle">{{ f.status }}</span></h1>
       <span v-if="dirty" class="text-xs text-muted">Unsaved changes</span>
       <button class="btn" :disabled="saving" data-testid="save-draft" @click="save(f.status === 'published' ? 'published' : 'draft')">{{ f.status === 'published' ? 'Save' : 'Save draft' }}</button>
       <button class="btn" :disabled="saving" @click="schedule">Schedule</button>
@@ -115,13 +99,8 @@ function addTag(): void {
           <div><label class="label" for="cat">Category</label><select id="cat" v-model="f.categoryId" class="input"><option value="">None</option><option v-for="c in cats" :key="c.id" :value="c.id">{{ c.name }}</option></select></div>
         </div>
         <div><label class="label" for="ex">Excerpt</label><textarea id="ex" v-model="f.excerpt" class="input" rows="2" maxlength="500" /></div>
-        <div>
-          <div class="flex flex-wrap gap-1 mb-1" role="toolbar" aria-label="Formatting"><button v-for="t in tools" :key="t[0]" type="button" class="btn !min-h-8 !px-2.5 text-xs" :aria-label="t[2]" @click="t[1]()">{{ t[0] }}</button></div>
-          <div class="grid md:grid-cols-2 gap-3">
-            <textarea ref="ta" v-model="f.body" class="input font-mono !text-[13px] leading-relaxed min-h-[26rem]" aria-label="Markdown body" placeholder="Write in Markdown..." />
-            <div class="card p-4 min-h-[26rem] overflow-auto prose-prev" aria-label="Preview" v-html="html || '<p style=&quot;color:var(--muted)&quot;>Live preview appears here.</p>'" />
-          </div>
-        </div>
+        <div><p class="label">Article</p>
+          <RichEditor ref="rich" v-model="f.body" images placeholder="Write your article. Use the toolbar for headings, lists, links, images and tables." label="Article body" min-height="30rem" @image="picker = 'inline'" /></div>
       </div>
 
       <aside class="space-y-3">

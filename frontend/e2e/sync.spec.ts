@@ -12,8 +12,8 @@ test('text typed on one device appears on the other, and URLs are detected', asy
   await expect(b.locator('textarea')).toHaveValue('hello from A\nhttps://example.com/x')
   await b.locator('textarea').fill('reply from B')
   await expect(a.locator('textarea')).toHaveValue('reply from B')
-  a.once('dialog', d => d.accept())
   await a.getByText('Clear', { exact: true }).click()
+  await a.getByTestId('confirm-yes').click()
   await expect(b.locator('textarea')).toHaveValue('')
 })
 
@@ -42,8 +42,8 @@ test('file is shared peer to peer, verified, and downloadable', async ({ browser
   const path = await (await dl).path()
   const got = createHash('sha256').update(await (await import('node:fs/promises')).readFile(path)).digest('hex')
   expect(got).toBe(createHash('sha256').update(data).digest('hex'))
-  b.once('dialog', d => d.accept())
   await rowB.getByRole('button', { name: /^Remove/ }).click()
+  await b.getByTestId('confirm-yes').click()
   await expect(rowA).toHaveCount(0)
 })
 

@@ -3,7 +3,8 @@
 const props = defineProps<{ appHref: string; internal?: boolean }>()
 const emit = defineEmits<{ feedback: [] }>()
 const name = String(useRuntimeConfig().public.appName)
-const go = computed(() => (props.internal ? { is: 'NuxtLink', attrs: { to: props.appHref } } : { is: 'a', attrs: { href: props.appHref } }))
+const Go = props.internal ? resolveComponent('NuxtLink') : 'a'
+const goAttrs = props.internal ? { to: props.appHref } : { href: props.appHref }
 
 const stats = [
   { n: '0', l: 'accounts to create' }, { n: '0 B', l: 'of your files kept on our servers' }, { n: '4', l: 'people in a secure chat room' }, { n: '100%', l: 'in your browser, no install' },
@@ -41,7 +42,7 @@ const solid = (t: string): string => (t === 'pink' ? 'bg-pink' : 'bg-[var(--blue
         <h1 class="text-[2rem] md:text-5xl font-semibold mt-4 leading-[1.1]">One shared space for <span class="text-[var(--blue)]">all</span> <span class="text-pink">your</span> devices</h1>
         <p class="text-muted mt-4 text-base md:text-lg max-w-xl leading-relaxed">{{ name }} moves text and files between your phone, tablet and computer in seconds. Free, private, and nothing to install or sign up for.</p>
         <div class="flex flex-wrap gap-2.5 mt-6">
-          <component :is="go.is" v-bind="go.attrs" class="btn btn-accent !min-h-11 px-5">Open {{ name }}<Icon name="arrowRight" :size="16" weight="bold" /></component>
+          <component :is="Go" v-bind="goAttrs" class="btn btn-accent !min-h-11 px-5">Open {{ name }}<Icon name="arrowRight" :size="16" weight="bold" /></component>
           <a href="#how" class="btn !min-h-11 px-5">How it works</a>
         </div>
       </div>
@@ -151,7 +152,7 @@ const solid = (t: string): string => (t === 'pink' ? 'bg-pink' : 'bg-[var(--blue
       <h2 class="text-2xl md:text-3xl font-semibold">Try it in ten seconds</h2>
       <p class="text-white/70 mt-2">Open {{ name }} on two devices and start typing.</p>
       <div class="flex flex-wrap gap-2.5 justify-center mt-6">
-        <component :is="go.is" v-bind="go.attrs" class="btn btn-accent !min-h-11 px-6">Open {{ name }}</component>
+        <component :is="Go" v-bind="goAttrs" class="btn btn-accent !min-h-11 px-6">Open {{ name }}</component>
         <button class="btn !min-h-11 px-6 !bg-white/10 !border-white/20 !text-white hover:!bg-white/20" @click="emit('feedback')">Tell us what you think</button>
       </div>
     </section>

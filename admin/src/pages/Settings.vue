@@ -2,6 +2,7 @@
 import { onMounted, reactive, ref } from 'vue'
 import { DEFAULT_CHAT_SHARE_MESSAGE } from '@sync/shared'
 import { api } from '../api'
+import RichEditor from '../components/RichEditor.vue'
 import { fail, ok } from '../ui'
 
 const tab = ref<'general' | 'legal' | 'social'>('general')
@@ -16,11 +17,11 @@ async function save(): Promise<void> {
 </script>
 
 <template>
-  <div class="space-y-4 max-w-3xl"><h1 class="text-2xl font-bold">Site settings</h1>
+  <div class="space-y-4 max-w-3xl"><h1 class="text-2xl font-semibold">Site settings</h1>
     <div class="inline-flex rounded-xl bg-surface-2 p-1" role="tablist"><button v-for="t in (['general', 'legal', 'social'] as const)" :key="t" role="tab" :aria-selected="tab === t" class="px-4 h-9 rounded-lg text-sm font-medium capitalize" :class="tab === t ? 'bg-surface shadow-sm' : 'text-muted'" @click="tab = t">{{ t === 'social' ? 'Social & analytics' : t }}</button></div>
     <form class="card p-4 space-y-3" @submit.prevent="save">
       <div v-for="k in groups[tab]" :key="k"><label class="label" :for="k">{{ names[k] }}</label>
-        <textarea v-if="k.endsWith('_md')" :id="k" v-model="f[k]" class="input font-mono !text-[13px]" rows="12" />
+        <RichEditor v-if="k.endsWith('_md')" :model-value="f[k] ?? ''" @update:model-value="f[k] = $event" :label="names[k] ?? k" placeholder="Write this page. Leave it empty to show the built-in text." min-height="18rem" />
         <textarea v-else-if="k === 'chat_share_message'" :id="k" v-model="f[k]" class="input" rows="3" maxlength="500" :placeholder="DEFAULT_CHAT_SHARE_MESSAGE" /><input v-else :id="k" v-model="f[k]" class="input">
         <p v-if="hints[k]" class="text-xs text-muted mt-1">{{ hints[k] }}</p></div>
       <button class="btn btn-accent">Save</button>

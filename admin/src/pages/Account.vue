@@ -15,7 +15,7 @@ async function all(): Promise<void> { if (await confirmDialog('Sign out everywhe
 </script>
 
 <template>
-  <div class="space-y-4 max-w-xl"><h1 class="text-2xl font-bold">Account</h1>
+  <div class="space-y-4 max-w-xl"><h1 class="text-2xl font-semibold">Account</h1>
     <p class="text-sm text-muted">{{ auth.me?.name }} · {{ auth.me?.email }}</p>
     <form class="card p-4 space-y-3" @submit.prevent="change"><h2 class="font-semibold">Change password</h2>
       <div><label class="label" for="o">Current password</label><input id="o" v-model="pw.old" type="password" class="input" autocomplete="current-password" required></div>

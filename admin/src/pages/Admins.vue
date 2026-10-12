@@ -12,7 +12,7 @@ async function del(a: A): Promise<void> { if (!await confirmDialog('Remove admin
 </script>
 
 <template>
-  <div class="space-y-4 max-w-4xl"><h1 class="text-2xl font-bold">Admins</h1>
+  <div class="space-y-4 max-w-4xl"><h1 class="text-2xl font-semibold">Admins</h1>
     <form class="card p-4 grid sm:grid-cols-2 gap-3" @submit.prevent="add">
       <div><label class="label" for="ae">Email</label><input id="ae" v-model="f.email" type="email" class="input" required></div><div><label class="label" for="an">Name</label><input id="an" v-model="f.name" class="input" required></div>
       <div><label class="label" for="ap">Password (12+ characters)</label><input id="ap" v-model="f.password" type="password" class="input" minlength="12" required autocomplete="new-password"></div>

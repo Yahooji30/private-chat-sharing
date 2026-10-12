@@ -80,6 +80,7 @@ const footer = [['Features', '/features'], ['FAQ', '/faq'], ['Privacy', '/privac
 
     <LazySettingsModal v-if="app.settingsOpen" />
     <FeedbackModal />
+    <ConfirmDialog />
     <ToastHost />
   </div>
 </template>
