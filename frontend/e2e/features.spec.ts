@@ -15,7 +15,7 @@ test('settings: found URLs, font, theme and device name persist and apply', asyn
   await a.getByRole('button', { name: 'Save General Settings' }).click()
   await expect(a.getByText('Settings saved')).toBeVisible()
   await a.getByRole('dialog').getByRole('button', { name: 'Close' }).click()
-  await expect(a.getByRole('link', { name: 'https://example.com' })).toHaveAttribute('target', '_self')
+  await expect(a.getByRole('link', { name: 'example.com' })).toHaveAttribute('target', '_self')
   await expect.poll(() => b.locator('textarea').evaluate(el => getComputedStyle(el).fontSize)).toBe('24px')
   await expect.poll(() => b.locator('textarea').evaluate(el => getComputedStyle(el).fontFamily)).toContain('mono')
   await a.reload()

@@ -6,7 +6,7 @@ test('text typed on one device appears on the other, and URLs are detected', asy
   await expect(b.locator('textarea')).toHaveValue('')
   await a.locator('textarea').fill('hello from A\nhttps://example.com/x')
   await expect(b.locator('textarea')).toHaveValue('hello from A\nhttps://example.com/x')
-  await expect(b.getByRole('link', { name: 'https://example.com/x' })).toHaveAttribute('target', '_blank')
+  await expect(b.getByRole('link', { name: 'example.com/x' })).toHaveAttribute('target', '_blank')
   await expect(a.getByText('Saved').first()).toBeVisible()
   await b.reload()
   await expect(b.locator('textarea')).toHaveValue('hello from A\nhttps://example.com/x')
@@ -25,7 +25,7 @@ test('presence shows both devices and device rename sticks', async ({ browser })
   await a.getByRole('button', { name: 'Save General Settings' }).click()
   await expect(a.getByText('Settings saved')).toBeVisible()
   await b.getByRole('button', { name: 'Devices online' }).click()
-  await expect(b.getByText('Test Laptop')).toBeVisible()
+  await expect(b.getByText('Test Laptop').first()).toBeVisible()
 })
 
 test('file is shared peer to peer, verified, and downloadable', async ({ browser }) => {

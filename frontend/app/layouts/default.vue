@@ -17,7 +17,8 @@ const more = computed(() => (app.blogUrl ? [{ to: '/read/features', label: 'Feat
 const chatRoute = computed(() => route.path.startsWith('/c/'))
 const readRoute = computed(() => route.path.startsWith('/read'))
 // the sidebar ad only belongs on content-style pages, never in a private chat
-const rail = computed(() => route.path === '/' || route.path.startsWith('/public'))
+const rail = computed(() => route.path.startsWith('/public'))
+const wide = computed(() => route.path === '/')
 const tabs = computed(() => [nav[0]!, nav[1]!, { fab: true, label: 'Link' }, nav[2]!, ...external.value])
 </script>
 
@@ -55,8 +56,8 @@ const tabs = computed(() => [nav[0]!, nav[1]!, { fab: true, label: 'Link' }, nav
         </div>
       </header>
 
-      <div class="flex-1 w-full mx-auto px-3 md:px-6" :class="[chatRoute ? '' : 'lg:pt-6', rail && !chatRoute ? 'max-w-[1180px] xl:grid xl:grid-cols-[minmax(0,1fr)_300px] xl:gap-7' : 'max-w-[920px]']">
-        <main class="min-w-0 w-full mx-auto md:max-w-3xl lg:max-w-none" :class="chatRoute ? '' : 'pb-6'">
+      <div class="flex-1 w-full mx-auto px-3 md:px-6" :class="[chatRoute ? '' : 'lg:pt-6', rail && !chatRoute ? 'max-w-[1180px] xl:grid xl:grid-cols-[minmax(0,1fr)_300px] xl:gap-7' : wide ? 'max-w-[1180px]' : 'max-w-[920px]']">
+        <main class="min-w-0 w-full mx-auto lg:max-w-none" :class="[wide ? '' : 'md:max-w-3xl', chatRoute ? '' : 'pb-6']">
           <div v-if="!isOnline || (app.hasConnected && !app.online)" class="mb-2 rounded-2xl bg-warn/20 border border-warn/50 text-sm px-3 py-2 flex items-center gap-2" role="status">
             <Icon name="wifi" :size="16" /> You are offline. Changes will sync when you reconnect.
           </div>

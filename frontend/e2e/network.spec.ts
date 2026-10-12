@@ -228,7 +228,7 @@ test('production build: strict security headers are served and nothing the app d
   expect(csp).toContain("default-src 'self'"); expect(csp).toContain("object-src 'none'"); expect(csp).toContain("frame-ancestors 'none'")
   expect(res.headers()['x-content-type-options']).toBe('nosniff')
   await type(p, 'see https://example.com')
-  await expect(p.getByRole('link', { name: 'https://example.com' })).toBeVisible()
+  await expect(p.getByRole('link', { name: 'example.com' })).toBeVisible()
   await openSettings(p, 'Link Device')
   await expect(p.locator('canvas[aria-label="Link QR code"]')).toBeVisible()
   await p.getByRole('tab', { name: 'Share Link' }).click()

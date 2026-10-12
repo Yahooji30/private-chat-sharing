@@ -62,32 +62,38 @@ const label = (i: FileItem): string => {
     default: return files.holderOnline(i.entry) ? 'Available' : 'Waiting for a device that has it'
   }
 }
+const ext = (n: string): string => (n.includes('.') ? n.split('.').pop()!.slice(0, 4).toUpperCase() : 'FILE')
+const warm = (m: string): boolean => /^(image|video)\//.test(m)
 defineExpose({ pick })
 </script>
 
 <template>
-  <section v-show="sorted.length || dragging" class="mt-4" aria-label="Shared files">
+  <section aria-label="Shared files">
     <div class="flex items-center gap-2 mb-2 px-1">
-      <h2 class="font-semibold">Files <span class="text-muted font-normal">({{ sorted.length }})</span></h2>
+      <h2 class="font-bold text-base">Files</h2><span v-if="sorted.length" class="chip">{{ sorted.length }}</span>
       <div class="ml-auto flex gap-1.5">
-        <button v-if="anyMissing" class="btn !min-h-9 text-sm" @click="files.downloadMissing()"><Icon name="download" :size="15" /><span class="hidden sm:inline">Get all</span></button>
-        <button v-if="anyDone" class="btn !min-h-9 text-sm" @click="files.zipAll()"><Icon name="zip" :size="15" /><span class="hidden sm:inline">Zip all</span></button>
-        <button class="btn !min-h-9 text-sm" @click="pick"><Icon name="plus" :size="15" />Add</button>
-        <button v-if="sorted.length" class="btn !min-h-9 text-sm" aria-label="Remove all files" @click="confirmClear"><Icon name="trash" :size="15" /></button>
+        <button v-if="anyMissing" class="btn !min-h-9 !px-2.5 text-sm" aria-label="Get all" @click="files.downloadMissing()"><Icon name="download" :size="15" /><span class="hidden sm:inline">Get all</span></button>
+        <button v-if="anyDone" class="btn !min-h-9 !px-2.5 text-sm" aria-label="Zip all" @click="files.zipAll()"><Icon name="zip" :size="15" /><span class="hidden sm:inline">Zip</span></button>
+        <button v-if="sorted.length" class="btn !min-h-9 !px-2.5 text-sm" aria-label="Remove all files" @click="confirmClear"><Icon name="trash" :size="15" /></button>
       </div>
     </div>
     <p v-if="!files.opfs" class="text-xs text-muted mb-2 px-1">This browser keeps files in memory only: no resume after reload, 500 MB limit.</p>
-    <p v-if="files.blocked" class="text-xs mb-2 px-3 py-2 rounded-lg bg-warn/20 border border-warn/50">Direct connection blocked by your network. Try the same Wi-Fi or enable a relay.</p>
+    <p v-if="files.blocked" class="text-xs mb-2 px-3 py-2 rounded-xl bg-warn/20 border border-warn/50">Direct connection blocked by your network. Try the same Wi-Fi or enable a relay.</p>
+
+    <button class="w-full rounded-2xl border border-dashed px-4 text-center transition-colors" :class="[dragging ? 'border-[var(--accent)] bg-accent-soft' : 'border-[color-mix(in_srgb,var(--text)_22%,var(--line))] hover:border-[var(--accent)] hover:bg-accent-soft/50', sorted.length ? 'py-3 mb-3' : 'py-8']" @click="pick">
+      <span class="inline-flex items-center gap-2 font-semibold text-sm" :class="sorted.length ? 'text-accent-ink' : 'text-ink'"><Icon name="plus" :size="16" />{{ sorted.length ? 'Add more files' : 'Drop files here or tap to choose' }}</span>
+      <span v-if="!sorted.length" class="block text-xs text-muted mt-1">Sent straight to your other devices. Nothing is stored on a server.</span>
+    </button>
 
     <ul class="space-y-2">
-      <li v-for="i in sorted" :key="i.entry.fileId" class="card p-3 flex items-center gap-3 anim-pop" :data-testid="`file-${i.entry.name}`" :data-status="i.status">
-        <img v-if="i.entry.thumb" :src="i.entry.thumb" alt="" class="size-12 rounded-lg object-cover bg-surface-2 shrink-0">
-        <span v-else class="size-12 rounded-lg bg-surface-2 grid place-items-center shrink-0 text-muted"><Icon name="file" :size="22" /></span>
+      <li v-for="i in sorted" :key="i.entry.fileId" class="card !rounded-2xl p-3 flex items-center gap-3 anim-pop" :data-testid="`file-${i.entry.name}`" :data-status="i.status">
+        <img v-if="i.entry.thumb" :src="i.entry.thumb" alt="" class="size-11 rounded-xl object-cover bg-surface-2 shrink-0">
+        <span v-else class="size-11 rounded-xl grid place-items-center shrink-0 text-[11px] font-extrabold tracking-wide" :class="warm(i.entry.mime) ? 'bg-pink-soft text-pink-ink' : 'bg-accent-soft text-accent-ink'">{{ ext(i.entry.name) }}</span>
         <div class="min-w-0 flex-1">
-          <p class="font-medium truncate" :title="i.entry.name">{{ i.entry.name }}</p>
-          <p class="text-xs text-muted truncate">{{ fmtBytes(i.entry.size) }} · {{ label(i) }}</p>
+          <p class="font-semibold truncate leading-tight" :title="i.entry.name">{{ i.entry.name }}</p>
+          <p class="text-xs text-muted truncate mt-0.5">{{ fmtBytes(i.entry.size) }} · {{ label(i) }}</p>
           <div v-if="['downloading', 'paused'].includes(i.status) || (i.status === 'preparing' && i.hashing)" class="mt-1.5 h-1.5 rounded-full bg-line overflow-hidden" role="progressbar" :aria-valuenow="pct(i)">
-            <div class="h-full bg-accent transition-[width] duration-200" :style="{ width: `${i.status === 'preparing' ? Math.round((i.hashing / i.entry.size) * 100) : pct(i)}%` }" />
+            <div class="h-full bg-[var(--accent)] transition-[width] duration-200" :style="{ width: `${i.status === 'preparing' ? Math.round((i.hashing / i.entry.size) * 100) : pct(i)}%` }" />
           </div>
         </div>
         <div class="flex items-center gap-1 shrink-0">
@@ -104,8 +110,8 @@ defineExpose({ pick })
     </ul>
 
     <input ref="input" type="file" multiple class="hidden" data-testid="file-input" @change="onPick">
-    <div v-if="dragging" class="fixed inset-0 z-40 bg-accent/10 border-4 border-dashed border-accent grid place-items-center pointer-events-none">
-      <p class="card px-6 py-4 text-lg font-semibold">Drop files to share them</p>
+    <div v-if="dragging" class="fixed inset-0 z-40 bg-[var(--accent)]/10 border-4 border-dashed border-[var(--accent)] grid place-items-center pointer-events-none">
+      <p class="card px-6 py-4 text-lg font-bold">Drop files to share them</p>
     </div>
 
     <Modal :open="!!view.item" :title="view.item?.entry.name ?? ''" @close="view.item = null">
@@ -116,5 +122,4 @@ defineExpose({ pick })
       <pre v-else-if="view.text" class="whitespace-pre-wrap break-words text-sm font-mono">{{ view.text }}</pre>
     </Modal>
   </section>
-
 </template>
