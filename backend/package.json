@@ -12,6 +12,7 @@
     "typecheck": "tsc -p .",
     "db:migrate": "tsx --env-file=.env src/core/db/migrate.ts",
     "db:seed-faq": "tsx --env-file=.env src/core/db/seed-faq.ts",
+    "db:seed-blog": "tsx --env-file=.env src/core/db/seed-blog.ts",
     "test": "vitest run"
   },
   "dependencies": {

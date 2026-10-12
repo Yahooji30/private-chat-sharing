@@ -3,12 +3,11 @@ const app = useApp()
 const route = useRoute()
 const isOnline = useOnline()
 const base = [{ to: '/', label: 'Home', icon: 'home' }, { to: '/chat', label: 'Secure Chat', icon: 'chat' }]
-// The blog is the separate SEO site; it opens inside the app window (pages/blog) so an installed PWA never leaves the app. Features and FAQ are native pages.
-const pages = computed(() => [...(app.blogUrl ? [{ to: '/blog', label: 'Blog', icon: 'blog' }] : []), { to: '/features', label: 'Features', icon: 'features' }, { to: '/faq', label: 'FAQ', icon: 'faq' }])
+// Blog, Features and FAQ are native pages of the app. The server-rendered blog site is the copy search engines index; these pages point to it with a canonical link.
+const pages = computed(() => [{ to: '/blog', label: 'Blog', icon: 'blog' }, { to: '/features', label: 'Features', icon: 'features' }, { to: '/faq', label: 'FAQ', icon: 'faq' }])
 const side = computed(() => [...base, ...pages.value])
 const active = (to: string): boolean => (to === '/' ? route.path === '/' : route.path.startsWith(to) || (to === '/chat' && route.path.startsWith('/c/')))
 const chatRoute = computed(() => route.path.startsWith('/c/'))
-const framed = computed(() => route.path === '/blog' || route.path.startsWith('/blog/'))
 const feedback = useState('feedback-open', () => false)
 const wide = computed(() => route.path === '/')
 // phone + tablet tab bar: Home, Chat, the raised Link button, then the first two site pages
@@ -59,7 +58,7 @@ const footer = [['Features', '/features'], ['FAQ', '/faq'], ['Privacy', '/privac
         </main>
       </div>
 
-      <footer class="text-center text-xs text-muted pt-2 pb-24 lg:pb-6" :class="chatRoute || framed ? 'hidden' : ''">
+      <footer class="text-center text-xs text-muted pt-2 pb-24 lg:pb-6" :class="chatRoute ? 'hidden' : ''">
         <template v-for="f in footer" :key="f[1]"><NuxtLink :to="f[1]" class="hover:underline">{{ f[0] }}</NuxtLink> · </template><button class="hover:underline" @click="feedback = true">Feedback</button>
       </footer>
     </div>

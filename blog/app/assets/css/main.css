@@ -92,7 +92,3 @@ button, a, input, textarea, select { touch-action: manipulation; }
 .prose-article :is(th, td) { border: 1px solid var(--line); padding: .5rem .7rem; text-align: left; }
 .prose-article pre { font-size: .9rem; }
 
-/* shown inside the app window: the app provides the header and tab bar */
-html.embedded [data-chrome] { display: none !important; }
-html.embedded body { background: var(--bg); }
-html.embedded main { padding-bottom: 1.5rem; }

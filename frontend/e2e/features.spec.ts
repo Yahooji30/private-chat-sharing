@@ -114,12 +114,12 @@ test('features and FAQ are native pages with clean addresses; the blog opens ins
   await a.getByRole('link', { name: 'FAQ' }).first().click()
   await expect(a).toHaveURL(/\/faq$/)
   await expect(a.getByRole('heading', { name: /Frequently asked/ })).toBeVisible()
-  // the blog is the server-rendered site shown inside the app; opening an article moves the address to /blog/<slug>
+  // the blog is read inside the app (no iframe): list, then an article under /blog/<slug>
   await a.getByRole('link', { name: 'Blog' }).first().click()
   await expect(a).toHaveURL(/\/blog$/)
-  const site = a.frameLocator('iframe[title="Jodbox site"]')
-  await site.locator('article a[href^="/"]').first().click()
+  await a.locator('article h2 a').first().click()
   await expect(a).toHaveURL(/\/blog\/[^/]+$/, { timeout: 15_000 })
+  await expect(a.getByRole('heading', { level: 1 })).toBeVisible()
 })
 
 test('home: the character counter follows the server limit, links get their own section, no device icons', async ({ browser }) => {

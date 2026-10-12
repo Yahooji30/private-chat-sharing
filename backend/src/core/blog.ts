@@ -113,7 +113,7 @@ async function fkCheck(i: ArticleInput): Promise<void> {
   }
 }
 
-export async function saveArticle(id: string | null, raw: unknown, adminId: string): Promise<string> {
+export async function saveArticle(id: string | null, raw: unknown, adminId: string | null): Promise<string> {
   const i = articleInputSchema.parse(raw)
   const at = checkStatus(i)
   await fkCheck(i)

@@ -109,3 +109,17 @@ The `net` and `pwa` projects run against built apps. Always use `pnpm build`, it
 Brand colors live as CSS variables at the top of `frontend/app/assets/css/main.css` and `blog/app/assets/css/main.css` (blue `#0058F0`, pink `#F02878`, plus highlight and shade tones). The app name comes from `NUXT_PUBLIC_APP_NAME`.
 
 Google AdSense is optional. Set `NUXT_PUBLIC_ADSENSE_CLIENT` (`ca-pub-...`) and the three unit ids `NUXT_PUBLIC_AD_SLOT_RAIL`, `NUXT_PUBLIC_AD_SLOT_INLINE`, `NUXT_PUBLIC_AD_SLOT_BANNER` in `frontend/.env` and `blog/.env`, then rebuild. Without a client id the ad spaces show as labelled previews (`NUXT_PUBLIC_ADS_PREVIEW=false` hides them). The blog serves `/ads.txt` from the same client id. Ads never appear inside private chat rooms. If you serve visitors in the EU/UK, add a consent banner (CMP) before enabling real ads.
+
+## Blog inside the app, and starter content
+
+The app reads the blog itself (`/blog`, `/blog/<article>`, `/blog/category/<x>`, `/blog/tag/<x>`) from the public blog API, so it never depends on an embedded page. The separate blog site (`blog/`) stays the server-rendered copy search engines index; every app page points to it with a canonical link.
+
+Load starter content into an empty database (each is safe to run twice and never touches what the admin has written):
+
+```
+cd backend
+pnpm db:seed-faq    # 31 FAQ questions
+pnpm db:seed-blog   # 8 articles with cover images, categories and tags
+```
+
+Cover images are written to `MEDIA_DIR`. In production make sure the web server serves `/media/` from that folder (see `deploy/nginx.conf`).

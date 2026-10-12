@@ -4,13 +4,11 @@ const appName = process.env.NUXT_PUBLIC_APP_NAME ?? 'Jodbox'
 const isProd = process.env.NODE_ENV === 'production'
 const rtUrl = process.env.NUXT_PUBLIC_RT_URL ?? ''
 // Nuxt inlines its hydration payload, so scripts need 'unsafe-inline'. Everything else stays on this origin.
-const blogOrigin = (process.env.NUXT_PUBLIC_BLOG_URL ?? '').replace(/\/$/, '')
-const blogOrigins = [blogOrigin, blogOrigin.replace('//localhost', '//127.0.0.1')].filter((v, n, a) => v && a.indexOf(v) === n).join(' ')
 const adsOn = !!process.env.NUXT_PUBLIC_ADSENSE_CLIENT
 const adHosts = 'https://*.googlesyndication.com https://*.doubleclick.net https://*.google.com https://*.gstatic.com https://*.adtrafficquality.google'
 const csp = [
   "default-src 'self'", `script-src 'self' 'unsafe-inline'${adsOn ? ` ${adHosts}` : ''}`, "style-src 'self' 'unsafe-inline'", `img-src 'self' data: blob:${adsOn ? ' https:' : ''}`, "media-src 'self' blob:", "font-src 'self' data:",
-  `connect-src 'self' ws: wss: ${rtUrl}${adsOn ? ` ${adHosts}` : ''}`.trim(), "worker-src 'self' blob:", `frame-src blob: ${blogOrigins}${adsOn ? ` ${adHosts}` : ''}`, "object-src 'none'", "base-uri 'self'", "form-action 'self'", "frame-ancestors 'none'",
+  `connect-src 'self' ws: wss: ${rtUrl}${adsOn ? ` ${adHosts}` : ''}`.trim(), "worker-src 'self' blob:", `frame-src blob:${adsOn ? ` ${adHosts}` : ''}`, "object-src 'none'", "base-uri 'self'", "form-action 'self'", "frame-ancestors 'none'",
 ].join('; ')
 const securityHeaders = { 'Content-Security-Policy': csp, 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'strict-origin-when-cross-origin', 'Permissions-Policy': 'camera=(self), microphone=(), geolocation=()', 'X-Frame-Options': 'DENY' }
 
@@ -30,11 +28,12 @@ export default defineNuxtConfig({
   nitro: {
     noExternals: true, // bundle every dependency into .output so the server needs no node_modules (pnpm and Windows safe)
     prerender: { routes: ['/200.html'], failOnError: false },
-    devProxy: { '/api': { target: 'http://127.0.0.1:4000/api', changeOrigin: false } },
+    devProxy: { '/api': { target: 'http://127.0.0.1:4000/api', changeOrigin: false }, '/media': { target: 'http://127.0.0.1:4000/media', changeOrigin: false } },
   },
   routeRules: {
     ...(isProd ? { '/**': { headers: securityHeaders } } : {}),
     '/api/**': { proxy: `${process.env.NUXT_API_INTERNAL ?? 'http://127.0.0.1:4000'}/api/**` },
+    '/media/**': { proxy: `${process.env.NUXT_API_INTERNAL ?? 'http://127.0.0.1:4000'}/media/**` },
   },
   app: {
     head: {

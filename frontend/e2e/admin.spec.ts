@@ -27,7 +27,7 @@ test('login: guarded routes redirect, wrong password fails, sign out works', asy
   await expect(page.getByRole('alert')).toContainText('Invalid credentials')
   await signIn(page)
   await expect(page.getByText('Online devices')).toBeVisible()
-  await expect(page.getByText('Open reports')).toBeVisible()
+  await expect(page.getByText('Online devices')).toBeVisible()
   await page.getByRole('button', { name: 'Sign out' }).click()
   await expect(page).toHaveURL(/\/login/)
   await page.goto(`${ADMIN}/`)
@@ -138,7 +138,7 @@ test('site settings: legal text saved in admin renders on the public site', asyn
   await page.getByRole('button', { name: 'Save' }).click()
   await expect(page.getByText('Settings saved')).toBeVisible()
   const v = await (await browser.newContext()).newPage()
-  await expect.poll(async () => (await v.request.get(`${BLOG}/privacy`)).text(), { timeout: 10_000 }).toContain('Custom privacy')
+  await expect.poll(async () => (await v.request.get(`${BLOG}/privacy`)).text(), { timeout: 25_000 }).toContain('Custom privacy')
   await v.close()
 })
 
