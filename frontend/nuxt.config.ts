@@ -23,7 +23,7 @@ export default defineNuxtConfig({
   vite: { plugins: [tailwindcss() as unknown as never] },
   runtimeConfig: {
     apiInternal: process.env.NUXT_API_INTERNAL ?? 'http://127.0.0.1:4000',
-    public: { appName, rtUrl: '', blogUrl: '', adsenseClient: '', adsPreview: 'true', adSlotRail: '', adSlotInline: '', adSlotBanner: '' }, // NUXT_PUBLIC_RT_URL, NUXT_PUBLIC_BLOG_URL from frontend/.env
+    public: { appName, rtUrl: '', blogUrl: '', adsenseClient: '', adsEnabled: 'true', adsPreview: 'true', adSlotRail: '', adSlotInline: '', adSlotBanner: '' }, // NUXT_PUBLIC_RT_URL, NUXT_PUBLIC_BLOG_URL from frontend/.env
   },
   nitro: {
     noExternals: true, // bundle every dependency into .output so the server needs no node_modules (pnpm and Windows safe)

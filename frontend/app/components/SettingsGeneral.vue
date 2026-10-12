@@ -32,6 +32,7 @@ const sel = 'input !min-h-10 !w-auto pr-8 cursor-pointer'
       <SettingRow title="Font Size" :desc="`${draft.fontSize}px. Adjust the text size of your text area.`">
         <input v-model.number="draft.fontSize" type="range" min="12" max="28" step="1" class="w-28 accent-[var(--accent)]" aria-label="Font size">
       </SettingRow>
+      <SettingRow title="Spellcheck" desc="Underline spelling mistakes while typing."><Toggle :model-value="app.spellcheck" label="Spellcheck" @update:model-value="app.setLocal('spellcheck', $event)" /></SettingRow>
     </section>
 
     <section class="card p-4 space-y-4">
@@ -39,7 +40,6 @@ const sel = 'input !min-h-10 !w-auto pr-8 cursor-pointer'
         <Toggle v-model="draft.urlsPanel" label="Enable Found URLs" />
       </SettingRow>
       <template v-if="draft.urlsPanel">
-        <SettingRow sub title="Auto-Expand URLs" desc="Show the URL panel expanded when links are detected."><Toggle v-model="draft.urlsAutoExpand" label="Auto-expand URLs" /></SettingRow>
         <SettingRow sub title="Open URLs In" desc="New tab or the current tab.">
           <select :value="draft.urlsNewTab ? 'new' : 'same'" :class="sel" aria-label="Open URLs in" @change="draft.urlsNewTab = ($event.target as HTMLSelectElement).value === 'new'">
             <option value="new">New Tab</option><option value="same">Current Tab</option>
@@ -48,17 +48,6 @@ const sel = 'input !min-h-10 !w-auto pr-8 cursor-pointer'
       </template>
     </section>
 
-    <details class="card group">
-      <summary class="flex items-center gap-3 cursor-pointer select-none px-4 py-3.5 font-medium list-none [&::-webkit-details-marker]:hidden">
-        <span class="flex-1">More options<span class="block text-[0.8125rem] text-muted font-normal">Auto-download, spellcheck and ads</span></span>
-        <Icon name="chevron" :size="18" class="text-muted transition group-open:rotate-180" />
-      </summary>
-      <div class="px-4 pb-4 pt-1 space-y-4 border-t border-line">
-      <SettingRow title="Auto-download small files" desc="Fetch files under 50 MB automatically on this device."><Toggle :model-value="app.autoDownload" label="Auto-download" @update:model-value="app.setLocal('autoDownload', $event)" /></SettingRow>
-      <SettingRow title="Spellcheck" desc="Underline spelling mistakes while typing."><Toggle :model-value="app.spellcheck" label="Spellcheck" @update:model-value="app.setLocal('spellcheck', $event)" /></SettingRow>
-      <SettingRow title="Disable Ads" desc="Hide ads on all your devices."><Toggle v-model="draft.adsDisabled" label="Disable ads" /></SettingRow>
-      </div>
-    </details>
 
     <section class="card p-4 space-y-3">
       <label class="block">

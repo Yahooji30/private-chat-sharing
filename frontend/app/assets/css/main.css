@@ -91,3 +91,9 @@ button, a, input, textarea, select { touch-action: manipulation; }
 .prose-article table { width: 100%; border-collapse: collapse; margin: 1em 0; display: block; overflow-x: auto; }
 .prose-article :is(th, td) { border: 1px solid var(--line); padding: .5rem .7rem; text-align: left; }
 .prose-article pre { font-size: .9rem; }
+
+/* the scratchpad: a blue-to-pink gradient edge, always on; focus only adds a soft glow */
+.pad { border: 2px solid transparent; border-radius: 1rem; box-shadow: 0 1px 2px rgb(16 24 40 / .04);
+  background: linear-gradient(180deg, var(--surface), color-mix(in srgb, var(--accent-soft) 40%, var(--surface))) padding-box, linear-gradient(135deg, var(--blue), var(--pink)) border-box;
+  transition: box-shadow .2s; }
+.pad:focus-within { box-shadow: 0 0 0 4px color-mix(in srgb, var(--blue) 12%, transparent), 0 8px 28px -6px color-mix(in srgb, var(--pink) 32%, transparent), 0 4px 18px -4px color-mix(in srgb, var(--blue) 30%, transparent); }

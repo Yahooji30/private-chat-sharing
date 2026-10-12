@@ -19,7 +19,7 @@ export default defineNuxtConfig({
   runtimeConfig: {
     apiInternal: api,
     revalidateSecret: '', // set at runtime with NUXT_REVALIDATE_SECRET
-    public: { appName, adsenseClient: '', adsPreview: 'true', adSlotRail: '', adSlotInline: '', adSlotBanner: '', siteUrl: 'http://localhost:3001', appUrl: 'http://localhost:3000' }, // override with NUXT_PUBLIC_SITE_URL / NUXT_PUBLIC_APP_URL
+    public: { appName, adsenseClient: '', adsEnabled: 'true', adsPreview: 'true', adSlotRail: '', adSlotInline: '', adSlotBanner: '', siteUrl: 'http://localhost:3001', appUrl: 'http://localhost:3000' }, // override with NUXT_PUBLIC_SITE_URL / NUXT_PUBLIC_APP_URL
   },
   nitro: {
     noExternals: true, // bundle every dependency into .output so the server needs no node_modules (pnpm and Windows safe)

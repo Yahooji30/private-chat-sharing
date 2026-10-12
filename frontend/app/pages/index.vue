@@ -80,7 +80,7 @@ const steps = [
           <button v-if="showLinks" class="btn flex-1 !min-h-11" aria-label="Show found links" @click="sheet = 'links'"><Icon name="link" :size="18" />Links<span v-if="urls.length" class="chip">{{ urls.length }}</span></button>
           <button class="btn flex-1 !min-h-11" aria-label="Show files" @click="sheet = 'files'"><Icon name="files" :size="18" />Files<span v-if="fileCount" class="chip chip-pink">{{ fileCount }}</span></button>
         </div>
-        <div class="card overflow-hidden flex flex-col lg:flex-1 lg:min-h-0 transition-[border-color,box-shadow] focus-within:border-[var(--accent)] focus-within:shadow-[0_0_0_3px_color-mix(in_srgb,var(--accent)_16%,transparent)]">
+        <div class="pad overflow-hidden flex flex-col lg:flex-1 lg:min-h-0">
           <div class="flex items-center gap-3 px-5 pt-4">
             <span class="eyebrow">Scratchpad</span>
             <span class="ml-auto text-xs tabular-nums" :class="meter" data-testid="char-count" :title="`Limit: ${app.textMax.toLocaleString()} characters`">{{ len.toLocaleString() }} / {{ app.textMax.toLocaleString() }}</span>

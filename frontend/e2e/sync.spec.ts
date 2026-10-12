@@ -49,10 +49,8 @@ test('file is shared peer to peer, verified, and downloadable', async ({ browser
 
 test('a large file can be paused, resumed after reload, and completes', async ({ browser }) => {
   const [a, b] = await twoDevices(browser)
-  await b.getByRole('button', { name: 'Settings' }).click()
-  await b.getByText('More options').click()
-  await b.getByRole('switch', { name: 'Auto-download' }).click()
-  await b.getByRole('button', { name: 'Close' }).click()
+  await b.evaluate(() => localStorage.setItem('sync:autoDownload', '0')) // the toggle is hidden from Settings for now
+  await b.reload()
   const data = randomBytes(24 * 1024 * 1024)
   await a.getByTestId('file-input').setInputFiles({ name: 'big.bin', mimeType: 'application/octet-stream', buffer: data })
   await expect(a.getByTestId('file-big.bin')).toHaveAttribute('data-status', 'complete', { timeout: 30_000 })
@@ -88,10 +86,8 @@ test('link code from one device is redeemed on another through the link page', a
 
 test('the sending device can reload mid-transfer: it keeps serving from its stored copy and the download completes', async ({ browser }) => {
   const [a, b] = await twoDevices(browser)
-  await b.getByRole('button', { name: 'Settings' }).click()
-  await b.getByText('More options').click()
-  await b.getByRole('switch', { name: 'Auto-download' }).click()
-  await b.getByRole('dialog').getByRole('button', { name: 'Close' }).click()
+  await b.evaluate(() => localStorage.setItem('sync:autoDownload', '0')) // the toggle is hidden from Settings for now
+  await b.reload()
   const data = randomBytes(40 * 1024 * 1024)
   await a.getByTestId('file-input').setInputFiles({ name: 'holder.bin', mimeType: 'application/octet-stream', buffer: data })
   await expect(a.getByTestId('file-holder.bin')).toHaveAttribute('data-status', 'complete', { timeout: 30_000 })

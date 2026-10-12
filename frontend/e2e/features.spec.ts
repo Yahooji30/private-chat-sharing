@@ -57,10 +57,8 @@ test('text tools: copy, download, clear and the character limit', async ({ brows
 
 test('files: cancel, remove from another device, clear all, and zip everything', async ({ browser }) => {
   const [a, b] = await twoDevices(browser)
-  await b.getByRole('button', { name: 'Settings' }).click()
-  await b.getByText('More options').click()
-  await b.getByRole('switch', { name: 'Auto-download' }).click()
-  await b.getByRole('dialog').getByRole('button', { name: 'Close' }).click()
+  await b.evaluate(() => localStorage.setItem('sync:autoDownload', '0')) // the toggle is hidden from Settings for now
+  await b.reload()
   const files = [['one.txt', 'first file'], ['two.txt', 'second file']] as const
   for (const [name, body] of files) await a.getByTestId('file-input').setInputFiles({ name, mimeType: 'text/plain', buffer: Buffer.from(body) })
   for (const [name] of files) await expect(b.getByTestId(`file-${name}`)).toHaveAttribute('data-status', 'remote', { timeout: 15_000 })

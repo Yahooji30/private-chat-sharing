@@ -1,15 +1,16 @@
 <script setup lang="ts">
 /**
  * One Google AdSense placement. Space is reserved up front so nothing jumps when the ad loads.
- * Without NUXT_PUBLIC_ADSENSE_CLIENT it shows a labelled preview box (turn off with NUXT_PUBLIC_ADS_PREVIEW=false).
+ * NUXT_PUBLIC_ADS_ENABLED=false hides every ad space on the site at once. Without NUXT_PUBLIC_ADSENSE_CLIENT it shows a labelled preview box (turn off with NUXT_PUBLIC_ADS_PREVIEW=false).
  * kind: rail = 300x600 sidebar, inline = responsive rectangle inside content, banner = wide strip.
  */
 const props = defineProps<{ kind: 'rail' | 'inline' | 'banner' }>()
-const cfg = useRuntimeConfig().public as { adsenseClient?: string; adsPreview?: string | boolean; adSlotRail?: string; adSlotInline?: string; adSlotBanner?: string }
+const cfg = useRuntimeConfig().public as { adsenseClient?: string; adsEnabled?: string | boolean; adsPreview?: string | boolean; adSlotRail?: string; adSlotInline?: string; adSlotBanner?: string }
 const client = String(cfg.adsenseClient ?? '')
 const slotId = ({ rail: cfg.adSlotRail, inline: cfg.adSlotInline, banner: cfg.adSlotBanner })[props.kind] ?? ''
-const live = !!client && !!slotId
-const preview = !live && String(cfg.adsPreview ?? 'true') !== 'false'
+const enabled = String(cfg.adsEnabled ?? 'true') !== 'false'
+const live = enabled && !!client && !!slotId
+const preview = enabled && !live && String(cfg.adsPreview ?? 'true') !== 'false'
 const box = ({ rail: 'min-h-[600px] w-[300px]', inline: 'min-h-[280px]', banner: 'min-h-[100px] md:min-h-[90px]' })[props.kind]
 const size = ({ rail: '300 x 600', inline: 'Responsive rectangle', banner: 'Responsive banner' })[props.kind]
 if (live) useHead({ script: [{ key: 'adsense', async: true, crossorigin: 'anonymous', src: `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${client}` }] })
