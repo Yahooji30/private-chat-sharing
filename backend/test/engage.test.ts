@@ -83,7 +83,9 @@ describe('feedback', () => {
     expect((await pub('POST', '/api/feedback', 6, { ...ok, message: 'hey' })).status).toBe(400)
     expect((await pub('POST', '/api/feedback', 7, { ...ok, email: 'not-an-email' })).status).toBe(400)
     expect((await pub('POST', '/api/feedback', 1, ok)).status).toBe(200)
-    expect((await pub('POST', '/api/feedback', 1, { rating: 3, message: 'Anonymous but useful note' })).status).toBe(200)
+    expect((await pub('POST', '/api/feedback', 1, { rating: 3, message: 'Anonymous but useful note' })).status).toBe(400) // name is required
+    expect((await pub('POST', '/api/feedback', 1, { ...ok, message: 'x'.repeat(201) })).status).toBe(400) // 200 characters at most
+    expect((await pub('POST', '/api/feedback', 1, { rating: 3, name: 'Ravi', message: 'x'.repeat(200) })).status).toBe(200)
     const inbox = (await admin('GET', '/api/admin/feedback')).body
     expect(inbox.total).toBe(2); expect(inbox.unread).toBe(2)
     expect(inbox.items[1]).toMatchObject({ name: 'Asha', email: 'asha@example.com', rating: 5, status: 'new', public: false })
@@ -119,12 +121,6 @@ describe('feedback', () => {
     expect((await admin('PATCH', `/api/admin/feedback/${id}`, { status: 'weird' })).status).toBe(400)
     expect((await admin('DELETE', `/api/admin/feedback/${id}`)).status).toBe(200)
     expect((await admin('DELETE', `/api/admin/feedback/${id}`)).status).toBe(404)
-  })
-
-  it('names unnamed public feedback "Anonymous"', async () => {
-    const id = (await admin('GET', '/api/admin/feedback')).body.items.find((i: any) => i.name === '').id
-    await admin('PATCH', `/api/admin/feedback/${id}`, { public: true })
-    expect((await pub('GET', '/api/feedback/public')).body.items[0].name).toBe('Anonymous')
   })
 })
 

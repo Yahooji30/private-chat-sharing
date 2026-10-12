@@ -158,11 +158,12 @@ export type FaqInput = z.infer<typeof faqInputSchema>
 export const faqReorderSchema = z.object({ ids: z.array(z.string().max(40)).min(1).max(500) })
 
 export const FEEDBACK_STATUS = ['new', 'read', 'archived'] as const
+export const FEEDBACK_MESSAGE_MAX = 200
 export const feedbackInputSchema = z.object({
-  name: z.string().trim().max(60).default(''),
+  name: z.string().trim().min(1).max(60),
   email: z.union([z.literal(''), z.string().trim().email().max(120)]).default(''),
   rating: z.number().int().min(1).max(5),
-  message: z.string().trim().min(5).max(2000),
+  message: z.string().trim().min(5).max(FEEDBACK_MESSAGE_MAX),
   /** honeypot: real visitors never fill this in */
   website: z.string().max(200).optional(),
 })

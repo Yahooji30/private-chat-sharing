@@ -10,7 +10,7 @@ test('secure chat: create, join with password, messages relay, wrong password fa
   const code = a.url().split('/').pop()!
   await expect(a.getByText(`Room ${code}`)).toBeVisible({ timeout: 15_000 })
   await a.getByPlaceholder('Write a message').fill('secret hello')
-  await a.getByRole('button', { name: 'Send' }).click()
+  await a.getByRole('button', { name: 'Send', exact: true }).click()
   await expect(a.getByText('secret hello')).toBeVisible()
 
   const b = await device(browser)
@@ -25,7 +25,7 @@ test('secure chat: create, join with password, messages relay, wrong password fa
   await expect(a.getByText('Someone joined')).toBeVisible()
   await expect(b.getByText('2/4 in room')).toBeVisible()
   await a.getByPlaceholder('Write a message').fill('second message')
-  await a.getByRole('button', { name: 'Send' }).click()
+  await a.getByRole('button', { name: 'Send', exact: true }).click()
   await expect(b.getByText('second message')).toBeVisible()
   await b.getByPlaceholder('Write a message').fill('reply!')
   await b.keyboard.press('Enter')

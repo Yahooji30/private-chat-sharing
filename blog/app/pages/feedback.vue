@@ -22,6 +22,7 @@ const labels = ['', 'Poor', 'Fair', 'Good', 'Very good', 'Excellent']
 
 async function submit(): Promise<void> {
   error.value = ''
+  if (!who.value.trim()) { error.value = 'Please enter your name.'; return }
   if (!rating.value) { error.value = 'Please choose a star rating.'; return }
   if (message.value.trim().length < 5) { error.value = 'Please write a few words (at least 5 characters).'; return }
   state.value = 'sending'
@@ -50,7 +51,7 @@ async function submit(): Promise<void> {
 
     <form v-else class="card p-5 md:p-6 mt-6 space-y-4" novalidate @submit.prevent="submit">
       <fieldset>
-        <legend class="text-sm font-medium">Your rating</legend>
+        <legend class="text-sm font-medium">Your rating <span class="text-pink-ink">*</span></legend>
         <div class="flex items-center gap-1 mt-1.5" role="radiogroup" aria-label="Rating">
           <label v-for="n in 5" :key="n" class="cursor-pointer text-4xl leading-none px-0.5 rounded focus-within:outline-2 focus-within:outline-accent transition" :class="n <= (hover || rating) ? 'text-warn' : 'text-muted/40'" @mouseenter="hover = n" @mouseleave="hover = 0">
             <input v-model.number="rating" type="radio" name="rating" :value="n" class="sr-only" :aria-label="`${n} star${n > 1 ? 's' : ''}, ${labels[n]}`">★
@@ -59,9 +60,10 @@ async function submit(): Promise<void> {
         </div>
       </fieldset>
       <label class="block"><span class="text-sm font-medium">Your message</span>
-        <textarea v-model="message" class="input mt-1.5 !py-2.5 min-h-32" rows="5" maxlength="2000" required placeholder="What's on your mind?" /></label>
+        <textarea v-model="message" class="input mt-1.5 !py-2.5 min-h-32" rows="5" maxlength="200" required placeholder="What's on your mind?" />
+        <span class="mt-1 flex text-xs tabular-nums" :class="message.length >= 200 ? 'text-pink-ink font-semibold' : 'text-muted'"><span>At least 5 characters</span><span class="ml-auto">{{ message.length }} / 200</span></span></label>
       <div class="grid sm:grid-cols-2 gap-3">
-        <label class="block"><span class="text-sm font-medium">Name <span class="text-muted font-normal">(optional)</span></span><input v-model="who" class="input mt-1.5" maxlength="60" autocomplete="name"></label>
+        <label class="block"><span class="text-sm font-medium">Name <span class="text-pink-ink">*</span></span><input v-model="who" class="input mt-1.5" maxlength="60" autocomplete="name" required></label>
         <label class="block"><span class="text-sm font-medium">Email <span class="text-muted font-normal">(optional, if you'd like a reply)</span></span><input v-model="email" type="email" class="input mt-1.5" maxlength="120" autocomplete="email"></label>
       </div>
       <!-- honeypot: invisible to people, tempting to bots -->

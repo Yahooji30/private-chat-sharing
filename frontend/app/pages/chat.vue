@@ -29,7 +29,7 @@ const points = [
 
 <template>
   <div class="max-w-5xl mx-auto pt-3 md:pt-8 grid md:grid-cols-2 gap-4 md:gap-8 items-start">
-    <div class="space-y-3 md:pt-4">
+    <div class="space-y-3 md:pt-4 order-2 md:order-1">
       <h1 class="text-3xl md:text-4xl font-semibold tracking-tight">Private chat that <span class="text-pink">disappears</span></h1>
       <p class="text-muted text-lg">Start a throwaway room in seconds. No accounts, no names, no history.</p>
       <ul class="space-y-3 pt-3">
@@ -37,7 +37,7 @@ const points = [
           <div><p class="font-semibold">{{ p[1] }}</p><p class="text-sm text-muted">{{ p[2] }}</p></div></li>
       </ul>
     </div>
-    <div class="space-y-3">
+    <div class="space-y-3 order-1 md:order-2">
       <form class="card p-5 space-y-4" @submit.prevent="create">
         <h2 class="text-lg font-semibold">Create a room</h2>
         <label class="block"><span class="text-sm font-medium">Password</span>
@@ -55,6 +55,6 @@ const points = [
         <button class="btn !min-h-11 px-5">Join</button>
       </form>
     </div>
-    <AdSlot kind="inline" class="md:col-span-2" />
+    <AdSlot kind="inline" class="md:col-span-2 order-3" />
   </div>
 </template>

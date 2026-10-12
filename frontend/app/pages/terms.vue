@@ -16,6 +16,7 @@ onMounted(async () => {
   <article class="max-w-2xl mx-auto pt-3 lg:pt-1 pb-8 prose-page">
     <p class="eyebrow !m-0">Legal</p>
     <h1>Terms</h1>
+    <AdSlot kind="banner" class="!my-4 not-prose" />
     <p v-if="loading" class="text-muted">Loading...</p>
     <div v-else-if="custom" v-html="custom" />
     <template v-else>
@@ -25,5 +26,6 @@ onMounted(async () => {
       <h2>Shared networks</h2>
       <p>Devices behind the same public IP address share a space. On public Wi-Fi or mobile carriers, unrelated people may share it. Do not put secrets in the shared text. Use secure chat for private conversations.</p>
     </template>
+    <AdSlot kind="inline" class="mt-8" />
   </article>
 </template>

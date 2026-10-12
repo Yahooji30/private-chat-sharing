@@ -16,6 +16,7 @@ onMounted(async () => {
   <article class="max-w-2xl mx-auto pt-3 lg:pt-1 pb-8 prose-page">
     <p class="eyebrow !m-0">Legal</p>
     <h1>Privacy</h1>
+    <AdSlot kind="banner" class="!my-4 not-prose" />
     <p v-if="loading" class="text-muted">Loading...</p>
     <div v-else-if="custom" v-html="custom" />
     <template v-else>
@@ -27,5 +28,6 @@ onMounted(async () => {
       <h2>Cookies</h2>
       <p>One cookie identifies your device so linked devices and settings work. It is not used for tracking.</p>
     </template>
+    <AdSlot kind="inline" class="mt-8" />
   </article>
 </template>

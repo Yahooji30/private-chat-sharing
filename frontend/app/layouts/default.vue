@@ -27,6 +27,7 @@ const footer = [['Features', '/features'], ['FAQ', '/faq'], ['Privacy', '/privac
           <Icon :name="n.icon" :size="20" :weight="active(n.to) ? 'fill' : 'regular'" />{{ n.label }}
         </NuxtLink>
       </nav>
+      <button class="mt-1 px-3 h-10 inline-flex items-center gap-3 rounded-lg text-[0.9375rem] font-medium text-ink/70 hover:bg-surface-2 hover:text-ink transition-colors" @click="feedback = true"><Icon name="mail" :size="20" />Send feedback</button>
       <div class="mt-auto space-y-3">
         <button class="w-full text-left rounded-xl p-4 text-white bg-[var(--accent-btn)] hover:bg-[var(--accent-btn-hover)] transition-colors" @click="app.openSettings('link')">
           <span class="flex items-center gap-2 font-semibold text-[0.9375rem]"><Icon name="link" :size="18" weight="bold" />Link a device</span>

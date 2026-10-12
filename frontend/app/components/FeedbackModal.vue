@@ -1,5 +1,6 @@
 <script setup lang="ts">
 /** Feedback as a pop-up from anywhere in the app (footer, FAQ, features). Posts to the same endpoint as the blog's feedback page. */
+import { FEEDBACK_MESSAGE_MAX } from '@sync/shared'
 const open = useState('feedback-open', () => false)
 const name = String(useRuntimeConfig().public.appName)
 const toast = useToast()
@@ -12,6 +13,7 @@ watch(open, v => { if (v && state.value === 'done') state.value = 'idle' })
 
 async function submit(): Promise<void> {
   error.value = ''
+  if (!who.value.trim()) { error.value = 'Please enter your name.'; return }
   if (!rating.value) { error.value = 'Please choose a star rating.'; return }
   if (message.value.trim().length < 5) { error.value = 'Please write a few words (at least 5 characters).'; return }
   state.value = 'sending'
@@ -36,7 +38,7 @@ async function submit(): Promise<void> {
     </div>
     <form v-else class="space-y-4" novalidate @submit.prevent="submit">
       <fieldset>
-        <legend class="text-sm font-medium">Your rating</legend>
+        <legend class="text-sm font-medium">Your rating <span class="text-pink-ink">*</span></legend>
         <div class="flex items-center gap-0.5 mt-1" role="radiogroup" aria-label="Rating">
           <label v-for="n in 5" :key="n" class="cursor-pointer p-1 rounded-lg focus-within:outline-2 focus-within:outline-accent" :class="n <= rating ? 'text-warn' : 'text-line'">
             <input v-model.number="rating" type="radio" name="rating" :value="n" class="sr-only" :aria-label="`${n} star${n > 1 ? 's' : ''}, ${labels[n]}`"><Icon name="star" :size="32" :weight="n <= rating ? 'fill' : 'regular'" />
@@ -44,12 +46,11 @@ async function submit(): Promise<void> {
           <span class="ml-2 text-sm text-muted" aria-live="polite">{{ labels[rating] }}</span>
         </div>
       </fieldset>
-      <label class="block"><span class="text-sm font-medium">Your message</span>
-        <textarea v-model="message" class="input mt-1.5 !py-2.5 min-h-28" rows="4" maxlength="2000" required placeholder="What's on your mind?" /></label>
-      <div class="grid sm:grid-cols-2 gap-3">
-        <label class="block"><span class="text-sm font-medium">Name <span class="text-muted font-normal">(optional)</span></span><input v-model="who" class="input mt-1.5" maxlength="60" autocomplete="name"></label>
-        <label class="block"><span class="text-sm font-medium">Email <span class="text-muted font-normal">(optional)</span></span><input v-model="email" type="email" class="input mt-1.5" maxlength="120" autocomplete="email"></label>
-      </div>
+      <label class="block"><span class="text-sm font-medium">Name <span class="text-pink-ink">*</span></span><input v-model="who" class="input mt-1.5" maxlength="60" autocomplete="name" required placeholder="Your name"></label>
+      <label class="block"><span class="text-sm font-medium">Your message <span class="text-pink-ink">*</span></span>
+        <textarea v-model="message" class="input mt-1.5 !py-2.5 min-h-28" rows="4" :maxlength="FEEDBACK_MESSAGE_MAX" required placeholder="What's on your mind?" />
+        <span class="mt-1 flex text-xs tabular-nums" :class="message.length >= FEEDBACK_MESSAGE_MAX ? 'text-pink-ink font-semibold' : message.length >= FEEDBACK_MESSAGE_MAX * 0.9 ? 'text-warn' : 'text-muted'" data-testid="feedback-count"><span>At least 5 characters</span><span class="ml-auto">{{ message.length }} / {{ FEEDBACK_MESSAGE_MAX }}</span></span></label>
+      <label class="block"><span class="text-sm font-medium">Email <span class="text-muted font-normal">(optional, if you would like a reply)</span></span><input v-model="email" type="email" class="input mt-1.5" maxlength="120" autocomplete="email" placeholder="you@example.com"></label>
       <div class="absolute -left-[9999px] h-0 w-0 overflow-hidden" aria-hidden="true"><label>Website<input v-model="website" tabindex="-1" autocomplete="off" name="website"></label></div>
       <p v-if="error" class="text-sm text-pink-ink" role="alert">{{ error }}</p>
       <button class="btn btn-accent w-full !min-h-11" :disabled="state === 'sending'">{{ state === 'sending' ? 'Sending...' : 'Send feedback' }}</button>

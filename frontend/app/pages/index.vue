@@ -75,15 +75,15 @@ const steps = [
       <h1 class="text-2xl md:text-[1.75rem] font-semibold mt-0.5">{{ headline }}</h1>
     </header>
 
-    <div class="lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-6 lg:items-stretch">
-      <!-- scratchpad: on a computer it grows to the height of the side column, so there is never a gap under it -->
-      <section class="lg:flex lg:flex-col" aria-label="Shared text">
+    <div class="lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-6 lg:items-start">
+      <!-- scratchpad: a fixed, comfortable height; it never stretches with the side column -->
+      <section aria-label="Shared text">
         <!-- phone + tablet: found links and files open as pop-up sheets, right under the title so they are never below the fold -->
         <div class="lg:hidden flex gap-2 mb-3">
           <button v-if="showLinks" class="btn flex-1 !min-h-11" aria-label="Show found links" @click="sheet = 'links'"><Icon name="link" :size="18" />Links<span v-if="urls.length" class="chip">{{ urls.length }}</span></button>
           <button class="btn flex-1 !min-h-11" aria-label="Show files" @click="sheet = 'files'"><Icon name="files" :size="18" />Files<span v-if="fileCount" class="chip chip-pink">{{ fileCount }}</span></button>
         </div>
-        <div class="card overflow-hidden flex flex-col lg:flex-1 transition-[border-color,box-shadow] focus-within:border-[var(--accent)] focus-within:shadow-[0_0_0_3px_color-mix(in_srgb,var(--accent)_16%,transparent)]">
+        <div class="card overflow-hidden flex flex-col transition-[border-color,box-shadow] focus-within:border-[var(--accent)] focus-within:shadow-[0_0_0_3px_color-mix(in_srgb,var(--accent)_16%,transparent)]">
           <div class="flex items-center gap-3 px-5 pt-4">
             <span class="eyebrow">Scratchpad</span>
             <span class="ml-auto text-xs tabular-nums" :class="meter" data-testid="char-count" :title="`Limit: ${app.textMax.toLocaleString()} characters`">{{ len.toLocaleString() }} / {{ app.textMax.toLocaleString() }}</span>
@@ -93,7 +93,7 @@ const steps = [
             <button class="size-8 -mr-1.5 grid place-items-center rounded-lg text-muted hover:bg-surface-2 hover:text-ink" aria-label="Reload from server" @click="sync.load()"><Icon name="refresh" :size="17" /></button>
           </div>
           <textarea ref="ta" :value="sync.text.value" :class="fontClass" :style="{ fontSize: `${app.settings.fontSize}px` }" :spellcheck="app.spellcheck"
-            class="block w-full flex-none h-[46dvh] md:h-[54dvh] min-h-64 lg:h-auto lg:flex-1 lg:min-h-[28rem] resize-none bg-transparent px-5 py-3 outline-none leading-[1.7]"
+            class="block w-full flex-none h-[46dvh] md:h-[54dvh] min-h-64 lg:h-[calc(100dvh-21rem)] lg:min-h-[24rem] lg:max-h-[48rem] resize-none bg-transparent px-5 py-3 outline-none leading-[1.7]"
             placeholder="Type or paste here. It shows up on all your devices instantly." aria-label="Shared text" autocapitalize="sentences" @input="sync.edit(($event.target as HTMLTextAreaElement).value)" />
           <div class="flex border-t border-line divide-x divide-line" role="toolbar" aria-label="Text actions">
             <button :class="dock" aria-label="Copy" @click="copy"><Icon name="copy" :size="19" />Copy</button>

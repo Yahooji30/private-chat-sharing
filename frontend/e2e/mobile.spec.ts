@@ -45,3 +45,19 @@ test('mobile: found links and files open as pop-up sheets, links are copyable, n
   await page.getByRole('button', { name: 'Show files' }).click()
   await expect(page.getByRole('dialog').getByText(/Drop files here or tap to choose|Add more files/)).toBeVisible()
 })
+
+test('mobile: the last button on a page is not hidden behind the tab bar and can be tapped', async ({ page }) => {
+  await page.goto('/chat')
+  const create = page.getByRole('button', { name: 'Create secure room' })
+  await expect(create).toBeVisible()
+  // the create-room form comes first
+  const joinBox = await page.getByText('Have a room link or code?').boundingBox()
+  expect((await create.boundingBox())!.y).toBeLessThan(joinBox!.y)
+  await page.getByRole('link', { name: 'FAQ' }).first().scrollIntoViewIfNeeded().catch(() => undefined)
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
+  const bar = (await page.getByRole('navigation', { name: 'Main' }).last().boundingBox())!
+  const foot = (await page.getByRole('button', { name: 'Feedback' }).boundingBox())!
+  expect(foot.y + foot.height).toBeLessThanOrEqual(bar.y + 1) // the footer's feedback link stays above the bar
+  await page.getByRole('button', { name: 'Feedback' }).click()
+  await expect(page.getByRole('dialog').getByText('Your rating')).toBeVisible()
+})

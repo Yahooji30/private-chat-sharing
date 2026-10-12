@@ -8,6 +8,7 @@ const custom = computed(() => site.value?.terms_html ?? '')
 <template>
   <article class="max-w-2xl mx-auto pt-6 prose-page">
     <h1>Terms</h1>
+    <AdSlot kind="banner" class="!my-4" />
     <div v-if="custom" v-html="custom" />
     <template v-else>
     <p>Last updated: <time datetime="2026-10-06">6 October 2026</time></p>
@@ -16,5 +17,6 @@ const custom = computed(() => site.value?.terms_html ?? '')
       <h2>Shared networks</h2>
       <p>Devices behind the same public IP address share a space. On public Wi-Fi or mobile carriers, unrelated people may share it. Do not put secrets in the shared text. Use secure chat for private conversations.</p>
     </template>
+    <AdSlot kind="inline" class="mt-8" />
   </article>
 </template>

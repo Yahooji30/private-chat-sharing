@@ -8,6 +8,7 @@ const custom = computed(() => site.value?.privacy_html ?? '')
 <template>
   <article class="max-w-2xl mx-auto pt-6 prose-page">
     <h1>Privacy</h1>
+    <AdSlot kind="banner" class="!my-4" />
     <div v-if="custom" v-html="custom" />
     <template v-else>
     <p>Last updated: <time datetime="2026-10-06">6 October 2026</time></p>
@@ -18,5 +19,6 @@ const custom = computed(() => site.value?.privacy_html ?? '')
       <h2>Cookies</h2>
       <p>One cookie identifies your device so linked devices and settings work. It is not used for tracking.</p>
     </template>
+    <AdSlot kind="inline" class="mt-8" />
   </article>
 </template>

@@ -132,11 +132,15 @@ test('home: the character counter follows the server limit, links get their own 
 
 test('feedback is a pop-up, privacy and terms load inside the app, links can be copied', async ({ browser }) => {
   const a = await device(browser, '/faq')
-  await a.getByRole('button', { name: 'Send feedback' }).click()
+  await a.getByRole('button', { name: 'Send feedback' }).first().click()
   const dlg = a.getByRole('dialog')
   await expect(dlg.getByText('Your rating')).toBeVisible()
   await dlg.locator('label:has(input[value="4"])').click()
   await dlg.getByPlaceholder("What's on your mind?").fill('Great app, thank you')
+  await expect(dlg.getByTestId('feedback-count')).toContainText('20 / 200')
+  await dlg.getByRole('button', { name: 'Send feedback' }).click()
+  await expect(dlg.getByText('Please enter your name.')).toBeVisible() // name is required
+  await dlg.getByPlaceholder('Your name').fill('Asha')
   await dlg.getByRole('button', { name: 'Send feedback' }).click()
   await expect(dlg.getByText('Thank you!')).toBeVisible()
   await dlg.getByRole('button', { name: 'Close', exact: true }).first().click()
@@ -150,4 +154,16 @@ test('feedback is a pop-up, privacy and terms load inside the app, links can be 
   await a.locator('textarea').fill('see https://example.com/docs')
   await a.getByRole('button', { name: 'Copy example.com' }).click()
   expect(await a.evaluate(() => navigator.clipboard.readText())).toBe('https://example.com/docs')
+})
+
+test('sidebar has Send feedback, and the scratchpad keeps its height when files are added', async ({ browser }) => {
+  const a = await device(browser, '/')
+  await a.setViewportSize({ width: 1440, height: 900 })
+  await a.waitForSelector('textarea')
+  const before = (await a.locator('textarea').boundingBox())!.height
+  await a.getByTestId('file-input').setInputFiles([1, 2, 3, 4].map(n => ({ name: `f${n}.txt`, mimeType: 'text/plain', buffer: Buffer.from(`file ${n}`) })))
+  await expect(a.getByTestId('file-f4.txt')).toBeVisible()
+  expect((await a.locator('textarea').boundingBox())!.height).toBe(before)
+  await a.getByRole('button', { name: 'Send feedback' }).first().click()
+  await expect(a.getByRole('dialog').getByText('Your rating')).toBeVisible()
 })

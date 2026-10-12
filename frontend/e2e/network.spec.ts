@@ -186,7 +186,7 @@ test('secure chat works between devices on different networks', async ({ browser
   await b.getByRole('button', { name: 'Join chat' }).click()
   await expect(b.getByText('2/4 in room')).toBeVisible({ timeout: 20_000 })
   await a.getByPlaceholder('Write a message').fill('hello from another network')
-  await a.getByRole('button', { name: 'Send' }).click()
+  await a.getByRole('button', { name: 'Send', exact: true }).click()
   await expect(b.getByText('hello from another network')).toBeVisible()
 })
 
@@ -286,7 +286,7 @@ test('connection loss in chat: the dropped member resumes the same seat and rece
   await b.getByPlaceholder('Room password').fill('resume me please')
   await b.getByRole('button', { name: 'Join chat' }).click()
   await expect(b.getByText('2/4 in room')).toBeVisible({ timeout: 20_000 })
-  const say = async (p: typeof a, t: string): Promise<void> => { await p.getByPlaceholder('Write a message').fill(t); await p.getByRole('button', { name: 'Send' }).click() }
+  const say = async (p: typeof a, t: string): Promise<void> => { await p.getByPlaceholder('Write a message').fill(t); await p.getByRole('button', { name: 'Send', exact: true }).click() }
   await say(a, 'before the drop')
   await expect(b.getByText('before the drop')).toBeVisible()
   await b.context().setOffline(true)
