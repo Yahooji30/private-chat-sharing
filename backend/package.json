@@ -11,6 +11,7 @@
     "start:rt": "node --env-file=.env dist/rt.js",
     "typecheck": "tsc -p .",
     "db:migrate": "tsx --env-file=.env src/core/db/migrate.ts",
+    "db:seed-faq": "tsx --env-file=.env src/core/db/seed-faq.ts",
     "test": "vitest run"
   },
   "dependencies": {
