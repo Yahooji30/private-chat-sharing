@@ -1,4 +1,5 @@
 import { sql } from './client'
+import { migrate } from './migrate'
 import { SEED_FAQS } from './faq-data'
 import { base32 } from '../lib/crypto'
 import { renderMarkdown } from '../lib/markdown'
@@ -21,6 +22,7 @@ export async function seedFaqs(): Promise<number> {
 }
 
 if (process.argv[1]?.endsWith('seed-faq.ts')) {
+  await migrate() // the faqs table comes from migration 004; apply anything pending first so this works on an older database
   const n = await seedFaqs()
   await sql.end()
   console.log(n ? `Added ${n} FAQ questions. Edit them in Admin > FAQ.` : 'The FAQ already has questions, so nothing was added.')
