@@ -1,5 +1,5 @@
 import type { Redis } from 'ioredis'
-import { LIMITS } from '@sync/shared'
+import { env } from './config/env'
 import { sql } from './db/client'
 import { open, seal, spaceKey } from './lib/crypto'
 import { K } from './redis/keys'
@@ -23,7 +23,7 @@ export async function readText(redis: Redis, spaceId: string): Promise<{ content
 }
 
 export async function writeText(redis: Redis, spaceId: string, content: string): Promise<number> {
-  if (content.length > LIMITS.textChars) throw new Error('too large')
+  if (content.length > env.TEXT_MAX_CHARS) throw new Error('too large')
   const cur = await readText(redis, spaceId)
   return Number(await evalLua(redis, TEXT_UPDATE, [K.text(spaceId), K.dirty], [content, cur.rev, spaceId]))
 }

@@ -1,4 +1,3 @@
-import { LIMITS } from '@sync/shared'
 
 export type SaveState = 'idle' | 'saving' | 'saved' | 'offline'
 
@@ -9,7 +8,7 @@ export function useTextSync() {
   const rev = ref(0)
   let dirty = false
   let timer: ReturnType<typeof setTimeout> | undefined
-  const tooBig = computed(() => text.value.length >= LIMITS.textChars)
+  const tooBig = computed(() => text.value.length >= useApp().textMax)
 
   async function send(): Promise<void> {
     if (!dirty) return
@@ -24,7 +23,7 @@ export function useTextSync() {
   }
 
   function edit(next: string): void {
-    text.value = next.slice(0, LIMITS.textChars)
+    text.value = next.slice(0, useApp().textMax)
     dirty = true
     state.value = 'saving'
     clearTimeout(timer)

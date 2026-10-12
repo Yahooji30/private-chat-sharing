@@ -1,7 +1,8 @@
 import { z } from 'zod'
 
 export const LIMITS = {
-  textChars: 100_000,
+  textChars: 100_000, // default; the server's TEXT_MAX_CHARS decides, and sends the real value to the app
+  textCharsHard: 1_000_000,
   blockSize: 1024 * 1024,
   maxFiles: 100,
   fileNameChars: 255,
@@ -74,7 +75,7 @@ export type Settings = z.infer<typeof settingsSchema>
 export const DEFAULT_SETTINGS: Settings = settingsSchema.parse({})
 
 export const textUpdateSchema = z.object({
-  content: z.string().max(LIMITS.textChars),
+  content: z.string().max(LIMITS.textCharsHard),
   baseRev: z.number().int().min(0),
 })
 export const deviceRenameSchema = z.object({ name: z.string().trim().min(1).max(LIMITS.deviceNameChars) })
@@ -194,9 +195,12 @@ export type SeoInput = z.infer<typeof seoInputSchema>
 /** What the public `GET /api/seo` returns per page (only pages the admin has filled in). */
 export interface SeoEntry { title: string; description: string; keywords: string; ogTitle: string; ogDescription: string; ogImage: string; canonical: string; noindex: boolean }
 
-export const DEFAULT_CHAT_SHARE_MESSAGE = 'I have sent you a secret message. Please click on this link, use the password ** and read the message.'
+export const DEFAULT_CHAT_SHARE_MESSAGE = 'I have sent you a secret message. Please click on this link, use the password {password} and read the message.'
 /** Builds the text that is sent through WhatsApp and friends: the admin's template plus the room link on its own line. */
-export function chatShareText(template: string | undefined, link: string): string {
-  const t = (template ?? '').trim() || DEFAULT_CHAT_SHARE_MESSAGE
+export function chatShareText(template: string | undefined, link: string, password?: string): string {
+  let t = (template ?? '').trim() || DEFAULT_CHAT_SHARE_MESSAGE
+  // {password} (or the older ** placeholder) becomes the room password; without one the message says it comes separately
+  const pw = password?.trim()
+  t = pw ? t.replace(/\{password\}|\*\*/g, () => pw) : t.replace(/the password (\{password\}|\*\*)/gi, 'the password I will send you separately').replace(/\{password\}|\*\*/g, '(sent separately)')
   return t.includes('{link}') ? t.replaceAll('{link}', link) : `${t}\n\n${link}`
 }

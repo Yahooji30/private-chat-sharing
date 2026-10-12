@@ -6,7 +6,7 @@ test('text typed on one device appears on the other, and URLs are detected', asy
   await expect(b.locator('textarea')).toHaveValue('')
   await a.locator('textarea').fill('hello from A\nhttps://example.com/x')
   await expect(b.locator('textarea')).toHaveValue('hello from A\nhttps://example.com/x')
-  await expect(b.getByRole('link', { name: 'example.com/x' })).toHaveAttribute('target', '_blank')
+  await expect(b.getByRole('link', { name: /example\.com\s?\/x/ })).toHaveAttribute('target', '_blank')
   await expect(a.getByText('Saved').first()).toBeVisible()
   await b.reload()
   await expect(b.locator('textarea')).toHaveValue('hello from A\nhttps://example.com/x')

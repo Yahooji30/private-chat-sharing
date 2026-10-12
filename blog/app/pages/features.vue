@@ -9,7 +9,7 @@ const features = [
   { icon: 'upload', title: 'Device-to-device file transfer', text: 'Drop in files and they travel straight from device to device over WebRTC. Nothing is uploaded to our servers, big files resume after a drop, and every block is verified.' },
   { icon: 'qr', title: 'Link any device, anywhere', text: 'A phone on mobile data? Scan a QR code, type a short code or share a link and it joins your space in seconds. Unlink any time.' },
   { icon: 'lock', title: 'Secure private chat', text: 'Password-protected rooms for up to four people. Messages are encrypted in your browser, there is no history for newcomers, and the room is wiped when the last person leaves.' },
-  { icon: 'share', title: 'Invite with one tap', text: 'Share a secret chat link through WhatsApp, Telegram, email or any app, with a ready-made message. The password is shared separately, so the link alone is useless.' },
+  { icon: 'share', title: 'Invite with one tap', text: 'Share a secret chat link through WhatsApp, email, SMS or any app, with a ready-made message. The password is shared separately, so the link alone is useless.' },
   { icon: 'link', title: 'Found links panel', text: 'Every web address in your shared text is collected in a tidy panel, so you can open links from your laptop on your phone without copying anything.' },
   { icon: 'shield', title: 'Private by design', text: 'No sign-up and no accounts. Networks are identified by a keyed hash of the IP address, never the address itself, and your text is encrypted at rest.' },
   { icon: 'phone', title: 'Installs like an app', text: 'Add it to your home screen on Android, iPhone or desktop. It opens instantly, works offline for the basics, and appears in the share menu of other apps.' },

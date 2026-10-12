@@ -7,6 +7,9 @@ export type ChatPhase = 'password' | 'joining' | 'live' | 'reconnecting' | 'full
 
 /** Keys live only in module memory: reload or leave = they are gone (by design). */
 const keyring = new Map<string, RoomKeys>()
+/** The password stays in memory only so the person who knows it can put it into an invite message. Reload or leave and it is gone. */
+const passwords = new Map<string, string>()
+export const roomPassword = (code: string): string => passwords.get(code) ?? ''
 export const hasKeys = (code: string): boolean => keyring.has(code)
 export const rememberKeys = (code: string, k: RoomKeys): void => { keyring.set(code, k) }
 
@@ -15,6 +18,7 @@ export async function createRoom(password: string, code?: string): Promise<{ cod
   const keys = await deriveKeys(password, kdfSalt)
   const r = await api<{ code: string; manageToken: string }>('/chat/rooms', { method: 'POST', body: { code: code || undefined, authKey: keys.authKey, kdfSalt } })
   rememberKeys(r.code, keys)
+  passwords.set(r.code, password)
   try { localStorage.setItem(`sync:chat:manage:${r.code}`, r.manageToken) } catch { /* private mode */ }
   return r
 }
@@ -45,6 +49,7 @@ export function useChat(code: string) {
       const keys = await deriveKeys(password, kdfSalt)
       const { ticket } = await api<{ ticket: string }>(`/chat/rooms/${code}/ticket`, { method: 'POST', body: { authKey: keys.authKey } })
       rememberKeys(code, keys)
+      passwords.set(code, password)
       await connect({ ticket })
       return true
     } catch (e) {
@@ -136,7 +141,7 @@ export function useChat(code: string) {
     if (on) typingTimer = setTimeout(() => sock?.emit('chat:typing', { on: false }), 3000)
   }
 
-  function wipe(): void { msgs.value = []; system.value = []; keyring.delete(code); token = '' }
+  function wipe(): void { msgs.value = []; system.value = []; keyring.delete(code); passwords.delete(code); token = '' }
   function leave(): void { left = true; sock?.emit('chat:leave'); sock?.disconnect(); wipe(); phase.value = 'password' }
   function dispose(): void { left = true; sock?.emit('chat:leave'); sock?.disconnect(); msgs.value = [] }
 

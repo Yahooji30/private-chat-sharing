@@ -43,3 +43,18 @@ test('secure chat: create, join with password, messages relay, wrong password fa
 })
 
 const BLOG = process.env.E2E_BLOG_URL ?? 'http://localhost:3001'
+
+test('invite: the message carries the room password unless it is switched off; no Telegram, no preview box', async ({ browser }) => {
+  const a = await device(browser, '/chat')
+  await a.getByPlaceholder('At least 8 characters').fill('correct horse battery')
+  await a.getByRole('button', { name: 'Create secure room' }).click()
+  await a.waitForURL('**/c/**')
+  await a.getByRole('button', { name: 'Invite' }).click()
+  const wa = a.getByTestId('share-whatsapp')
+  await expect(wa).toHaveAttribute('href', /correct%20horse%20battery/)
+  await expect(a.getByTestId('share-telegram')).toHaveCount(0)
+  await expect(a.getByText('Message that will be sent')).toHaveCount(0)
+  await a.getByTestId('share-with-password').uncheck()
+  await expect(wa).not.toHaveAttribute('href', /correct%20horse%20battery/)
+  await expect(wa).toHaveAttribute('href', /separately/)
+})

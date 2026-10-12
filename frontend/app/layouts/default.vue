@@ -3,12 +3,12 @@ const app = useApp()
 const route = useRoute()
 const isOnline = useOnline()
 const base = [{ to: '/', label: 'Home', icon: 'home' }, { to: '/chat', label: 'Secure Chat', icon: 'chat' }]
-// Blog, features and FAQ are the separate SEO site; they open inside the app window (pages/blog) so an installed PWA never leaves the app
+// The blog is the separate SEO site; it opens inside the app window (pages/blog) so an installed PWA never leaves the app. Features and FAQ are native pages.
 const pages = computed(() => (app.blogUrl ? [{ to: '/blog', label: 'Blog', icon: 'blog' }, { to: '/features', label: 'Features', icon: 'features' }, { to: '/faq', label: 'FAQ', icon: 'faq' }] : []))
 const side = computed(() => [...base, ...pages.value])
 const active = (to: string): boolean => (to === '/' ? route.path === '/' : route.path.startsWith(to) || (to === '/chat' && route.path.startsWith('/c/')))
 const chatRoute = computed(() => route.path.startsWith('/c/'))
-const framed = computed(() => ['/blog', '/features', '/faq', '/feedback', '/privacy', '/terms'].some(p => route.path === p || route.path.startsWith(`${p}/`)))
+const framed = computed(() => ['/blog', '/feedback', '/privacy', '/terms'].some(p => route.path === p || route.path.startsWith(`${p}/`)))
 const wide = computed(() => route.path === '/')
 // phone + tablet tab bar: Home, Chat, the raised Link button, then the first two site pages
 const tabs = computed(() => [base[0]!, base[1]!, { fab: true, label: 'Link' }, ...pages.value.slice(0, 2)])
@@ -57,20 +57,20 @@ const footer = [['Features', '/features'], ['FAQ', '/faq'], ['Feedback', '/feedb
         </main>
       </div>
 
-      <footer class="text-center text-xs text-muted pt-2 pb-28 lg:pb-6" :class="chatRoute || framed ? 'hidden' : ''">
+      <footer class="text-center text-xs text-muted pt-2 pb-24 lg:pb-6" :class="chatRoute || framed ? 'hidden' : ''">
         <template v-if="app.blogUrl"><template v-for="(f, n) in footer" :key="f[1]"><span v-if="n"> · </span><NuxtLink :to="f[1]" class="hover:underline">{{ f[0] }}</NuxtLink></template></template>
       </footer>
     </div>
 
-    <!-- phone + tablet: floating tab bar with a raised Link button -->
-    <nav v-if="!chatRoute" class="lg:hidden fixed z-30 bottom-2.5 inset-x-3 md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-[30rem] rounded-2xl bg-surface/95 backdrop-blur-xl border border-line shadow-card" :style="{ marginBottom: 'var(--safe-b)' }" aria-label="Main">
-      <div class="grid items-end px-1.5 py-1.5" :style="{ gridTemplateColumns: `repeat(${tabs.length}, minmax(0, 1fr))` }">
+    <!-- phone + tablet: tab bar pinned to the bottom, nothing floats over the content -->
+    <nav v-if="!chatRoute" class="lg:hidden fixed z-30 bottom-0 inset-x-0 bg-surface border-t border-line" :style="{ paddingBottom: 'var(--safe-b)' }" aria-label="Main">
+      <div class="mx-auto max-w-lg grid items-stretch px-1 h-16" :style="{ gridTemplateColumns: `repeat(${tabs.length}, minmax(0, 1fr))` }">
         <template v-for="t in tabs" :key="t.label">
-          <button v-if="'fab' in t" class="flex flex-col items-center gap-0.5 text-[11px] font-medium text-pink-ink" aria-label="Link" @click="app.openSettings('link')">
-            <span class="-mt-7 size-14 rounded-2xl grid place-items-center text-white btn-pink !p-0 ring-4 ring-bg"><Icon name="link" :size="24" weight="bold" /></span>Link
+          <button v-if="'fab' in t" class="flex flex-col items-center justify-center gap-1 text-[11px] font-medium text-pink-ink" aria-label="Link device" @click="app.openSettings('link')">
+            <span class="size-8 rounded-lg grid place-items-center text-white bg-pink"><Icon name="link" :size="18" weight="bold" /></span>Link device
           </button>
-          <NuxtLink v-else :to="t.to!" class="flex flex-col items-center gap-0.5 py-1 text-[11px] font-medium" :class="active(t.to!) ? 'text-accent-ink' : 'text-muted'">
-            <span class="px-4 py-1 rounded-full transition-colors" :class="active(t.to!) ? 'bg-accent-soft' : ''"><Icon :name="t.icon!" :size="22" :weight="active(t.to!) ? 'fill' : 'regular'" /></span>{{ t.label!.replace('Secure ', '') }}
+          <NuxtLink v-else :to="t.to!" class="flex flex-col items-center justify-center gap-1 text-[11px] font-medium" :class="active(t.to!) ? 'text-accent-ink' : 'text-muted'">
+            <span class="h-8 w-14 rounded-full grid place-items-center transition-colors" :class="active(t.to!) ? 'bg-accent-soft' : ''"><Icon :name="t.icon!" :size="21" :weight="active(t.to!) ? 'fill' : 'regular'" /></span>{{ t.label!.replace('Secure ', '') }}
           </NuxtLink>
         </template>
       </div>

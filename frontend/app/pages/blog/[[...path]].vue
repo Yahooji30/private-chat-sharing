@@ -11,7 +11,7 @@ const router = useRouter()
 const frame = useTemplateRef<HTMLIFrameElement>('frame')
 const loaded = ref(false)
 const slow = ref(false)
-const SITE = ['/features', '/faq', '/feedback', '/privacy', '/terms']
+const SITE = ['/feedback', '/privacy', '/terms']
 const toSite = (appPath: string): string => (appPath === '/blog' || appPath.startsWith('/blog/') || appPath.startsWith('/blog?') ? appPath.slice(5) || '/' : appPath)
 const toApp = (sitePath: string): string => (SITE.some(p => sitePath === p || sitePath.startsWith(`${p}?`)) ? sitePath : sitePath === '/' ? '/blog' : `/blog${sitePath}`)
 const origin = computed(() => { try { return new URL(app.blogUrl).origin } catch { return '' } })
@@ -21,7 +21,7 @@ let fromFrame = ''
 
 useHead(() => ({ link: [{ rel: 'canonical', href: direct(toSite(route.path)) }] }))
 let timer: ReturnType<typeof setTimeout> | undefined
-onMounted(() => { timer = setTimeout(() => { slow.value = !loaded.value }, 7000) })
+onMounted(() => { timer = setTimeout(() => { slow.value = !loaded.value }, 6000) })
 onBeforeUnmount(() => clearTimeout(timer))
 
 watch(() => route.fullPath, v => {
@@ -39,18 +39,21 @@ useEventListener(window, 'message', (e: MessageEvent) => {
     if (typeof e.data.title === 'string' && e.data.title) document.title = e.data.title
     const next = toApp(e.data.path)
     if (next !== route.fullPath) void router.replace(next)
-    loaded.value = true
+    loaded.value = true; slow.value = false
+    sendTheme()
   }
 })
-function onLoad(): void { loaded.value = true; slow.value = false; sendTheme() }
+// the iframe load event also fires for a blocked or error page, so only the blog's own message counts as "opened"
+function onLoad(): void { sendTheme() }
 </script>
 
 <template>
-  <div class="fixed inset-x-0 top-14 md:top-16 lg:top-0 lg:left-64 bottom-0 bg-bg">
+  <div class="fixed inset-x-0 top-14 md:top-16 lg:top-0 lg:left-64 bottom-[calc(4rem+var(--safe-b))] lg:bottom-0 bg-bg">
     <p v-if="!app.blogUrl" class="p-8 text-center text-muted">The site address is not configured (NUXT_PUBLIC_BLOG_URL).</p>
     <template v-else>
       <div v-if="!loaded" class="absolute inset-0 grid place-items-center text-muted"><div class="text-center"><Icon name="refresh" class="animate-spin mx-auto" :size="22" />
-        <p v-if="slow" class="mt-4 text-sm">Taking too long? <a :href="direct(toSite(route.fullPath))" class="text-accent-ink underline font-medium">Open this page directly</a></p></div></div>
+        <template v-if="slow"><p class="mt-4 text-sm max-w-xs mx-auto">This page could not be shown inside the app. Rebuild the blog (pnpm build in blog) and check NUXT_PUBLIC_APP_URL, or open it directly.</p>
+          <a :href="direct(toSite(route.fullPath))" class="btn btn-accent mt-3">Open this page directly</a></template></div></div>
       <iframe ref="frame" :src="src" title="Jodbox site" class="size-full border-0 bg-bg" :class="loaded ? '' : 'invisible'" @load="onLoad" />
     </template>
   </div>

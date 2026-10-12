@@ -43,8 +43,7 @@ test('text tools: copy, download, clear and the character limit', async ({ brows
   await expect(a.getByText('Copied')).toBeVisible()
   expect(await a.evaluate(() => navigator.clipboard.readText())).toBe('copy me')
   const dl = a.waitForEvent('download')
-  await a.getByRole('button', { name: 'Downloads' }).click()
-  await a.getByRole('button', { name: 'Save text as .txt' }).click()
+  await a.getByRole('button', { name: 'Save as text file' }).click()
   expect(await readFile(await (await dl).path(), 'utf8')).toBe('copy me')
   await a.locator('textarea').fill('x'.repeat(99_000))
   await expect(a.getByText(/99,000 \/ 100,000/)).toBeVisible()
@@ -107,17 +106,25 @@ test('paste button inserts the clipboard at the cursor', async ({ browser }) => 
   await expect(a.getByText('Pasted')).toBeVisible()
 })
 
-test('features and FAQ open inside the app under clean addresses, and the address follows the page', async ({ browser }) => {
+test('features and FAQ are native pages with clean addresses; the blog opens inside the app', async ({ browser }) => {
   const a = await device(browser, '/features')
-  const site = a.frameLocator('iframe[title="Jodbox site"]')
-  await expect(site.getByRole('heading', { name: /Everything you need/ })).toBeVisible({ timeout: 15_000 })
+  await expect(a.getByRole('heading', { name: /Everything you need/ })).toBeVisible({ timeout: 15_000 })
   await expect(a.locator('link[rel=canonical]')).toHaveAttribute('href', /\/features$/)
   await a.getByRole('link', { name: 'FAQ' }).first().click()
   await expect(a).toHaveURL(/\/faq$/)
-  await expect(site.getByRole('heading', { name: /Questions|FAQ|Frequently/i }).first()).toBeVisible({ timeout: 15_000 })
-  // opening an article inside the framed blog moves the app's address to /blog/<slug>
+  await expect(a.getByRole('heading', { name: /Frequently asked/ })).toBeVisible()
+  // the blog is the server-rendered site shown inside the app; opening an article moves the address to /blog/<slug>
   await a.getByRole('link', { name: 'Blog' }).first().click()
   await expect(a).toHaveURL(/\/blog$/)
+  const site = a.frameLocator('iframe[title="Jodbox site"]')
   await site.locator('article a[href^="/"]').first().click()
   await expect(a).toHaveURL(/\/blog\/[^/]+$/, { timeout: 15_000 })
+})
+
+test('home: the character counter follows the server limit, links get their own section, no device icons', async ({ browser }) => {
+  const a = await device(browser, '/')
+  await a.locator('textarea').fill('hello https://example.com/docs')
+  await expect(a.getByTestId('char-count')).toHaveText(/30 \/ 100,000/)
+  await expect(a.getByText('Found URLs')).toBeVisible()
+  await expect(a.getByRole('button', { name: 'Show devices' })).toHaveCount(0)
 })

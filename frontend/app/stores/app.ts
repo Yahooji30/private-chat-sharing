@@ -1,4 +1,4 @@
-import { DEFAULT_SETTINGS, type Settings } from '@sync/shared'
+import { DEFAULT_SETTINGS, LIMITS, type Settings } from '@sync/shared'
 
 export interface Device { id: string; name: string; type: string; linked: boolean }
 export interface Peer { deviceId: string; name: string; type: string; self: boolean; since: number }
@@ -13,6 +13,7 @@ export const useApp = defineStore('app', () => {
   const ready = ref(false)
   const device = ref<Device | null>(null)
   const ip = ref('')
+  const textMax = ref(LIMITS.textChars) // the server's TEXT_MAX_CHARS, delivered with /space/me
   const cfg = useRuntimeConfig().public
   const rtUrl = ref(String(cfg.rtUrl ?? '').replace(/\/$/, ''))
   const blogUrl = ref(String(cfg.blogUrl ?? '').replace(/\/$/, ''))
@@ -40,8 +41,9 @@ export const useApp = defineStore('app', () => {
     spellcheck.value = ls.get('spellcheck', '0') === '1'
     applyTheme()
     matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme)
-    const me = await api<{ device: Device; ip: string; settings: Settings }>('/space/me')
+    const me = await api<{ device: Device; ip: string; settings: Settings; limits?: { textChars: number } }>('/space/me')
     device.value = me.device; ip.value = me.ip; settings.value = me.settings
+    if (me.limits?.textChars) textMax.value = me.limits.textChars
     ready.value = true
   }
 
@@ -58,5 +60,5 @@ export const useApp = defineStore('app', () => {
   }
   function openSettings(tab: 'general' | 'link' | 'linked' = 'general'): void { settingsTab.value = tab; settingsOpen.value = true }
 
-  return { ready, device, ip, rtUrl, blogUrl, settings, peers, online, hasConnected, theme, autoDownload, spellcheck, settingsOpen, settingsTab, load, saveSettings, setLocal, rename, setTheme, toggleTheme, openSettings }
+  return { ready, device, ip, textMax, rtUrl, blogUrl, settings, peers, online, hasConnected, theme, autoDownload, spellcheck, settingsOpen, settingsTab, load, saveSettings, setLocal, rename, setTheme, toggleTheme, openSettings }
 })
