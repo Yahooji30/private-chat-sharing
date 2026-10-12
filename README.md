@@ -35,7 +35,7 @@ Specs live in `docs/` (`00-MASTER.md`, `01-FEATURES.md`, `02-ARCHITECTURE.md`).
 | SEO per page | Admin > SEO edits title, description, keywords, social title/description/image, canonical and noindex for the app home and secure chat pages and for the blog, features, FAQ, feedback, privacy and terms pages. The blog site renders them on the server; the app injects them into its first HTML (`frontend/server/plugins/seo.ts`) so crawlers and link previews see them. Noindex pages leave the sitemap. Articles keep their own SEO fields |
 | Chat invite message | The Invite sheet in a chat room sends a ready-made message with the room link through WhatsApp, Telegram, email, SMS, the phone's share sheet or copy. Wording is editable in Admin > Site settings (`{link}` marks where the link goes); the default is "I have sent you a secret message. Please click on this link, use the password ** and read the message." The password is never part of it |
 | PWA | Manifest, icons, service worker, offline shell, share target |
-| Ads | Not part of this module. The home page keeps `#ad-top-banner`, the layout `#ad-footer`, and the per-space "hide ads" setting is stored |
+| Ads | Optional Google AdSense slots in the frontend and blog (see "Brand and ads" below). Never inside chat rooms. |
 
 Deviations from the docs: plain SQL migrations instead of Drizzle, Node 22 instead of 24, admin Media page at `/library` (because `/media` serves images).
 
