@@ -39,7 +39,7 @@ async function submit(): Promise<void> {
 
 <template>
   <div class="max-w-2xl mx-auto pt-6 md:pt-10 pb-12">
-    <h1 class="text-3xl md:text-4xl font-bold tracking-tight">Feedback</h1>
+    <h1 class="text-3xl md:text-4xl font-semibold tracking-tight">Feedback</h1>
     <p class="text-muted mt-2 text-lg">Found a bug, want a feature, or enjoying {{ name }}? Tell us. We read every message.</p>
 
     <div v-if="state === 'done'" class="card p-8 mt-6 text-center space-y-3" role="status">
@@ -72,7 +72,7 @@ async function submit(): Promise<void> {
     </form>
 
     <section v-if="data?.items.length" class="mt-12" aria-labelledby="loved">
-      <h2 id="loved" class="text-xl font-bold tracking-tight">What people say</h2>
+      <h2 id="loved" class="text-xl font-semibold tracking-tight">What people say</h2>
       <ul class="grid sm:grid-cols-2 gap-4 mt-4">
         <li v-for="(i, n) in data.items" :key="n" class="card p-5"><p class="text-warn tracking-wider" :aria-label="`${i.rating} out of 5`">{{ stars(i.rating) }}</p><p class="mt-2 whitespace-pre-line break-words">{{ i.message }}</p><p class="text-sm text-muted mt-3">{{ i.name }}</p></li>
       </ul>

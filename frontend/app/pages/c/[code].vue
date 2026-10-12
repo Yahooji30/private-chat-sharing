@@ -52,7 +52,7 @@ async function destroy(): Promise<void> {
     <div v-if="chat.phase.value === 'password' || unlocking" class="m-auto w-full max-w-sm px-4">
       <form class="card p-6 space-y-4" @submit.prevent="unlock">
         <div class="size-12 rounded-2xl bg-accent-soft text-accent-ink grid place-items-center"><Icon name="lock" :size="24" /></div>
-        <div><h1 class="text-2xl font-bold">Join room <span class="font-mono text-accent-ink">{{ code }}</span></h1><p class="text-sm text-muted mt-1">Enter the room password. It stays on this device.</p></div>
+        <div><h1 class="text-2xl font-semibold">Join room <span class="font-mono text-accent-ink">{{ code }}</span></h1><p class="text-sm text-muted mt-1">Enter the room password. It stays on this device.</p></div>
         <input v-model="pw" type="password" class="input" placeholder="Room password" autocomplete="off" autofocus aria-label="Room password">
         <p v-if="chat.error.value" class="text-sm text-accent-ink" role="alert">{{ chat.error.value }}</p>
         <button class="btn btn-accent w-full !min-h-12 text-base" :disabled="!pw || unlocking">{{ unlocking ? 'Unlocking...' : 'Join chat' }}</button>
@@ -64,13 +64,13 @@ async function destroy(): Promise<void> {
 
     <div v-else-if="chat.phase.value === 'full'" class="m-auto text-center px-6 space-y-3">
       <div class="size-14 mx-auto rounded-2xl bg-accent-soft text-accent-ink grid place-items-center"><Icon name="users" :size="26" /></div>
-      <h1 class="text-2xl font-bold">Room full (4/4)</h1><p class="text-muted">Ask someone to leave, then try again.</p>
+      <h1 class="text-2xl font-semibold">Room full (4/4)</h1><p class="text-muted">Ask someone to leave, then try again.</p>
       <button class="btn btn-accent" @click="chat.phase.value = 'password'">Try again</button>
     </div>
 
     <div v-else-if="['closed', 'lost'].includes(chat.phase.value)" class="m-auto text-center px-6 space-y-3">
       <div class="size-14 mx-auto rounded-2xl bg-accent-soft text-accent-ink grid place-items-center"><Icon name="mask" :size="26" /></div>
-      <h1 class="text-2xl font-bold">{{ chat.phase.value === 'closed' ? 'This room was closed' : 'Connection lost' }}</h1>
+      <h1 class="text-2xl font-semibold">{{ chat.phase.value === 'closed' ? 'This room was closed' : 'Connection lost' }}</h1>
       <p class="text-muted">The chat was wiped from this device.</p>
       <NuxtLink to="/chat" class="btn btn-accent">Start a new room</NuxtLink>
     </div>

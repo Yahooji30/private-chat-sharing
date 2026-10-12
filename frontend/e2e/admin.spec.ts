@@ -127,32 +127,6 @@ test('two-factor authentication: enable from account, sign in with a code, disab
   await expect(page.getByRole('button', { name: 'Set up 2FA' })).toBeVisible()
 })
 
-test('moderation: a reported public page appears in the queue and unpublishing makes it 404', async ({ page, browser }) => {
-  const slug = `e2e-report-${Date.now()}`
-  const author = await (await browser.newContext()).newPage()
-  await author.goto(`${SITE}/public/new`)
-  await author.getByPlaceholder('My page').fill('Reportable page')
-  await author.getByPlaceholder(/Hello/).fill('some content')
-  await author.getByPlaceholder('my-page').fill(slug)
-  await author.getByRole('button', { name: 'Publish' }).click()
-  await expect(author.getByText('Your page is live')).toBeVisible()
-  await author.goto(`${BLOG}/p/${slug}`)
-  await author.waitForLoadState('networkidle')
-  author.once('dialog', d => void d.accept('spam and abuse'))
-  await author.getByRole('button', { name: 'Report' }).click()
-  await expect(author.getByText('Thanks, we will review it')).toBeVisible()
-
-  await signIn(page)
-  await page.goto(`${ADMIN}/reports`)
-  const row = page.locator('tr', { hasText: slug })
-  await expect(row).toContainText('spam and abuse')
-  await row.getByRole('button', { name: 'Unpublish' }).click()
-  await page.getByTestId('confirm-yes').click()
-  await expect(row).toContainText('resolved')
-  await expect.poll(async () => (await author.request.get(`${SITE}/api/p/${slug}`)).status()).toBe(404)
-  await author.context().close()
-})
-
 test('site settings: legal text saved in admin renders on the public site', async ({ page, browser }) => {
   await signIn(page)
   await page.goto(`${ADMIN}/settings`)

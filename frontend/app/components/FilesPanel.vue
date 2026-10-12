@@ -70,7 +70,7 @@ defineExpose({ pick })
 <template>
   <section aria-label="Shared files">
     <div class="flex items-center gap-2 mb-2 px-1">
-      <h2 class="font-bold text-base">Files</h2><span v-if="sorted.length" class="chip">{{ sorted.length }}</span>
+      <h2 class="font-semibold text-base">Files</h2><span v-if="sorted.length" class="chip">{{ sorted.length }}</span>
       <div class="ml-auto flex gap-1.5">
         <button v-if="anyMissing" class="btn !min-h-9 !px-2.5 text-sm" aria-label="Get all" @click="files.downloadMissing()"><Icon name="download" :size="15" /><span class="hidden sm:inline">Get all</span></button>
         <button v-if="anyDone" class="btn !min-h-9 !px-2.5 text-sm" aria-label="Zip all" @click="files.zipAll()"><Icon name="zip" :size="15" /><span class="hidden sm:inline">Zip</span></button>
@@ -88,7 +88,7 @@ defineExpose({ pick })
     <ul class="space-y-2">
       <li v-for="i in sorted" :key="i.entry.fileId" class="card !rounded-2xl p-3 flex items-center gap-3 anim-pop" :data-testid="`file-${i.entry.name}`" :data-status="i.status">
         <img v-if="i.entry.thumb" :src="i.entry.thumb" alt="" class="size-11 rounded-xl object-cover bg-surface-2 shrink-0">
-        <span v-else class="size-11 rounded-xl grid place-items-center shrink-0 text-[11px] font-extrabold tracking-wide" :class="warm(i.entry.mime) ? 'bg-pink-soft text-pink-ink' : 'bg-accent-soft text-accent-ink'">{{ ext(i.entry.name) }}</span>
+        <span v-else class="size-11 rounded-xl grid place-items-center shrink-0 text-[11px] font-semibold tracking-wide" :class="warm(i.entry.mime) ? 'bg-pink-soft text-pink-ink' : 'bg-accent-soft text-accent-ink'">{{ ext(i.entry.name) }}</span>
         <div class="min-w-0 flex-1">
           <p class="font-semibold truncate leading-tight" :title="i.entry.name">{{ i.entry.name }}</p>
           <p class="text-xs text-muted truncate mt-0.5">{{ fmtBytes(i.entry.size) }} · {{ label(i) }}</p>
@@ -111,7 +111,7 @@ defineExpose({ pick })
 
     <input ref="input" type="file" multiple class="hidden" data-testid="file-input" @change="onPick">
     <div v-if="dragging" class="fixed inset-0 z-40 bg-[var(--accent)]/10 border-4 border-dashed border-[var(--accent)] grid place-items-center pointer-events-none">
-      <p class="card px-6 py-4 text-lg font-bold">Drop files to share them</p>
+      <p class="card px-6 py-4 text-lg font-semibold">Drop files to share them</p>
     </div>
 
     <Modal :open="!!view.item" :title="view.item?.entry.name ?? ''" @close="view.item = null">

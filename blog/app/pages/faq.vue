@@ -31,7 +31,7 @@ const groups = computed(() => {
 
 <template>
   <div class="max-w-3xl mx-auto pt-6 md:pt-10 pb-12">
-    <h1 class="text-3xl md:text-4xl font-bold tracking-tight">Frequently asked questions</h1>
+    <h1 class="text-3xl md:text-4xl font-semibold tracking-tight">Frequently asked questions</h1>
     <p class="text-muted mt-2 text-lg">Quick answers about {{ name }}. Can't find yours? <NuxtLink to="/feedback" class="text-accent-ink underline">Tell us</NuxtLink>.</p>
 
     <div v-if="items.length > 5" class="mt-5"><label class="sr-only" for="faq-search">Search the questions</label>

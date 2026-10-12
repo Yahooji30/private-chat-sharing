@@ -11,7 +11,7 @@ defineProps<{ post: Card; big?: boolean }>()
     </NuxtLink>
     <div class="p-4 md:p-5 flex flex-col gap-2 flex-1">
       <p class="text-xs text-muted flex gap-2 items-center"><NuxtLink v-if="post.category" :to="`/category/${post.category.slug}`" class="text-accent-ink font-medium hover:underline">{{ post.category.name }}</NuxtLink><span>{{ fmtDate(post.publishedAt) }}</span><span>{{ post.readingMin }} min read</span></p>
-      <h2 class="font-bold leading-snug" :class="big ? 'text-2xl md:text-3xl' : 'text-lg'"><NuxtLink :to="`/${post.slug}`" class="hover:text-accent-ink">{{ post.title }}</NuxtLink></h2>
+      <h2 class="font-semibold leading-snug" :class="big ? 'text-2xl md:text-3xl' : 'text-lg'"><NuxtLink :to="`/${post.slug}`" class="hover:text-accent-ink">{{ post.title }}</NuxtLink></h2>
       <p class="text-muted text-sm leading-relaxed line-clamp-3">{{ post.excerpt }}</p>
     </div>
   </article>

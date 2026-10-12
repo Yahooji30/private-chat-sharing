@@ -37,7 +37,7 @@ async function copy(): Promise<void> { if (await copyText(url)) toast.ok('Link c
   <article class="pt-4 md:pt-8 pb-10 grid lg:grid-cols-[minmax(0,72ch)_300px] gap-8 justify-center">
     <div class="min-w-0">
       <nav class="text-sm text-muted mb-3" aria-label="Breadcrumb"><NuxtLink to="/" class="hover:underline">Blog</NuxtLink><template v-if="art.category"> / <NuxtLink :to="`/category/${art.category.slug}`" class="hover:underline">{{ art.category.name }}</NuxtLink></template></nav>
-      <h1 class="text-3xl md:text-5xl font-bold tracking-tight leading-tight">{{ art.title }}</h1>
+      <h1 class="text-3xl md:text-5xl font-semibold tracking-tight leading-tight">{{ art.title }}</h1>
       <p class="text-sm text-muted mt-3"><span v-if="art.author">{{ art.author }} · </span><time :datetime="art.publishedAt ?? ''">{{ fmtDate(art.publishedAt) }}</time> · {{ art.readingMin }} min read</p>
       <BlogCover v-if="art.cover" :cover="art.cover" eager class="mt-6" />
       <details v-if="art.toc.length" class="lg:hidden card p-4 mt-6" :open="tocOpen" @toggle="tocOpen = ($event.target as HTMLDetailsElement).open"><summary class="font-semibold cursor-pointer">On this page</summary>
@@ -49,7 +49,7 @@ async function copy(): Promise<void> { if (await copyText(url)) toast.ok('Link c
       <div v-if="art.tags.length" class="flex flex-wrap gap-2 mt-8"><NuxtLink v-for="t in art.tags" :key="t.slug" :to="`/tag/${t.slug}`" class="btn !min-h-8 text-sm">#{{ t.name }}</NuxtLink></div>
       <div class="flex flex-wrap items-center gap-2 mt-6 pt-6 border-t border-line"><span class="text-sm text-muted mr-1">Share</span>
         <a v-for="s in shares" :key="s[0]" :href="s[1]" target="_blank" rel="noopener noreferrer" class="btn !min-h-9 text-sm">{{ s[0] }}</a><button class="btn !min-h-9 text-sm" @click="copy"><Icon name="copy" :size="14" />Copy link</button></div>
-      <section v-if="art.related.length" class="mt-12"><h2 class="text-xl font-bold mb-4">Related articles</h2><div class="grid sm:grid-cols-3 gap-4"><BlogCard v-for="r in art.related" :key="r.slug" :post="r" /></div></section>
+      <section v-if="art.related.length" class="mt-12"><h2 class="text-xl font-semibold mb-4">Related articles</h2><div class="grid sm:grid-cols-3 gap-4"><BlogCard v-for="r in art.related" :key="r.slug" :post="r" /></div></section>
     </div>
     <aside class="hidden lg:block"><div class="sticky top-24 space-y-4">
       <nav v-if="art.toc.length" class="card p-4" aria-label="Table of contents"><p class="font-semibold mb-2 text-sm">On this page</p>

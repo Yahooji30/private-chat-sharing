@@ -4,18 +4,23 @@ const appName = process.env.NUXT_PUBLIC_APP_NAME ?? 'Jodbox'
 const isProd = process.env.NODE_ENV === 'production'
 const rtUrl = process.env.NUXT_PUBLIC_RT_URL ?? ''
 // Nuxt inlines its hydration payload, so scripts need 'unsafe-inline'. Everything else stays on this origin.
-const blogOrigin = process.env.NUXT_PUBLIC_BLOG_URL ?? ''
+const blogOrigin = (process.env.NUXT_PUBLIC_BLOG_URL ?? '').replace(/\/$/, '')
+const blogOrigins = [blogOrigin, blogOrigin.replace('//localhost', '//127.0.0.1')].filter((v, n, a) => v && a.indexOf(v) === n).join(' ')
 const adsOn = !!process.env.NUXT_PUBLIC_ADSENSE_CLIENT
 const adHosts = 'https://*.googlesyndication.com https://*.doubleclick.net https://*.google.com https://*.gstatic.com https://*.adtrafficquality.google'
 const csp = [
   "default-src 'self'", `script-src 'self' 'unsafe-inline'${adsOn ? ` ${adHosts}` : ''}`, "style-src 'self' 'unsafe-inline'", `img-src 'self' data: blob:${adsOn ? ' https:' : ''}`, "media-src 'self' blob:", "font-src 'self' data:",
-  `connect-src 'self' ws: wss: ${rtUrl}${adsOn ? ` ${adHosts}` : ''}`.trim(), "worker-src 'self' blob:", `frame-src blob: ${blogOrigin}${adsOn ? ` ${adHosts}` : ''}`, "object-src 'none'", "base-uri 'self'", "form-action 'self'", "frame-ancestors 'none'",
+  `connect-src 'self' ws: wss: ${rtUrl}${adsOn ? ` ${adHosts}` : ''}`.trim(), "worker-src 'self' blob:", `frame-src blob: ${blogOrigins}${adsOn ? ` ${adHosts}` : ''}`, "object-src 'none'", "base-uri 'self'", "form-action 'self'", "frame-ancestors 'none'",
 ].join('; ')
 const securityHeaders = { 'Content-Security-Policy': csp, 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'strict-origin-when-cross-origin', 'Permissions-Policy': 'camera=(self), microphone=(), geolocation=()', 'X-Frame-Options': 'DENY' }
 
 // The interactive app is a pure SPA (no server rendering). Blog, public pages and legal pages are the separate SSR site in ../blog.
 export default defineNuxtConfig({
   ssr: false,
+  hooks: {
+    // the SEO pages keep clean addresses (/features, /faq ...) and all render through the one framed page
+    'pages:extend'(pages) { for (const path of ['/features', '/faq', '/feedback', '/privacy', '/terms']) pages.push({ name: `site${path.replace('/', '-')}`, path, file: new URL('./app/pages/blog/[[...path]].vue', import.meta.url).pathname }) },
+  },
   compatibilityDate: '2025-07-15',
   devtools: { enabled: false },
   modules: ['@pinia/nuxt', '@vueuse/nuxt', '@vite-pwa/nuxt'],
@@ -46,7 +51,7 @@ export default defineNuxtConfig({
         { name: 'apple-mobile-web-app-status-bar-style', content: 'default' },
       ],
       link: [
-        { rel: 'icon', type: 'image/svg+xml', href: '/icon.svg' },
+        { rel: 'icon', type: 'image/png', href: '/icons/favicon-48.png' },
         { rel: 'apple-touch-icon', href: '/icons/apple-touch-icon.png' },
       ],
       script: [{ innerHTML: `try{var t=localStorage.getItem('sync:theme')||'system';var d=t==='dark'||(t==='system'&&matchMedia('(prefers-color-scheme:dark)').matches);document.documentElement.classList.toggle('dark',d)}catch(e){}` }],

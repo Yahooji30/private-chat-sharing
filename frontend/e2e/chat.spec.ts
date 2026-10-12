@@ -43,21 +43,3 @@ test('secure chat: create, join with password, messages relay, wrong password fa
 })
 
 const BLOG = process.env.E2E_BLOG_URL ?? 'http://localhost:3001'
-
-test('public page: publish, view anonymously, edit via token, delete', async ({ browser }) => {
-  const a = await device(browser, '/chat')
-  await a.goto('/public/new')
-  await a.getByPlaceholder('My page').fill('E2E page')
-  await a.getByPlaceholder(/Hello/).fill('# Heading\n\nSome **bold** text <script>window.__x=1</script>')
-  await a.getByPlaceholder('my-page').fill(`e2e-${Date.now()}`)
-  await a.getByRole('button', { name: 'Publish' }).click()
-  await expect(a.getByText('Your page is live')).toBeVisible()
-  await a.getByRole('link', { name: 'View page' }).click()
-  // the page opens inside the app window (an iframe), so the PWA never leaves the app
-  const page = a.frameLocator('iframe[title="Blog"]')
-  await expect(page.getByRole('heading', { name: 'Heading' })).toBeVisible({ timeout: 10_000 })
-  await expect(page.locator('article strong')).toHaveText('bold')
-  const frame = a.frames().find(f => f.url().includes('/p/'))!
-  expect(await frame.evaluate(() => (window as unknown as { __x?: number }).__x)).toBeUndefined()
-  await expect(page.locator('meta[name=robots]')).toHaveAttribute('content', /noindex/)
-})

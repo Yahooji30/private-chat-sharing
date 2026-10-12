@@ -67,7 +67,7 @@ const modes: { id: Mode; label: string; icon: string }[] = [{ id: 'qr', label: '
       <div v-if="mode === 'qr'" class="pt-5 pb-2 flex flex-col items-center gap-3">
         <div class="relative p-3 bg-white rounded-3xl border-[3px] border-accent" :class="gen ? '' : 'opacity-40'">
           <canvas ref="qr" width="240" height="240" class="block size-[220px] sm:size-[240px]" aria-label="Link QR code" />
-          <img v-if="gen" src="/icon.svg" alt="" class="absolute inset-0 m-auto size-12 rounded-xl ring-4 ring-white">
+          <img v-if="gen" src="/icons/icon-192.png" alt="" class="absolute inset-0 m-auto size-12 rounded-xl ring-4 ring-white">
         </div>
         <p class="text-sm text-muted text-center">Scan this QR code on the device you want to link.</p>
         <p class="text-xs text-muted" aria-live="off">{{ gen ? `Expires in ${fmtClock(left)}` : 'Code expired' }}</p>

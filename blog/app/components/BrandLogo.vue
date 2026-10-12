@@ -1,12 +1,10 @@
 <script setup lang="ts">
-const props = withDefaults(defineProps<{ size?: number; mark?: boolean }>(), { size: 36, mark: true })
+/** The Jodbox logo exactly as supplied: full lockup, or just the two-tablet mark. size = height in px. */
+withDefaults(defineProps<{ size?: number; mark?: boolean }>(), { size: 36, mark: false })
 const name = String(useRuntimeConfig().public.appName)
-const cut = Math.ceil(name.length / 2)
 </script>
 
 <template>
-  <span class="inline-flex items-center gap-2 select-none">
-    <img v-if="mark" src="/logo-mark.svg" alt="" :width="size * 1.23" :height="size" class="shrink-0" :style="{ height: `${size}px`, width: 'auto' }">
-    <span class="leading-none" :style="{ fontSize: `${size * 0.78}px` }" :aria-label="name"><span class="wm-a">{{ name.slice(0, cut) }}</span><span class="wm-b">{{ name.slice(cut) }}</span></span>
-  </span>
+  <img v-if="mark" src="/logo-mark.webp" :alt="name" :height="size" :width="Math.round(size * 1.434)" class="block w-auto select-none" :style="{ height: `${size}px` }" draggable="false">
+  <img v-else src="/logo.webp" :alt="name" :height="size" :width="Math.round(size * 4.05)" class="block w-auto select-none" :style="{ height: `${size}px` }" draggable="false">
 </template>

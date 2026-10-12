@@ -22,9 +22,9 @@ const rest = computed(() => (page.value === 1 ? (data.value?.items.slice(1) ?? [
 
 <template>
   <div class="pt-5 md:pt-10 pb-10">
-    <section class="relative overflow-hidden rounded-[24px] px-6 py-8 md:px-12 md:py-14 text-white bg-[#0B1437]">
+    <section class="relative overflow-hidden rounded-2xl px-6 py-8 md:px-12 md:py-14 text-white bg-[#0B1437]">
       <span class="chip !bg-white/10 !text-white">Blog</span>
-      <h1 class="text-[1.9rem] md:text-5xl font-extrabold tracking-tight mt-4 max-w-2xl leading-[1.12]">Guides and ideas for sharing <span class="text-[#FF5C9A]">smarter</span></h1>
+      <h1 class="text-[1.9rem] md:text-5xl font-semibold tracking-tight mt-4 max-w-2xl leading-[1.12]">Guides and ideas for sharing <span class="text-[#FF5C9A]">smarter</span></h1>
       <p class="mt-4 text-white/75 max-w-xl text-base md:text-lg leading-relaxed">Tips, how-tos and news about moving text and files between your devices, privately and instantly.</p>
     </section>
     <nav v-if="cats?.length" class="flex gap-2 overflow-x-auto py-4 -mx-3 px-3 md:mx-0 md:px-0 scroll-thin" aria-label="Categories">

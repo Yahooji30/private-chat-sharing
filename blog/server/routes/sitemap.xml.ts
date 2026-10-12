@@ -16,7 +16,7 @@ export default defineEventHandler(async event => {
     ...listed('blog', o, '/'), ...listed('features', o, '/features'), ...listed('faq', o, '/faq'), ...listed('feedback', o, '/feedback'),
     ...listed('privacy', o, '/privacy'), ...listed('terms', o, '/terms'),
     ...d.articles.map(a => url(o, `/${a.slug}`, a.lastmod)), ...d.categories.map(c => url(o, `/category/${c}`)),
-    ...d.tags.map(t => url(o, `/tag/${t}`)), ...d.pages.map(p => url(o, `/p/${p.slug}`, p.lastmod)),
+    ...d.tags.map(t => url(o, `/tag/${t}`)),
   ].join('')
   setHeader(event, 'content-type', 'application/xml; charset=utf-8')
   setHeader(event, 'cache-control', 'public, s-maxage=600')

@@ -14,7 +14,7 @@ useHead({ link: [{ rel: 'canonical', href: `${cfg.public.siteUrl}/category/${slu
 <template>
   <div class="pt-4 md:pt-8 pb-10">
     <p class="text-sm text-muted"><NuxtLink to="/" class="hover:underline">Blog</NuxtLink> / category</p>
-    <h1 class="text-3xl md:text-4xl font-bold tracking-tight mt-1 mb-6">{{ name }}</h1>
+    <h1 class="text-3xl md:text-4xl font-semibold tracking-tight mt-1 mb-6">{{ name }}</h1>
     <p v-if="!data?.items.length" class="card p-10 text-center text-muted">Nothing here yet.</p>
     <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5"><BlogCard v-for="p in data?.items" :key="p.slug" :post="p" /></div>
     <BlogPager v-if="data" :page="data.page" :pages="data.pages" :base="`/category/${slug}`" />
