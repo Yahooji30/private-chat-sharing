@@ -97,8 +97,8 @@ test('link by code: phone on mobile data joins, both directions sync live, then 
   await laptop.getByRole('button', { name: 'Close' }).click()
 
   await openSettings(laptop, 'Linked Devices')
-  laptop.once('dialog', d => void d.accept())
   await laptop.getByRole('button', { name: 'Unlink Pocket Phone' }).click()
+  await laptop.getByTestId('confirm-yes').click()
   await expect(laptop.getByText('No devices linked by code yet')).toBeVisible()
   await expect(text(phone)).toHaveValue('', { timeout: 15_000 })
   await type(phone, 'alone again')
@@ -150,8 +150,8 @@ test('link by IP address: an online device on another network is pulled into the
 
   await laptop.getByRole('tab', { name: 'Linked Devices' }).click()
   await expect(laptop.getByText('Network #1')).toBeVisible()
-  laptop.once('dialog', d => void d.accept())
   await laptop.getByRole('button', { name: 'Unlink Network #1' }).click()
+  await laptop.getByTestId('confirm-yes').click()
   await expect(laptop.getByText('No networks linked by IP address.')).toBeVisible()
   await expect(text(phone)).toHaveValue('', { timeout: 15_000 })
 })

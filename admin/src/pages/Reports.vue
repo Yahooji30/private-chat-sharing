@@ -14,7 +14,7 @@ async function remove(r: R): Promise<void> { if (await confirmDialog('Delete pag
 </script>
 
 <template>
-  <div class="space-y-4"><h1 class="text-2xl font-bold">Reports</h1><p class="text-sm text-muted">Public pages reported by visitors.</p>
+  <div class="space-y-4"><h1 class="text-2xl font-semibold">Reports</h1><p class="text-sm text-muted">Public pages reported by visitors.</p>
     <div class="card overflow-x-auto"><table class="w-full text-sm min-w-[640px]"><thead><tr><th class="th">Page</th><th class="th">Reason</th><th class="th">Reported</th><th class="th">State</th><th class="th" /></tr></thead><tbody>
       <tr v-for="r in rows" :key="r.id"><td class="td"><a :href="`/p/${r.slug}`" target="_blank" rel="noopener" class="font-medium hover:text-accent-ink">{{ r.title }}</a><p class="text-xs text-muted">/p/{{ r.slug }}</p></td>
         <td class="td max-w-xs">{{ r.reason }}</td><td class="td">{{ fmtDate(r.at) }}</td><td class="td"><span class="badge">{{ r.resolved ? 'resolved' : 'open' }}</span> <span v-if="r.pageStatus !== 'published'" class="badge">{{ r.pageStatus }}</span></td>

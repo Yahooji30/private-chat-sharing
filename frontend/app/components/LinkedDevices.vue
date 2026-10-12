@@ -11,7 +11,7 @@ async function load(): Promise<void> {
   try { data.value = await api('/link/list') } catch (e) { toast.err((e as Error).message) } finally { loading.value = false }
 }
 async function unlink(kind: 'device' | 'ip', id: string): Promise<void> {
-  if (!confirm('Unlink? That device or network will go back to its own space.')) return
+  if (!await confirmDialog('Unlink this device?', 'It goes back to its own space and stops sharing with this one.', { confirmLabel: 'Unlink' })) return
   try { await api(`/link/${kind}/${id}`, { method: 'DELETE' }); toast.ok('Unlinked'); await load() } catch (e) { toast.err((e as Error).message) }
 }
 onMounted(() => { void load(); window.addEventListener('sync:linked-changed', load) })

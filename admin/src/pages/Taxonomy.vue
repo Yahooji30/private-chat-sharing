@@ -22,7 +22,7 @@ async function del(r: Row): Promise<void> {
 
 <template>
   <div class="space-y-4 max-w-3xl">
-    <h1 class="text-2xl font-bold">{{ props.kind === 'categories' ? 'Categories' : 'Tags' }}</h1>
+    <h1 class="text-2xl font-semibold">{{ props.kind === 'categories' ? 'Categories' : 'Tags' }}</h1>
     <form class="flex gap-2" @submit.prevent="add"><input v-model="name" class="input" :placeholder="`New ${label().toLowerCase()} name`" :aria-label="`New ${label().toLowerCase()}`" maxlength="60"><button class="btn btn-accent">Add</button></form>
     <div class="card overflow-x-auto"><table class="w-full text-sm min-w-[480px]"><thead><tr><th class="th">Name</th><th class="th">Slug</th><th class="th">Articles</th><th class="th" /></tr></thead><tbody>
       <tr v-for="r in rows" :key="r.id">

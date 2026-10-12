@@ -31,7 +31,7 @@ const stars = (n: number): string => '★'.repeat(n) + '☆'.repeat(5 - n)
 
 <template>
   <div class="space-y-4 max-w-4xl">
-    <div class="flex items-center gap-3 flex-wrap"><h1 class="text-2xl font-bold mr-auto">Feedback</h1>
+    <div class="flex items-center gap-3 flex-wrap"><h1 class="text-2xl font-semibold mr-auto">Feedback</h1>
       <span v-if="data?.average" class="text-sm text-muted">Average <strong class="text-ink">{{ data.average.toFixed(1) }}</strong> / 5 · {{ data.total }} message{{ data.total === 1 ? '' : 's' }}</span></div>
     <p class="text-sm text-muted">Messages sent from the website's feedback form. Tick "Show on website" to feature one on the feedback page (only the name, rating and message are shown, never the email).</p>
     <div class="inline-flex rounded-xl bg-surface-2 p-1" role="tablist">

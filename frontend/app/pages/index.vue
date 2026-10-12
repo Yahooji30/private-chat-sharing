@@ -51,8 +51,8 @@ function download(): void {
   a.click()
   setTimeout(() => URL.revokeObjectURL(a.href), 1000)
 }
-function clear(): void {
-  if (!sync.text.value || !confirm('Clear all text on every linked device?')) return
+async function clear(): Promise<void> {
+  if (!sync.text.value || !await confirmDialog('Clear all text?', 'The text is cleared on every linked device. This cannot be undone.', { confirmLabel: 'Clear text' })) return
   sync.edit('')
 }
 const files = useTemplateRef<{ pick: () => void }>('files')
@@ -93,7 +93,7 @@ const steps = [
             <button class="size-8 -mr-1.5 grid place-items-center rounded-lg text-muted hover:bg-surface-2 hover:text-ink" aria-label="Reload from server" @click="sync.load()"><Icon name="refresh" :size="17" /></button>
           </div>
           <textarea ref="ta" :value="sync.text.value" :class="fontClass" :style="{ fontSize: `${app.settings.fontSize}px` }" :spellcheck="app.spellcheck"
-            class="block w-full flex-none h-[46dvh] md:h-[54dvh] min-h-64 lg:h-[calc(100dvh-21rem)] lg:min-h-[24rem] lg:max-h-[48rem] resize-none bg-transparent px-5 py-3 outline-none leading-[1.7]"
+            class="block w-full flex-none h-[46dvh] md:h-[54dvh] min-h-64 lg:h-[calc(100dvh-15.5rem)] lg:min-h-[24rem] lg:max-h-[70rem] resize-none bg-transparent px-5 py-3 outline-none leading-[1.7]"
             placeholder="Type or paste here. It shows up on all your devices instantly." aria-label="Shared text" autocapitalize="sentences" @input="sync.edit(($event.target as HTMLTextAreaElement).value)" />
           <div class="flex border-t border-line divide-x divide-line" role="toolbar" aria-label="Text actions">
             <button :class="dock" aria-label="Copy" @click="copy"><Icon name="copy" :size="19" />Copy</button>

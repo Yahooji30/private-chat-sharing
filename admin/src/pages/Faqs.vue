@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref } from 'vue'
 import { api } from '../api'
+import RichEditor from '../components/RichEditor.vue'
 import Icon from '../components/Icon.vue'
 import { confirmDialog, fail, ok } from '../ui'
 
@@ -47,13 +48,13 @@ async function del(r: Faq): Promise<void> {
 
 <template>
   <div class="space-y-4 max-w-4xl">
-    <div class="flex items-center gap-3"><h1 class="text-2xl font-bold mr-auto">FAQ</h1><button class="btn btn-accent" data-testid="new-faq" @click="open(blank())"><Icon name="plus" />Add question</button></div>
+    <div class="flex items-center gap-3"><h1 class="text-2xl font-semibold mr-auto">FAQ</h1><button class="btn btn-accent" data-testid="new-faq" @click="open(blank())"><Icon name="plus" />Add question</button></div>
     <p class="text-sm text-muted">Shown on the website's FAQ page, in this order. Answers support Markdown (bold, lists, links). Hidden questions stay here but are not public.</p>
 
     <form v-if="form" ref="editor" class="card p-4 space-y-3" data-testid="faq-form" @submit.prevent="save">
       <h2 class="font-semibold">{{ form.id ? 'Edit question' : 'New question' }}</h2>
       <div><label class="label" for="faq-q">Question</label><input id="faq-q" v-model="form.question" class="input" maxlength="300" required minlength="3"></div>
-      <div><label class="label" for="faq-a">Answer (Markdown)</label><textarea id="faq-a" v-model="form.answer" class="input font-mono !text-[13px]" rows="6" maxlength="5000" required /></div>
+      <div><p class="label">Answer</p><RichEditor v-model="form.answer" placeholder="Write the answer..." label="Answer" min-height="10rem" /></div>
       <div class="grid sm:grid-cols-2 gap-3 items-end">
         <div><label class="label" for="faq-c">Group <span class="font-normal text-muted">(optional, e.g. Privacy)</span></label><input id="faq-c" v-model="form.category" class="input" maxlength="60" list="faq-groups"><datalist id="faq-groups"><option v-for="c in cats" :key="c" :value="c" /></datalist></div>
         <label class="flex items-center gap-2 h-10 text-sm font-medium"><input v-model="form.published" type="checkbox" class="size-4 accent-[var(--accent)]">Show on the website</label>

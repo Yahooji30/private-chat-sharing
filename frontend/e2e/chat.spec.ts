@@ -31,8 +31,8 @@ test('secure chat: create, join with password, messages relay, wrong password fa
   await b.keyboard.press('Enter')
   await expect(a.getByText('reply!')).toBeVisible()
 
-  b.once('dialog', d => d.accept())
   await b.getByRole('button', { name: /Leave/ }).click()
+  await b.getByTestId('confirm-yes').click()
   await expect(a.getByText('Someone left')).toBeVisible()
   const c = await device(browser)
   await c.goto(`/c/${code}`)
