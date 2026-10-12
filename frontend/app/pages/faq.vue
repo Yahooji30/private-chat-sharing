@@ -2,6 +2,7 @@
 interface Faq { id: string; question: string; answerHtml: string; answerText: string; category: string }
 const name = String(useRuntimeConfig().public.appName)
 const blogUrl = useApp().blogUrl
+const feedback = useState('feedback-open', () => false)
 useAppSeo('faq', { title: `FAQ | ${name}`, description: `Answers to common questions about ${name}: sharing text and files between devices, linking networks, secure chat rooms and privacy.` })
 // the server-rendered copy on the blog site is the one search engines index
 useHead({ link: blogUrl ? [{ rel: 'canonical', href: `${blogUrl}/faq` }] : [] })
@@ -51,7 +52,7 @@ const groups = computed(() => {
 
     <div class="card p-5 mt-10 flex flex-wrap items-center gap-3">
       <div class="mr-auto"><p class="font-semibold">Still have a question?</p><p class="text-sm text-muted">We read every message.</p></div>
-      <NuxtLink to="/feedback" class="btn">Send feedback</NuxtLink><NuxtLink to="/" class="btn btn-accent">Open the app</NuxtLink>
+      <button class="btn" @click="feedback = true">Send feedback</button><NuxtLink to="/" class="btn btn-accent">Open the app</NuxtLink>
     </div>
     <AdSlot kind="inline" class="mt-8" />
   </div>

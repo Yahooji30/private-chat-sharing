@@ -35,12 +35,12 @@ async function share(): Promise<void> { try { await navigator.share({ title: 'A 
 
 <template>
   <div class="space-y-4">
-    <div class="grid grid-cols-2 gap-2">
-      <a v-for="(c, n) in channels" :key="c.key" :href="c.href" target="_blank" rel="noopener noreferrer" class="btn !min-h-11" :class="n === 0 ? 'btn-accent col-span-2' : ''" :data-testid="`share-${c.key}`">
-        <Icon :name="c.icon" :size="18" />{{ c.label }}
+    <div class="flex flex-wrap gap-2">
+      <a v-for="(c, n) in channels" :key="c.key" :href="c.href" target="_blank" rel="noopener noreferrer" class="btn !min-h-9 !px-3.5 text-sm" :class="n === 0 ? 'btn-accent' : ''" :data-testid="`share-${c.key}`">
+        <Icon :name="c.icon" :size="16" />{{ c.label }}
       </a>
-      <button v-if="canShare" class="btn !min-h-11" data-testid="share-native" @click="share"><Icon name="share" :size="18" />Share</button>
-      <button class="btn !min-h-11" data-testid="share-copy-message" @click="copyMessage"><Icon name="copy" :size="18" />Copy message</button>
+      <button v-if="canShare" class="btn !min-h-9 !px-3.5 text-sm" data-testid="share-native" @click="share"><Icon name="share" :size="16" />Share</button>
+      <button class="btn !min-h-9 !px-3.5 text-sm" data-testid="share-copy-message" @click="copyMessage"><Icon name="copy" :size="16" />Copy message</button>
     </div>
 
     <label v-if="password" class="flex items-start gap-3 rounded-xl border border-line bg-surface-2 px-3.5 py-3 cursor-pointer">
@@ -50,10 +50,10 @@ async function share(): Promise<void> { try { await navigator.share({ title: 'A 
     </label>
 
     <section class="flex flex-col sm:flex-row gap-4 items-center border-t border-line pt-4" aria-label="Room link and QR code">
-      <canvas ref="qr" width="160" height="160" class="rounded-lg border border-line bg-white size-32 shrink-0" aria-label="Room QR code" />
+      <canvas ref="qr" width="160" height="160" class="rounded-lg border border-line bg-white size-28 shrink-0" aria-label="Room QR code" />
       <div class="min-w-0 w-full space-y-2">
         <code class="block truncate px-3 py-2.5 rounded-lg bg-surface-2 border border-line text-sm font-mono">{{ url }}</code>
-        <button class="btn w-full" @click="copyLink"><Icon name="copy" :size="16" />Copy link only</button>
+        <button class="btn !min-h-9 !px-3.5 text-sm" @click="copyLink"><Icon name="copy" :size="16" />Copy link</button>
       </div>
     </section>
   </div>

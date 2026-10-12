@@ -50,6 +50,7 @@ test('file is shared peer to peer, verified, and downloadable', async ({ browser
 test('a large file can be paused, resumed after reload, and completes', async ({ browser }) => {
   const [a, b] = await twoDevices(browser)
   await b.getByRole('button', { name: 'Settings' }).click()
+  await b.getByText('More options').click()
   await b.getByRole('switch', { name: 'Auto-download' }).click()
   await b.getByRole('button', { name: 'Close' }).click()
   const data = randomBytes(24 * 1024 * 1024)
@@ -88,6 +89,7 @@ test('link code from one device is redeemed on another through the link page', a
 test('the sending device can reload mid-transfer: it keeps serving from its stored copy and the download completes', async ({ browser }) => {
   const [a, b] = await twoDevices(browser)
   await b.getByRole('button', { name: 'Settings' }).click()
+  await b.getByText('More options').click()
   await b.getByRole('switch', { name: 'Auto-download' }).click()
   await b.getByRole('dialog').getByRole('button', { name: 'Close' }).click()
   const data = randomBytes(40 * 1024 * 1024)

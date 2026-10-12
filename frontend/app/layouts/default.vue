@@ -4,15 +4,16 @@ const route = useRoute()
 const isOnline = useOnline()
 const base = [{ to: '/', label: 'Home', icon: 'home' }, { to: '/chat', label: 'Secure Chat', icon: 'chat' }]
 // The blog is the separate SEO site; it opens inside the app window (pages/blog) so an installed PWA never leaves the app. Features and FAQ are native pages.
-const pages = computed(() => (app.blogUrl ? [{ to: '/blog', label: 'Blog', icon: 'blog' }, { to: '/features', label: 'Features', icon: 'features' }, { to: '/faq', label: 'FAQ', icon: 'faq' }] : []))
+const pages = computed(() => [...(app.blogUrl ? [{ to: '/blog', label: 'Blog', icon: 'blog' }] : []), { to: '/features', label: 'Features', icon: 'features' }, { to: '/faq', label: 'FAQ', icon: 'faq' }])
 const side = computed(() => [...base, ...pages.value])
 const active = (to: string): boolean => (to === '/' ? route.path === '/' : route.path.startsWith(to) || (to === '/chat' && route.path.startsWith('/c/')))
 const chatRoute = computed(() => route.path.startsWith('/c/'))
-const framed = computed(() => ['/blog', '/feedback', '/privacy', '/terms'].some(p => route.path === p || route.path.startsWith(`${p}/`)))
+const framed = computed(() => route.path === '/blog' || route.path.startsWith('/blog/'))
+const feedback = useState('feedback-open', () => false)
 const wide = computed(() => route.path === '/')
 // phone + tablet tab bar: Home, Chat, the raised Link button, then the first two site pages
 const tabs = computed(() => [base[0]!, base[1]!, { fab: true, label: 'Link' }, ...pages.value.slice(0, 2)])
-const footer = [['Features', '/features'], ['FAQ', '/faq'], ['Feedback', '/feedback'], ['Privacy', '/privacy'], ['Terms', '/terms']] as const
+const footer = [['Features', '/features'], ['FAQ', '/faq'], ['Privacy', '/privacy'], ['Terms', '/terms']] as const
 </script>
 
 <template>
@@ -58,7 +59,7 @@ const footer = [['Features', '/features'], ['FAQ', '/faq'], ['Feedback', '/feedb
       </div>
 
       <footer class="text-center text-xs text-muted pt-2 pb-24 lg:pb-6" :class="chatRoute || framed ? 'hidden' : ''">
-        <template v-if="app.blogUrl"><template v-for="(f, n) in footer" :key="f[1]"><span v-if="n"> · </span><NuxtLink :to="f[1]" class="hover:underline">{{ f[0] }}</NuxtLink></template></template>
+        <template v-for="f in footer" :key="f[1]"><NuxtLink :to="f[1]" class="hover:underline">{{ f[0] }}</NuxtLink> · </template><button class="hover:underline" @click="feedback = true">Feedback</button>
       </footer>
     </div>
 
@@ -77,6 +78,7 @@ const footer = [['Features', '/features'], ['FAQ', '/faq'], ['Feedback', '/feedb
     </nav>
 
     <LazySettingsModal v-if="app.settingsOpen" />
+    <FeedbackModal />
     <ToastHost />
   </div>
 </template>

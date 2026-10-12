@@ -17,10 +17,6 @@ const securityHeaders = { 'Content-Security-Policy': csp, 'X-Content-Type-Option
 // The interactive app is a pure SPA (no server rendering). Blog, public pages and legal pages are the separate SSR site in ../blog.
 export default defineNuxtConfig({
   ssr: false,
-  hooks: {
-    // the site pages keep clean addresses (/feedback, /privacy, /terms) and render through the one framed page
-    'pages:extend'(pages) { for (const path of ['/feedback', '/privacy', '/terms']) pages.push({ name: `site${path.replace('/', '-')}`, path, file: new URL('./app/pages/blog/[[...path]].vue', import.meta.url).pathname }) },
-  },
   compatibilityDate: '2025-07-15',
   devtools: { enabled: false },
   modules: ['@pinia/nuxt', '@vueuse/nuxt', '@vite-pwa/nuxt'],

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 /**
- * Blog, features, FAQ, feedback, privacy and terms are the separate server-rendered SEO site. Here they open inside the app window
- * (so an installed PWA never jumps to a browser tab) under clean addresses: /blog, /blog/<article>, /features, /faq ...
+ * The blog is the separate server-rendered SEO site. Here it opens inside the app window
+ * (so an installed PWA never jumps to a browser tab) under clean addresses: /blog and /blog/<article>.
  * The real, indexable pages live on the blog site; this shell points search engines there with a canonical link.
  */
 definePageMeta({ key: 'site-frame' })
@@ -11,9 +11,8 @@ const router = useRouter()
 const frame = useTemplateRef<HTMLIFrameElement>('frame')
 const loaded = ref(false)
 const slow = ref(false)
-const SITE = ['/feedback', '/privacy', '/terms']
 const toSite = (appPath: string): string => (appPath === '/blog' || appPath.startsWith('/blog/') || appPath.startsWith('/blog?') ? appPath.slice(5) || '/' : appPath)
-const toApp = (sitePath: string): string => (SITE.some(p => sitePath === p || sitePath.startsWith(`${p}?`)) ? sitePath : sitePath === '/' ? '/blog' : `/blog${sitePath}`)
+const toApp = (sitePath: string): string => (sitePath === '/' ? '/blog' : `/blog${sitePath}`)
 const origin = computed(() => { try { return new URL(app.blogUrl).origin } catch { return '' } })
 const direct = (p: string): string => `${app.blogUrl}${p}`
 const src = ref(direct(toSite(route.fullPath)))

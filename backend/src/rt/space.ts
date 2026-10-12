@@ -1,6 +1,7 @@
 import type { Namespace, Socket } from 'socket.io'
 import type { Redis } from 'ioredis'
 import { EV, fileMetaSchema, fileIdSchema, fileReadySchema, rtcSignalSchema, textUpdateSchema } from '@sync/shared'
+import { env } from '../core/config/env'
 import { sql } from '../core/db/client'
 import { deviceRoom, ipRoom, spaceRoom } from '../core/emitter'
 import { hashIp } from '../core/lib/crypto'
@@ -70,7 +71,9 @@ export function setupSpace(ns: Namespace, redis: Redis): void {
     }
     const toOthers = () => socket.to(spaceRoom(spaceId))
 
-    on(EV.textUpdate, zod(textUpdateSchema), async (m, ack) => {
+    // the schema allows the hard ceiling; the real limit is TEXT_MAX_CHARS
+    const textOk = (v: unknown): { content: string; baseRev: number } | null => { const m = zod(textUpdateSchema)(v); return m && m.content.length <= env.TEXT_MAX_CHARS ? m : null }
+    on(EV.textUpdate, textOk, async (m, ack) => {
       const rev = await writeText(redis, spaceId, m.content)
       ack({ rev })
       toOthers().emit(EV.textChanged, { content: m.content, rev, by: deviceId })

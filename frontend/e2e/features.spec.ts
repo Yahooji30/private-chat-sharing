@@ -58,6 +58,7 @@ test('text tools: copy, download, clear and the character limit', async ({ brows
 test('files: cancel, remove from another device, clear all, and zip everything', async ({ browser }) => {
   const [a, b] = await twoDevices(browser)
   await b.getByRole('button', { name: 'Settings' }).click()
+  await b.getByText('More options').click()
   await b.getByRole('switch', { name: 'Auto-download' }).click()
   await b.getByRole('dialog').getByRole('button', { name: 'Close' }).click()
   const files = [['one.txt', 'first file'], ['two.txt', 'second file']] as const
@@ -108,7 +109,7 @@ test('paste button inserts the clipboard at the cursor', async ({ browser }) => 
 
 test('features and FAQ are native pages with clean addresses; the blog opens inside the app', async ({ browser }) => {
   const a = await device(browser, '/features')
-  await expect(a.getByRole('heading', { name: /Everything you need/ })).toBeVisible({ timeout: 15_000 })
+  await expect(a.getByRole('heading', { name: /One shared space/ })).toBeVisible({ timeout: 15_000 })
   await expect(a.locator('link[rel=canonical]')).toHaveAttribute('href', /\/features$/)
   await a.getByRole('link', { name: 'FAQ' }).first().click()
   await expect(a).toHaveURL(/\/faq$/)
@@ -127,4 +128,26 @@ test('home: the character counter follows the server limit, links get their own 
   await expect(a.getByTestId('char-count')).toHaveText(/30 \/ 100,000/)
   await expect(a.getByText('Found URLs')).toBeVisible()
   await expect(a.getByRole('button', { name: 'Show devices' })).toHaveCount(0)
+})
+
+test('feedback is a pop-up, privacy and terms load inside the app, links can be copied', async ({ browser }) => {
+  const a = await device(browser, '/faq')
+  await a.getByRole('button', { name: 'Send feedback' }).click()
+  const dlg = a.getByRole('dialog')
+  await expect(dlg.getByText('Your rating')).toBeVisible()
+  await dlg.locator('label:has(input[value="4"])').click()
+  await dlg.getByPlaceholder("What's on your mind?").fill('Great app, thank you')
+  await dlg.getByRole('button', { name: 'Send feedback' }).click()
+  await expect(dlg.getByText('Thank you!')).toBeVisible()
+  await dlg.getByRole('button', { name: 'Close', exact: true }).first().click()
+  await a.goto('/privacy')
+  await expect(a.getByRole('heading', { name: 'Privacy' }).first()).toBeVisible()
+  await a.goto('/terms')
+  await expect(a.getByRole('heading', { name: 'Terms' }).first()).toBeVisible()
+
+  await a.context().grantPermissions(['clipboard-read', 'clipboard-write'])
+  await a.goto('/')
+  await a.locator('textarea').fill('see https://example.com/docs')
+  await a.getByRole('button', { name: 'Copy example.com' }).click()
+  expect(await a.evaluate(() => navigator.clipboard.readText())).toBe('https://example.com/docs')
 })

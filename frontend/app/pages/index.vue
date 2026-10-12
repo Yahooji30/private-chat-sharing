@@ -6,7 +6,8 @@ const app = useApp()
 const toast = useToast()
 const sync = useTextSync()
 const ta = useTemplateRef<HTMLTextAreaElement>('ta')
-const tab = ref<'text' | 'links' | 'files'>('text')
+const isDesktop = useMediaQuery('(min-width: 1024px)')
+const sheet = ref<'links' | 'files' | null>(null) // phone + tablet: links and files open as pop-up sheets
 const peerCount = computed(() => Math.max(app.peers.length, app.online ? 1 : 0))
 const fileStore = useFiles()
 const fileCount = computed(() => fileStore.items.length)
@@ -21,6 +22,7 @@ const statusText = computed(() => ({ idle: 'Start typing...', saving: 'Saving...
 
 onMounted(async () => {
   tick = setInterval(() => { now.value = Date.now() }, 15_000)
+  void fileStore.init()
   sync.bind(() => ta.value)
   try { await sync.load() } catch { sync.state.value = 'offline' }
   const q = useRoute().query
@@ -58,8 +60,11 @@ const dock = 'flex-1 min-w-0 flex items-center justify-center gap-2 min-h-12 tex
 const len = computed(() => sync.text.value.length)
 const meter = computed(() => (len.value >= app.textMax ? 'text-pink-ink font-semibold' : len.value >= app.textMax * 0.9 ? 'text-warn font-semibold' : 'text-muted'))
 const showLinks = computed(() => app.settings.urlsPanel)
-const tabs = computed(() => [['text', 'Text'], ...(showLinks.value ? [['links', `Links${urls.value.length ? ` (${urls.value.length})` : ''}`]] : []), ['files', `Files${fileCount.value ? ` (${fileCount.value})` : ''}`]] as [typeof tab.value, string][])
-const steps = [['Open this page', 'On any device on the same Wi-Fi or network. No sign-up, no install needed.'], ['Type or drop files', 'Text appears everywhere instantly. Files go straight from device to device and are never stored on our servers.'], ['Link other networks', 'Scan a QR code or enter a short code to bring a phone on mobile data into the same space.']]
+const steps = [
+  { icon: 'devices', title: 'Open Jodbox on your devices', text: 'Use the same Wi-Fi or network and they find each other. No sign-up, nothing to install.' },
+  { icon: 'files', title: 'Type, paste or drop files', text: 'Text appears everywhere instantly. Files go straight from device to device and are never stored on our servers.' },
+  { icon: 'qr', title: 'Link other networks', text: 'Scan a QR code or enter a short code to bring a phone on mobile data into the same space.' },
+]
 </script>
 
 <template>
@@ -70,15 +75,15 @@ const steps = [['Open this page', 'On any device on the same Wi-Fi or network. N
       <h1 class="text-2xl md:text-[1.75rem] font-semibold mt-0.5">{{ headline }}</h1>
     </header>
 
-    <!-- phone + tablet: text, links and files are separate tabs -->
-    <div class="lg:hidden grid gap-1 p-1 mb-4 rounded-xl bg-surface-2" :class="showLinks ? 'grid-cols-3' : 'grid-cols-2'" role="tablist" aria-label="Sections">
-      <button v-for="t in tabs" :key="t[0]" role="tab" :aria-selected="tab === t[0]" class="h-10 rounded-lg text-sm font-medium transition-colors" :class="tab === t[0] ? 'bg-surface text-ink shadow-card' : 'text-muted'" @click="tab = t[0]">{{ t[1] }}</button>
-    </div>
-
-    <div class="lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-6 items-start">
-      <!-- scratchpad -->
-      <section :class="tab === 'text' ? '' : 'hidden lg:block'" aria-label="Shared text">
-        <div class="card overflow-hidden transition-[border-color,box-shadow] focus-within:border-[var(--accent)] focus-within:shadow-[0_0_0_3px_color-mix(in_srgb,var(--accent)_16%,transparent)]">
+    <div class="lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-6 lg:items-stretch">
+      <!-- scratchpad: on a computer it grows to the height of the side column, so there is never a gap under it -->
+      <section class="lg:flex lg:flex-col" aria-label="Shared text">
+        <!-- phone + tablet: found links and files open as pop-up sheets, right under the title so they are never below the fold -->
+        <div class="lg:hidden flex gap-2 mb-3">
+          <button v-if="showLinks" class="btn flex-1 !min-h-11" aria-label="Show found links" @click="sheet = 'links'"><Icon name="link" :size="18" />Links<span v-if="urls.length" class="chip">{{ urls.length }}</span></button>
+          <button class="btn flex-1 !min-h-11" aria-label="Show files" @click="sheet = 'files'"><Icon name="files" :size="18" />Files<span v-if="fileCount" class="chip chip-pink">{{ fileCount }}</span></button>
+        </div>
+        <div class="card overflow-hidden flex flex-col lg:flex-1 transition-[border-color,box-shadow] focus-within:border-[var(--accent)] focus-within:shadow-[0_0_0_3px_color-mix(in_srgb,var(--accent)_16%,transparent)]">
           <div class="flex items-center gap-3 px-5 pt-4">
             <span class="eyebrow">Scratchpad</span>
             <span class="ml-auto text-xs tabular-nums" :class="meter" data-testid="char-count" :title="`Limit: ${app.textMax.toLocaleString()} characters`">{{ len.toLocaleString() }} / {{ app.textMax.toLocaleString() }}</span>
@@ -88,7 +93,7 @@ const steps = [['Open this page', 'On any device on the same Wi-Fi or network. N
             <button class="size-8 -mr-1.5 grid place-items-center rounded-lg text-muted hover:bg-surface-2 hover:text-ink" aria-label="Reload from server" @click="sync.load()"><Icon name="refresh" :size="17" /></button>
           </div>
           <textarea ref="ta" :value="sync.text.value" :class="fontClass" :style="{ fontSize: `${app.settings.fontSize}px` }" :spellcheck="app.spellcheck"
-            class="block w-full h-[50dvh] md:h-[56dvh] lg:h-[64dvh] min-h-72 resize-none bg-transparent px-5 py-3 outline-none leading-[1.7]"
+            class="block w-full flex-none h-[46dvh] md:h-[54dvh] min-h-64 lg:h-auto lg:flex-1 lg:min-h-[28rem] resize-none bg-transparent px-5 py-3 outline-none leading-[1.7]"
             placeholder="Type or paste here. It shows up on all your devices instantly." aria-label="Shared text" autocapitalize="sentences" @input="sync.edit(($event.target as HTMLTextAreaElement).value)" />
           <div class="flex border-t border-line divide-x divide-line" role="toolbar" aria-label="Text actions">
             <button :class="dock" aria-label="Copy" @click="copy"><Icon name="copy" :size="19" />Copy</button>
@@ -97,32 +102,42 @@ const steps = [['Open this page', 'On any device on the same Wi-Fi or network. N
             <button :class="dock" @click="clear"><Icon name="trash" :size="19" />Clear</button>
           </div>
         </div>
+
         <AdSlot kind="inline" class="mt-5 lg:hidden" />
       </section>
 
-      <!-- side column: found links and files -->
-      <div class="space-y-5">
-        <section v-if="showLinks" :class="[tab === 'links' ? '' : 'hidden', urls.length ? 'lg:block' : 'lg:hidden']" aria-label="Found URLs">
-          <UrlsPanel :urls="urls" :new-tab="app.settings.urlsNewTab" />
-        </section>
-        <div :class="tab === 'files' ? '' : 'hidden lg:block'"><FilesPanel ref="files" /></div>
-        <AdSlot kind="inline" class="hidden lg:block" />
+      <!-- computer: found links and files sit beside the text -->
+      <div v-if="isDesktop" class="space-y-5">
+        <section v-if="showLinks && urls.length" aria-label="Found URLs"><UrlsPanel :urls="urls" :new-tab="app.settings.urlsNewTab" /></section>
+        <FilesPanel ref="files" />
+        <AdSlot kind="inline" />
       </div>
     </div>
 
-    <section class="mt-12 max-w-4xl mx-auto px-1" aria-labelledby="how">
-      <p class="eyebrow text-center">How it works</p>
-      <h2 id="how" class="text-2xl md:text-3xl font-semibold text-center mt-2">Three steps, no sign-up</h2>
-      <ol class="mt-7 grid md:grid-cols-3 gap-x-8 gap-y-6">
-        <li v-for="(st, n) in steps" :key="n" class="flex md:block gap-4"><span class="font-semibold text-4xl leading-none shrink-0 w-14 md:w-auto tabular-nums" :class="n === 1 ? 'text-pink' : 'text-[var(--blue)]'">0{{ n + 1 }}</span>
-          <div class="md:mt-3"><strong class="text-base font-semibold">{{ st[0] }}</strong><p class="text-muted mt-1 text-sm leading-relaxed">{{ st[1] }}</p></div></li>
+    <Modal :open="!isDesktop && sheet === 'links'" title="Found URLs" subtitle="Links detected in your text" @close="sheet = null"><UrlsPanel :urls="urls" :new-tab="app.settings.urlsNewTab" bare /></Modal>
+    <Modal :open="!isDesktop && sheet === 'files'" title="Files" subtitle="Shared straight between your devices" @close="sheet = null"><FilesPanel v-if="!isDesktop && sheet === 'files'" /></Modal>
+
+    <section class="mt-14 max-w-5xl mx-auto px-1" aria-labelledby="how">
+      <div class="text-center"><span class="chip">How it works</span>
+        <h2 id="how" class="text-2xl md:text-3xl font-semibold mt-3">Synced in three simple steps</h2>
+        <p class="text-muted mt-2 max-w-xl mx-auto">No account, no setup, no cables. Open it, type, and your other devices are already up to date.</p></div>
+      <ol class="mt-8 grid md:grid-cols-3 gap-4 md:gap-6">
+        <li v-for="(st, n) in steps" :key="n" class="card p-5 relative">
+          <div class="flex items-center gap-3">
+            <span class="size-11 rounded-xl grid place-items-center text-white shrink-0" :class="n === 1 ? 'bg-pink' : 'bg-[var(--blue)]'"><Icon :name="st.icon" :size="22" weight="bold" /></span>
+            <span class="text-xs font-semibold tracking-wide uppercase" :class="n === 1 ? 'text-pink-ink' : 'text-accent-ink'">Step {{ n + 1 }}</span>
+          </div>
+          <h3 class="mt-4 text-base font-semibold">{{ st.title }}</h3>
+          <p class="text-muted mt-1.5 text-sm leading-relaxed">{{ st.text }}</p>
+          <span v-if="n < 2" class="hidden md:grid absolute -right-[1.1rem] top-1/2 -translate-y-1/2 size-8 rounded-full bg-bg border border-line place-items-center text-muted z-10"><Icon name="arrowRight" :size="15" weight="bold" /></span>
+        </li>
       </ol>
       <AdSlot kind="banner" class="mt-10" />
       <p class="text-center text-sm text-muted mt-8">Need privacy? <NuxtLink to="/chat" class="text-accent-ink font-semibold underline">Start an encrypted chat room</NuxtLink> that disappears when everyone leaves. Anyone on your network shares the space, so avoid putting secrets in the shared text on public Wi-Fi.</p>
     </section>
 
     <template #fallback>
-      <div aria-hidden="true"><div class="h-12 w-60 rounded-lg bg-surface-2 mb-4" /><div class="h-[50dvh] min-h-72 rounded-xl bg-surface border border-line" /></div>
+      <div aria-hidden="true"><div class="h-12 w-60 rounded-lg bg-surface-2 mb-4" /><div class="h-[46dvh] min-h-64 rounded-xl bg-surface border border-line" /></div>
     </template>
     </ClientOnly>
   </div>

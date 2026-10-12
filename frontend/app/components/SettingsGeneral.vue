@@ -48,11 +48,17 @@ const sel = 'input !min-h-10 !w-auto pr-8 cursor-pointer'
       </template>
     </section>
 
-    <section class="card p-4 space-y-4">
+    <details class="card group">
+      <summary class="flex items-center gap-3 cursor-pointer select-none px-4 py-3.5 font-medium list-none [&::-webkit-details-marker]:hidden">
+        <span class="flex-1">More options<span class="block text-[0.8125rem] text-muted font-normal">Auto-download, spellcheck and ads</span></span>
+        <Icon name="chevron" :size="18" class="text-muted transition group-open:rotate-180" />
+      </summary>
+      <div class="px-4 pb-4 pt-1 space-y-4 border-t border-line">
       <SettingRow title="Auto-download small files" desc="Fetch files under 50 MB automatically on this device."><Toggle :model-value="app.autoDownload" label="Auto-download" @update:model-value="app.setLocal('autoDownload', $event)" /></SettingRow>
       <SettingRow title="Spellcheck" desc="Underline spelling mistakes while typing."><Toggle :model-value="app.spellcheck" label="Spellcheck" @update:model-value="app.setLocal('spellcheck', $event)" /></SettingRow>
       <SettingRow title="Disable Ads" desc="Hide ads on all your devices."><Toggle v-model="draft.adsDisabled" label="Disable ads" /></SettingRow>
-    </section>
+      </div>
+    </details>
 
     <section class="card p-4 space-y-3">
       <label class="block">
