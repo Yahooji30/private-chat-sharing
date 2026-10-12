@@ -186,3 +186,21 @@ test('confirmations are in-app dialogs (never the browser popup) and Open works 
   await a.getByRole('link', { name: /^Open / }).first().click()
   await expect(a).toHaveURL(/localhost:\d+\/$/)
 })
+
+test('desktop: the workspace is one screen tall and a long side column never changes the page layout', async ({ browser }) => {
+  const a = await device(browser, '/')
+  await a.setViewportSize({ width: 1440, height: 900 })
+  await a.waitForSelector('textarea')
+  const card = async () => (await a.locator('textarea').boundingBox())!
+  const before = await card()
+  await a.getByTestId('file-input').setInputFiles([1, 2, 3, 4, 5, 6].map(n => ({ name: `long${n}.txt`, mimeType: 'text/plain', buffer: Buffer.from(`file ${n}`) })))
+  await expect(a.getByTestId('file-long6.txt')).toBeAttached()
+  const after = await card()
+  expect(after.height).toBe(before.height)
+  // the textbox is tall: it fills the screen down to the button bar
+  expect(before.height).toBeGreaterThan(900 - 260)
+  // "How it works" starts right after the workspace: no gap taller than the page margin
+  const dock = (await a.getByRole('toolbar', { name: 'Text actions' }).boundingBox())!
+  const how = (await a.getByRole('heading', { name: /three simple steps/i }).boundingBox())!
+  expect(how.y - (dock.y + dock.height)).toBeLessThan(260)
+})

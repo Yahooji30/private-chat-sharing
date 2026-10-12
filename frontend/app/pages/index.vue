@@ -8,10 +8,9 @@ const sync = useTextSync()
 const ta = useTemplateRef<HTMLTextAreaElement>('ta')
 const isDesktop = useMediaQuery('(min-width: 1024px)')
 const sheet = ref<'links' | 'files' | null>(null) // phone + tablet: links and files open as pop-up sheets
-const peerCount = computed(() => Math.max(app.peers.length, app.online ? 1 : 0))
+const appName = String(useRuntimeConfig().public.appName)
 const fileStore = useFiles()
 const fileCount = computed(() => fileStore.items.length)
-const headline = computed(() => (peerCount.value > 1 ? `${peerCount.value} devices in sync` : 'Just this device for now'))
 const now = ref(Date.now())
 let tick: ReturnType<typeof setInterval>
 onBeforeUnmount(() => clearInterval(tick))
@@ -68,22 +67,20 @@ const steps = [
 </script>
 
 <template>
-  <div class="pt-3 lg:pt-1 pb-4">
+  <div class="pt-3 lg:pt-0 pb-4">
     <ClientOnly>
-    <header class="mb-4">
-      <p class="eyebrow">Your space</p>
-      <h1 class="text-2xl md:text-[1.75rem] font-semibold mt-0.5">{{ headline }}</h1>
-    </header>
+    <h1 class="sr-only">{{ appName }}: share text and files across your devices</h1>
 
-    <div class="lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-6 lg:items-start">
+    <!-- on a computer the whole workspace is exactly one screen tall: the side column scrolls inside itself, so it can never push the page around -->
+    <div class="lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-6 lg:h-[calc(100dvh-3rem)] lg:min-h-[32rem]">
       <!-- scratchpad: a fixed, comfortable height; it never stretches with the side column -->
-      <section aria-label="Shared text">
+      <section class="lg:h-full lg:min-h-0 lg:flex lg:flex-col" aria-label="Shared text">
         <!-- phone + tablet: found links and files open as pop-up sheets, right under the title so they are never below the fold -->
         <div class="lg:hidden flex gap-2 mb-3">
           <button v-if="showLinks" class="btn flex-1 !min-h-11" aria-label="Show found links" @click="sheet = 'links'"><Icon name="link" :size="18" />Links<span v-if="urls.length" class="chip">{{ urls.length }}</span></button>
           <button class="btn flex-1 !min-h-11" aria-label="Show files" @click="sheet = 'files'"><Icon name="files" :size="18" />Files<span v-if="fileCount" class="chip chip-pink">{{ fileCount }}</span></button>
         </div>
-        <div class="card overflow-hidden flex flex-col transition-[border-color,box-shadow] focus-within:border-[var(--accent)] focus-within:shadow-[0_0_0_3px_color-mix(in_srgb,var(--accent)_16%,transparent)]">
+        <div class="card overflow-hidden flex flex-col lg:flex-1 lg:min-h-0 transition-[border-color,box-shadow] focus-within:border-[var(--accent)] focus-within:shadow-[0_0_0_3px_color-mix(in_srgb,var(--accent)_16%,transparent)]">
           <div class="flex items-center gap-3 px-5 pt-4">
             <span class="eyebrow">Scratchpad</span>
             <span class="ml-auto text-xs tabular-nums" :class="meter" data-testid="char-count" :title="`Limit: ${app.textMax.toLocaleString()} characters`">{{ len.toLocaleString() }} / {{ app.textMax.toLocaleString() }}</span>
@@ -93,7 +90,7 @@ const steps = [
             <button class="size-8 -mr-1.5 grid place-items-center rounded-lg text-muted hover:bg-surface-2 hover:text-ink" aria-label="Reload from server" @click="sync.load()"><Icon name="refresh" :size="17" /></button>
           </div>
           <textarea ref="ta" :value="sync.text.value" :class="fontClass" :style="{ fontSize: `${app.settings.fontSize}px` }" :spellcheck="app.spellcheck"
-            class="block w-full flex-none h-[46dvh] md:h-[54dvh] min-h-64 lg:h-[calc(100dvh-15.5rem)] lg:min-h-[24rem] lg:max-h-[70rem] resize-none bg-transparent px-5 py-3 outline-none leading-[1.7]"
+            class="block w-full flex-none h-[calc(100dvh-20rem)] md:h-[calc(100dvh-21rem)] min-h-64 flex-none lg:h-auto lg:flex-1 lg:min-h-0 resize-none bg-transparent px-5 py-3 outline-none leading-[1.7]"
             placeholder="Type or paste here. It shows up on all your devices instantly." aria-label="Shared text" autocapitalize="sentences" @input="sync.edit(($event.target as HTMLTextAreaElement).value)" />
           <div class="flex border-t border-line divide-x divide-line" role="toolbar" aria-label="Text actions">
             <button :class="dock" aria-label="Copy" @click="copy"><Icon name="copy" :size="19" />Copy</button>
@@ -107,7 +104,7 @@ const steps = [
       </section>
 
       <!-- computer: found links and files sit beside the text -->
-      <div v-if="isDesktop" class="space-y-5">
+      <div v-if="isDesktop" class="space-y-5 lg:h-full lg:overflow-y-auto lg:pr-1">
         <section v-if="showLinks && urls.length" aria-label="Found URLs"><UrlsPanel :urls="urls" :new-tab="app.settings.urlsNewTab" /></section>
         <FilesPanel ref="files" />
         <AdSlot kind="inline" />
