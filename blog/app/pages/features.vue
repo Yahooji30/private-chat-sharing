@@ -60,5 +60,6 @@ await usePageSeo('features', {
       <p class="text-muted mt-1">Open it on two devices and start typing.</p>
       <div class="flex flex-wrap gap-2 justify-center mt-4"><a :href="appUrl" class="btn btn-accent !min-h-11 px-6">Open the app</a><NuxtLink to="/feedback" class="btn !min-h-11 px-6">Tell us what you think</NuxtLink></div>
     </section>
+    <AdSlot kind="inline" class="mt-8" />
   </div>
 </template>

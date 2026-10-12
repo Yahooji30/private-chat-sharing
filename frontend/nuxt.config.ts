@@ -1,12 +1,14 @@
 import tailwindcss from '@tailwindcss/vite'
 
-const appName = process.env.NUXT_PUBLIC_APP_NAME ?? 'Sync'
+const appName = process.env.NUXT_PUBLIC_APP_NAME ?? 'Jodbox'
 const isProd = process.env.NODE_ENV === 'production'
 const rtUrl = process.env.NUXT_PUBLIC_RT_URL ?? ''
 // Nuxt inlines its hydration payload, so scripts need 'unsafe-inline'. Everything else stays on this origin.
+const adsOn = !!process.env.NUXT_PUBLIC_ADSENSE_CLIENT
+const adHosts = 'https://*.googlesyndication.com https://*.doubleclick.net https://*.google.com https://*.gstatic.com https://*.adtrafficquality.google'
 const csp = [
-  "default-src 'self'", "script-src 'self' 'unsafe-inline'", "style-src 'self' 'unsafe-inline'", "img-src 'self' data: blob:", "media-src 'self' blob:", "font-src 'self' data:",
-  `connect-src 'self' ws: wss: ${rtUrl}`.trim(), "worker-src 'self' blob:", "frame-src blob:", "object-src 'none'", "base-uri 'self'", "form-action 'self'", "frame-ancestors 'none'",
+  "default-src 'self'", `script-src 'self' 'unsafe-inline'${adsOn ? ` ${adHosts}` : ''}`, "style-src 'self' 'unsafe-inline'", `img-src 'self' data: blob:${adsOn ? ' https:' : ''}`, "media-src 'self' blob:", "font-src 'self' data:",
+  `connect-src 'self' ws: wss: ${rtUrl}${adsOn ? ` ${adHosts}` : ''}`.trim(), "worker-src 'self' blob:", `frame-src blob:${adsOn ? ` ${adHosts}` : ''}`, "object-src 'none'", "base-uri 'self'", "form-action 'self'", "frame-ancestors 'none'",
 ].join('; ')
 const securityHeaders = { 'Content-Security-Policy': csp, 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'strict-origin-when-cross-origin', 'Permissions-Policy': 'camera=(self), microphone=(), geolocation=()', 'X-Frame-Options': 'DENY' }
 
@@ -21,7 +23,7 @@ export default defineNuxtConfig({
   vite: { plugins: [tailwindcss() as unknown as never] },
   runtimeConfig: {
     apiInternal: process.env.NUXT_API_INTERNAL ?? 'http://127.0.0.1:4000',
-    public: { appName, rtUrl: '', blogUrl: '' }, // NUXT_PUBLIC_RT_URL, NUXT_PUBLIC_BLOG_URL from frontend/.env
+    public: { appName, rtUrl: '', blogUrl: '', adsenseClient: '', adsPreview: 'true', adSlotRail: '', adSlotInline: '', adSlotBanner: '' }, // NUXT_PUBLIC_RT_URL, NUXT_PUBLIC_BLOG_URL from frontend/.env
   },
   nitro: {
     noExternals: true, // bundle every dependency into .output so the server needs no node_modules (pnpm and Windows safe)
@@ -37,7 +39,7 @@ export default defineNuxtConfig({
       htmlAttrs: { lang: 'en' },
       meta: [
         { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
-        { name: 'theme-color', content: '#e85a5a' },
+        { name: 'theme-color', content: '#0058F0' },
         { name: 'description', content: `${appName}: type on one device, see it on every device on your network. Share text and files instantly, privately, with no sign-up.` },
         { name: 'apple-mobile-web-app-capable', content: 'yes' },
         { name: 'apple-mobile-web-app-status-bar-style', content: 'default' },
@@ -53,7 +55,7 @@ export default defineNuxtConfig({
     registerType: 'autoUpdate',
     manifest: {
       name: appName, short_name: appName, description: 'Instant text and file sharing across your devices.',
-      theme_color: '#e85a5a', background_color: '#fafafa', display: 'standalone', orientation: 'any', start_url: '/', scope: '/',
+      theme_color: '#0058F0', background_color: '#F4F7FF', display: 'standalone', orientation: 'any', start_url: '/', scope: '/',
       icons: [
         { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
         { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },

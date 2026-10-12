@@ -26,11 +26,15 @@ const shares = [['X', `https://twitter.com/intent/tweet?url=${enc(url)}&text=${e
   ['LinkedIn', `https://www.linkedin.com/sharing/share-offsite/?url=${enc(url)}`], ['WhatsApp', `https://wa.me/?text=${enc(art.title + ' ' + url)}`]]
 const toast = useToast()
 const tocOpen = ref(false)
+// the in-article ad goes after the second paragraph, on a paragraph boundary
+const cut = (() => { let at = -1; for (let i = 0; i < 2; i++) { at = art.html.indexOf('</p>', at + 1); if (at < 0) return -1 } return at + 4 })()
+const htmlTop = cut > 0 ? art.html.slice(0, cut) : art.html
+const htmlRest = cut > 0 ? art.html.slice(cut) : ''
 async function copy(): Promise<void> { if (await copyText(url)) toast.ok('Link copied') }
 </script>
 
 <template>
-  <article class="pt-4 md:pt-8 pb-10 grid lg:grid-cols-[minmax(0,72ch)_16rem] gap-8 justify-center">
+  <article class="pt-4 md:pt-8 pb-10 grid lg:grid-cols-[minmax(0,72ch)_300px] gap-8 justify-center">
     <div class="min-w-0">
       <nav class="text-sm text-muted mb-3" aria-label="Breadcrumb"><NuxtLink to="/" class="hover:underline">Blog</NuxtLink><template v-if="art.category"> / <NuxtLink :to="`/category/${art.category.slug}`" class="hover:underline">{{ art.category.name }}</NuxtLink></template></nav>
       <h1 class="text-3xl md:text-5xl font-bold tracking-tight leading-tight">{{ art.title }}</h1>
@@ -38,7 +42,10 @@ async function copy(): Promise<void> { if (await copyText(url)) toast.ok('Link c
       <BlogCover v-if="art.cover" :cover="art.cover" eager class="mt-6" />
       <details v-if="art.toc.length" class="lg:hidden card p-4 mt-6" :open="tocOpen" @toggle="tocOpen = ($event.target as HTMLDetailsElement).open"><summary class="font-semibold cursor-pointer">On this page</summary>
         <ul class="mt-2 space-y-1.5 text-sm"><li v-for="t in art.toc" :key="t.id" :class="t.level === 3 ? 'pl-4' : ''"><a :href="`#${t.id}`" class="text-accent-ink hover:underline" @click="tocOpen = false">{{ t.text }}</a></li></ul></details>
-      <div class="prose-page prose-article mt-6 text-[1.05rem]" v-html="art.html" />
+      <div class="prose-page prose-article mt-6 text-[1.05rem]" v-html="htmlTop" />
+      <AdSlot v-if="htmlRest" kind="inline" class="my-6" />
+      <div v-if="htmlRest" class="prose-page prose-article text-[1.05rem]" v-html="htmlRest" />
+      <AdSlot kind="inline" class="mt-8" />
       <div v-if="art.tags.length" class="flex flex-wrap gap-2 mt-8"><NuxtLink v-for="t in art.tags" :key="t.slug" :to="`/tag/${t.slug}`" class="btn !min-h-8 text-sm">#{{ t.name }}</NuxtLink></div>
       <div class="flex flex-wrap items-center gap-2 mt-6 pt-6 border-t border-line"><span class="text-sm text-muted mr-1">Share</span>
         <a v-for="s in shares" :key="s[0]" :href="s[1]" target="_blank" rel="noopener noreferrer" class="btn !min-h-9 text-sm">{{ s[0] }}</a><button class="btn !min-h-9 text-sm" @click="copy"><Icon name="copy" :size="14" />Copy link</button></div>
@@ -47,6 +54,7 @@ async function copy(): Promise<void> { if (await copyText(url)) toast.ok('Link c
     <aside class="hidden lg:block"><div class="sticky top-24 space-y-4">
       <nav v-if="art.toc.length" class="card p-4" aria-label="Table of contents"><p class="font-semibold mb-2 text-sm">On this page</p>
         <ul class="space-y-1.5 text-sm"><li v-for="t in art.toc" :key="t.id" :class="t.level === 3 ? 'pl-3' : ''"><a :href="`#${t.id}`" class="text-muted hover:text-accent-ink">{{ t.text }}</a></li></ul></nav>
+      <AdSlot kind="rail" />
     </div></aside>
   </article>
 </template>

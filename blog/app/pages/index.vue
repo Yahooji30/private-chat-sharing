@@ -21,15 +21,31 @@ const rest = computed(() => (page.value === 1 ? (data.value?.items.slice(1) ?? [
 </script>
 
 <template>
-  <div class="pt-4 md:pt-8 pb-10">
-    <h1 class="text-3xl md:text-4xl font-bold tracking-tight">Blog</h1>
-    <nav v-if="cats?.length" class="flex gap-2 overflow-x-auto py-4 -mx-3 px-3 scroll-thin" aria-label="Categories">
+  <div class="pt-5 md:pt-10 pb-10">
+    <section class="relative overflow-hidden rounded-[28px] p-6 md:p-10 text-white bg-[linear-gradient(135deg,var(--blue-hi),var(--blue)_55%,var(--pink))] shadow-[0_20px_50px_-20px_rgb(0_88_240/.6)]">
+      <span class="chip !bg-white/20 !text-white">Blog</span>
+      <h1 class="text-3xl md:text-5xl font-bold tracking-tight mt-3 max-w-2xl leading-tight">Guides and ideas for sharing smarter</h1>
+      <p class="mt-3 text-white/90 max-w-xl md:text-lg">Tips, how-tos and news about moving text and files between your devices, privately and instantly.</p>
+      <svg class="absolute -right-6 -bottom-8 w-44 md:w-64 opacity-25" viewBox="0 0 128 104" fill="none" aria-hidden="true"><rect x="8" y="8" width="44" height="88" rx="14" stroke="#fff" stroke-width="10"/><rect x="76" y="8" width="44" height="88" rx="14" stroke="#fff" stroke-width="10"/></svg>
+    </section>
+    <nav v-if="cats?.length" class="flex gap-2 overflow-x-auto py-4 -mx-3 px-3 md:mx-0 md:px-0 scroll-thin" aria-label="Categories">
       <NuxtLink to="/" class="btn !min-h-9 text-sm btn-soft shrink-0">All</NuxtLink>
       <NuxtLink v-for="c in cats" :key="c.slug" :to="`/category/${c.slug}`" class="btn !min-h-9 text-sm shrink-0">{{ c.name }}</NuxtLink>
     </nav>
-    <p v-if="!data?.items.length" class="card p-10 text-center text-muted">No articles yet. Check back soon.</p>
-    <BlogCard v-if="featured" :post="featured" big class="mb-5" />
-    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5"><BlogCard v-for="p in rest" :key="p.slug" :post="p" /></div>
-    <BlogPager v-if="data" :page="data.page" :pages="data.pages" base="/" />
+    <AdSlot kind="banner" class="mb-6" />
+    <div class="lg:grid lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-8">
+      <div class="min-w-0">
+        <p v-if="!data?.items.length" class="card p-10 text-center text-muted">No articles yet. Check back soon.</p>
+        <BlogCard v-if="featured" :post="featured" big class="mb-5" />
+        <div class="grid sm:grid-cols-2 gap-4 md:gap-5">
+          <template v-for="(p, n) in rest" :key="p.slug">
+            <BlogCard :post="p" />
+            <AdSlot v-if="n === 3" kind="inline" class="sm:col-span-2" />
+          </template>
+        </div>
+        <BlogPager v-if="data" :page="data.page" :pages="data.pages" base="/" />
+      </div>
+      <aside class="hidden lg:block"><div class="sticky top-24 space-y-5"><AdSlot kind="rail" /></div></aside>
+    </div>
   </div>
 </template>

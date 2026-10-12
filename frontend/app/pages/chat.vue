@@ -30,7 +30,7 @@ const points = [
 <template>
   <div class="max-w-5xl mx-auto pt-3 md:pt-8 grid md:grid-cols-2 gap-4 md:gap-8 items-start">
     <div class="space-y-3 md:pt-4">
-      <h1 class="text-3xl md:text-4xl font-bold tracking-tight">Private chat that <span class="text-accent">disappears</span></h1>
+      <h1 class="text-3xl md:text-4xl font-bold tracking-tight">Private chat that <span class="grad-text">disappears</span></h1>
       <p class="text-muted text-lg">Start a throwaway room in seconds. No accounts, no names, no history.</p>
       <ul class="space-y-3 pt-3">
         <li v-for="p in points" :key="p[1]" class="flex gap-3"><span class="size-10 rounded-xl bg-accent-soft text-accent-ink grid place-items-center shrink-0"><Icon :name="p[0]!" /></span>
@@ -55,5 +55,6 @@ const points = [
         <button class="btn !min-h-11 px-5">Join</button>
       </form>
     </div>
+    <AdSlot kind="inline" class="md:col-span-2" />
   </div>
 </template>

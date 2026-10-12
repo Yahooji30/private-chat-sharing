@@ -75,7 +75,7 @@ test('link code from one device is redeemed on another through the link page', a
   await a.getByRole('button', { name: 'Settings' }).click()
   await a.getByRole('tab', { name: 'Link Device' }).click()
   await a.getByRole('tab', { name: 'Share Link' }).click()
-  const code = (await a.locator('span.size-9, span.size-10').allTextContents()).join('').replace('-', '')
+  const code = (await a.getByRole('dialog').locator('span.size-9, span.size-10').allTextContents()).join('').replace('-', '')
   expect(code).toMatch(/^[0-9A-Z]{8}$/)
   const c = await device(browser, `/link?c=${code}`)
   await c.waitForURL('**/', { timeout: 15_000 })

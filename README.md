@@ -103,3 +103,9 @@ The `net` and `pwa` projects run against built apps. Always use `pnpm build`, it
 - Mobile coverage is Chromium device emulation. iOS Safari and real phones were not available for testing.
 - Peer to peer across strict NATs needs a TURN relay (`TURN_ENABLED`, coturn); it is off by default.
 - Devices behind the same public IP share a space, including on public Wi-Fi and mobile carriers.
+
+## Brand and ads
+
+Brand colors live as CSS variables at the top of `frontend/app/assets/css/main.css` and `blog/app/assets/css/main.css` (blue `#0058F0`, pink `#F02878`, plus highlight and shade tones). The app name comes from `NUXT_PUBLIC_APP_NAME`.
+
+Google AdSense is optional. Set `NUXT_PUBLIC_ADSENSE_CLIENT` (`ca-pub-...`) and the three unit ids `NUXT_PUBLIC_AD_SLOT_RAIL`, `NUXT_PUBLIC_AD_SLOT_INLINE`, `NUXT_PUBLIC_AD_SLOT_BANNER` in `frontend/.env` and `blog/.env`, then rebuild. Without a client id the ad spaces show as labelled previews (`NUXT_PUBLIC_ADS_PREVIEW=false` hides them). The blog serves `/ads.txt` from the same client id. Ads never appear inside private chat rooms. If you serve visitors in the EU/UK, add a consent banner (CMP) before enabling real ads.

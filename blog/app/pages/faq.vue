@@ -56,5 +56,6 @@ const groups = computed(() => {
       <div class="mr-auto"><p class="font-semibold">Still have a question?</p><p class="text-sm text-muted">We read every message.</p></div>
       <NuxtLink to="/feedback" class="btn">Send feedback</NuxtLink><a :href="appUrl" class="btn btn-accent">Open the app</a>
     </div>
+    <AdSlot kind="inline" class="mt-8" />
   </div>
 </template>

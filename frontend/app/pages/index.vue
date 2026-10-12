@@ -44,6 +44,7 @@ function clear(): void {
 }
 const files = useTemplateRef<{ pick: () => void }>('files')
 const btn = 'btn !px-3'
+const steps = [['Open this page', 'On any device on the same Wi-Fi or network. No sign-up, no install needed.'], ['Type or drop files', 'Text appears everywhere instantly. Files go straight from device to device and are never stored on our servers.'], ['Link other networks', 'Scan a QR code or enter a short code to bring a phone on mobile data into the same space.']]
 </script>
 
 <template>
@@ -80,20 +81,22 @@ const btn = 'btn !px-3'
     <FilesPanel ref="files" />
     <TransferModal :open="!!transfer" :mode="transfer ?? 'upload'" @close="transfer = null" @pick="files?.pick()" @save-text="download(); transfer = null" />
 
-    <div id="ad-top-banner" class="min-h-0" />
+    <AdSlot kind="inline" class="mt-6 xl:hidden" />
     <template #fallback>
       <div aria-hidden="true"><div class="h-[92px] sm:h-[52px] mb-0 flex items-start"><div class="h-8 w-40 rounded-lg bg-surface-2" /></div><div class="h-[46dvh] md:h-[52dvh] min-h-60 rounded-2xl bg-surface border border-line" /><div class="h-14" /></div>
     </template>
     </ClientOnly>
 
+    <AdSlot kind="banner" class="mt-8 hidden xl:block" />
+
     <section class="mt-10 max-w-3xl mx-auto px-1" aria-labelledby="how">
-      <h2 id="how" class="text-2xl font-bold tracking-tight text-center">Share between your devices in three steps</h2>
-      <ol class="mt-5 grid sm:grid-cols-3 gap-3 text-sm">
-        <li class="card p-4"><span class="size-8 rounded-full bg-accent-soft text-accent-ink grid place-items-center font-bold mb-2">1</span><strong>Open this page</strong><p class="text-muted mt-1">On any device on the same Wi-Fi or network. No sign-up, no install needed.</p></li>
-        <li class="card p-4"><span class="size-8 rounded-full bg-accent-soft text-accent-ink grid place-items-center font-bold mb-2">2</span><strong>Type or drop files</strong><p class="text-muted mt-1">Text appears everywhere instantly. Files go straight from device to device and are never stored on our servers.</p></li>
-        <li class="card p-4"><span class="size-8 rounded-full bg-accent-soft text-accent-ink grid place-items-center font-bold mb-2">3</span><strong>Link other networks</strong><p class="text-muted mt-1">Scan a QR code or enter a short code to bring a phone on mobile data into the same space.</p></li>
+      <p class="text-center"><span class="chip">How it works</span></p>
+      <h2 id="how" class="text-2xl md:text-3xl font-bold tracking-tight text-center mt-3">Share between your devices in <span class="grad-text">three steps</span></h2>
+      <ol class="mt-6 grid sm:grid-cols-3 gap-3 text-sm">
+        <li v-for="(st, n) in steps" :key="n" class="card p-5"><span class="size-9 rounded-2xl grid place-items-center font-display font-bold text-white mb-3" :class="n === 1 ? 'btn-pink !min-h-0' : 'btn-accent !min-h-0'">{{ n + 1 }}</span><strong class="font-display text-base">{{ st[0] }}</strong><p class="text-muted mt-1 leading-relaxed">{{ st[1] }}</p></li>
       </ol>
-      <p class="text-center text-sm text-muted mt-5">Need privacy? <NuxtLink to="/chat" class="text-accent-ink underline">Start an encrypted chat room</NuxtLink> that disappears when everyone leaves. Anyone on your network shares the space, so avoid putting secrets in the shared text on public Wi-Fi.</p>
+      <AdSlot kind="inline" class="mt-8 xl:hidden" />
+      <p class="text-center text-sm text-muted mt-6">Need privacy? <NuxtLink to="/chat" class="text-accent-ink font-bold underline">Start an encrypted chat room</NuxtLink> that disappears when everyone leaves. Anyone on your network shares the space, so avoid putting secrets in the shared text on public Wi-Fi.</p>
     </section>
   </div>
 </template>

@@ -1,6 +1,6 @@
 import tailwindcss from '@tailwindcss/vite'
 
-const appName = process.env.NUXT_PUBLIC_APP_NAME ?? 'Sync'
+const appName = process.env.NUXT_PUBLIC_APP_NAME ?? 'Jodbox'
 const isProd = process.env.NODE_ENV === 'production'
 const api = process.env.NUXT_API_INTERNAL ?? 'http://127.0.0.1:4000'
 // Nuxt inlines its hydration payload, so scripts need 'unsafe-inline'. Everything else stays on this origin.
@@ -18,7 +18,7 @@ export default defineNuxtConfig({
   runtimeConfig: {
     apiInternal: api,
     revalidateSecret: '', // set at runtime with NUXT_REVALIDATE_SECRET
-    public: { appName, siteUrl: 'http://localhost:3001', appUrl: 'http://localhost:3000' }, // override with NUXT_PUBLIC_SITE_URL / NUXT_PUBLIC_APP_URL
+    public: { appName, adsenseClient: '', adsPreview: 'true', adSlotRail: '', adSlotInline: '', adSlotBanner: '', siteUrl: 'http://localhost:3001', appUrl: 'http://localhost:3000' }, // override with NUXT_PUBLIC_SITE_URL / NUXT_PUBLIC_APP_URL
   },
   nitro: {
     noExternals: true, // bundle every dependency into .output so the server needs no node_modules (pnpm and Windows safe)
@@ -33,7 +33,7 @@ export default defineNuxtConfig({
   app: {
     head: {
       htmlAttrs: { lang: 'en' },
-      meta: [{ name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' }, { name: 'theme-color', content: '#e85a5a' }],
+      meta: [{ name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' }, { name: 'theme-color', content: '#0058F0' }],
       link: [{ rel: 'icon', type: 'image/svg+xml', href: '/icon.svg' }],
       script: [{ innerHTML: `try{var t=localStorage.getItem('sync:theme')||'system';var d=t==='dark'||(t==='system'&&matchMedia('(prefers-color-scheme:dark)').matches);document.documentElement.classList.toggle('dark',d)}catch(e){}` }],
     },

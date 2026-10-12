@@ -32,7 +32,7 @@ async function openSettings(p: Page, tab: 'General' | 'Link Device' | 'Linked De
 async function newCode(p: Page): Promise<string> {
   await openSettings(p, 'Link Device')
   await p.getByRole('tab', { name: 'Share Link' }).click()
-  const code = (await p.locator('span.size-9, span.size-10').allTextContents()).join('').replace('-', '')
+  const code = (await p.getByRole('dialog').locator('span.size-9, span.size-10').allTextContents()).join('').replace('-', '')
   expect(code).toMatch(/^[0-9A-Z]{8}$/)
   return code
 }

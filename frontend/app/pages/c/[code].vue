@@ -11,7 +11,7 @@ const blurOn = ref(false)
 const blurred = ref(false)
 const showShare = ref(false)
 const listEl = useTemplateRef<HTMLElement>('list')
-const palette = ['#cf3f3f', '#2563eb', '#15803d', '#7e22ce']
+const palette = ['#0058F0', '#F02878', '#0E9F8E', '#7C3AED']
 const mineIsCreator = computed(() => { try { return !!localStorage.getItem(`sync:chat:manage:${code}`) } catch { return false } })
 
 onMounted(() => { if (hasKeys(code)) void chat.join() })
@@ -47,7 +47,7 @@ async function destroy(): Promise<void> {
 </script>
 
 <template>
-  <div class="fixed inset-0 top-14 md:top-16 flex flex-col bg-bg" :style="{ paddingBottom: 'var(--safe-b)' }">
+  <div class="fixed inset-0 top-14 md:top-16 lg:top-0 lg:left-64 flex flex-col bg-bg" :style="{ paddingBottom: 'var(--safe-b)' }">
     <!-- password gate -->
     <div v-if="chat.phase.value === 'password' || unlocking" class="m-auto w-full max-w-sm px-4">
       <form class="card p-6 space-y-4" @submit.prevent="unlock">

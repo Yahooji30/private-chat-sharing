@@ -29,5 +29,6 @@ async function copy(r: Row): Promise<void> { if (await copyText(`${app.blogUrl |
         <button class="btn !px-2.5" :aria-label="`Delete ${r.title}`" @click="del(r)"><Icon name="trash" :size="16" /></button>
       </li>
     </ul>
+    <AdSlot kind="inline" class="mt-6 xl:hidden" />
   </div>
 </template>
