@@ -12,7 +12,7 @@ const here = (to: string): boolean => (to === '/' ? !own.includes(route.path) : 
 
 <template>
   <div class="min-h-dvh flex flex-col">
-    <header class="sticky top-0 z-30 bg-bg/85 backdrop-blur-md border-b border-line/60" :style="{ paddingTop: 'var(--safe-t)' }">
+    <header data-chrome class="sticky top-0 z-30 bg-bg/85 backdrop-blur-md border-b border-line/60" :style="{ paddingTop: 'var(--safe-t)' }">
       <div class="mx-auto max-w-6xl px-4 h-14 md:h-16 flex items-center gap-3">
         <NuxtLink to="/" class="mr-auto md:mr-4" aria-label="Blog home"><BrandLogo :size="34" /></NuxtLink>
         <nav class="hidden md:flex items-center gap-1.5 mr-auto" aria-label="Main">
@@ -22,7 +22,7 @@ const here = (to: string): boolean => (to === '/' ? !own.includes(route.path) : 
       </div>
     </header>
     <main class="flex-1 w-full mx-auto max-w-6xl px-3 md:px-6"><slot /></main>
-    <footer class="mt-6 border-t border-line bg-surface/70 pb-28 md:pb-0">
+    <footer data-chrome class="mt-6 border-t border-line bg-surface/70 pb-28 md:pb-0">
       <div class="mx-auto max-w-6xl px-4 py-8 grid md:grid-cols-[1.4fr_1fr_1fr] gap-6 text-sm">
         <div><BrandLogo :size="30" /><p class="text-muted mt-3 max-w-xs leading-relaxed">Share text and files between your devices instantly. Private, fast, no sign-up.</p></div>
         <div><p class="font-display font-semibold mb-2">Explore</p><ul class="space-y-1.5 text-muted"><li><NuxtLink to="/" class="hover:text-accent-ink">Blog</NuxtLink></li><li><NuxtLink to="/features" class="hover:text-accent-ink">Features</NuxtLink></li><li><NuxtLink to="/faq" class="hover:text-accent-ink">FAQ</NuxtLink></li><li><a href="/rss.xml" class="hover:text-accent-ink">RSS</a></li></ul></div>
@@ -31,7 +31,7 @@ const here = (to: string): boolean => (to === '/' ? !own.includes(route.path) : 
     </footer>
 
     <!-- phone + tablet: floating tab bar like the app -->
-    <nav class="md:hidden fixed z-30 bottom-2.5 inset-x-3 rounded-[28px] bg-surface/90 backdrop-blur-xl border border-line shadow-[0_12px_40px_-12px_rgb(0_40_160/.45)]" :style="{ marginBottom: 'var(--safe-b)' }" aria-label="Main">
+    <nav data-chrome class="md:hidden fixed z-30 bottom-2.5 inset-x-3 rounded-[28px] bg-surface/90 backdrop-blur-xl border border-line shadow-card" :style="{ marginBottom: 'var(--safe-b)' }" aria-label="Main">
       <div class="grid grid-cols-5 items-end px-1.5 py-1.5">
         <NuxtLink v-for="t in tabs[0]" :key="t.to" :to="t.to" class="flex flex-col items-center gap-0.5 py-1 text-[11px] font-bold" :class="here(t.to) ? 'text-accent-ink' : 'text-muted'">
           <span class="px-4 py-1 rounded-full transition" :class="here(t.to) ? 'bg-accent-soft' : ''"><Icon :name="t.icon" :size="21" /></span>{{ t.label }}</NuxtLink>

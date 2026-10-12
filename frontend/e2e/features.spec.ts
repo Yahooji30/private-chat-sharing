@@ -116,13 +116,13 @@ test('public pages: create, list, edit, edit from another device with the secret
   await a.getByRole('link', { name: 'Edit', exact: true }).first().click()
   await a.getByPlaceholder('My page').fill('Edited title')
   await a.getByRole('button', { name: 'Save changes' }).click()
-  await expect(a.getByRole('heading', { name: 'Edited title' })).toBeVisible()
+  await expect(a.frameLocator('iframe[title="Blog"]').getByRole('heading', { name: 'Edited title' })).toBeVisible({ timeout: 10_000 })
 
   const other = await device(browser, new URL(editUrl).pathname + new URL(editUrl).search)
   await expect(other.getByPlaceholder('My page')).toHaveValue('Edited title')
   await other.getByPlaceholder('My page').fill('Edited remotely')
   await other.getByRole('button', { name: 'Save changes' }).click()
-  await expect(other.getByRole('heading', { name: 'Edited remotely' })).toBeVisible()
+  await expect(other.frameLocator('iframe[title="Blog"]').getByRole('heading', { name: 'Edited remotely' })).toBeVisible({ timeout: 10_000 })
 
   await a.goto('/public')
   a.once('dialog', d => void d.accept())

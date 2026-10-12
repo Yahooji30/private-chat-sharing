@@ -53,8 +53,11 @@ test('public page: publish, view anonymously, edit via token, delete', async ({ 
   await a.getByRole('button', { name: 'Publish' }).click()
   await expect(a.getByText('Your page is live')).toBeVisible()
   await a.getByRole('link', { name: 'View page' }).click()
-  await expect(a.getByRole('heading', { name: 'Heading' })).toBeVisible()
-  await expect(a.locator('article strong')).toHaveText('bold')
-  expect(await a.evaluate(() => (window as unknown as { __x?: number }).__x)).toBeUndefined()
-  await expect(a.locator('meta[name=robots]')).toHaveAttribute('content', /noindex/)
+  // the page opens inside the app window (an iframe), so the PWA never leaves the app
+  const page = a.frameLocator('iframe[title="Blog"]')
+  await expect(page.getByRole('heading', { name: 'Heading' })).toBeVisible({ timeout: 10_000 })
+  await expect(page.locator('article strong')).toHaveText('bold')
+  const frame = a.frames().find(f => f.url().includes('/p/'))!
+  expect(await frame.evaluate(() => (window as unknown as { __x?: number }).__x)).toBeUndefined()
+  await expect(page.locator('meta[name=robots]')).toHaveAttribute('content', /noindex/)
 })

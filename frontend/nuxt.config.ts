@@ -4,11 +4,12 @@ const appName = process.env.NUXT_PUBLIC_APP_NAME ?? 'Jodbox'
 const isProd = process.env.NODE_ENV === 'production'
 const rtUrl = process.env.NUXT_PUBLIC_RT_URL ?? ''
 // Nuxt inlines its hydration payload, so scripts need 'unsafe-inline'. Everything else stays on this origin.
+const blogOrigin = process.env.NUXT_PUBLIC_BLOG_URL ?? ''
 const adsOn = !!process.env.NUXT_PUBLIC_ADSENSE_CLIENT
 const adHosts = 'https://*.googlesyndication.com https://*.doubleclick.net https://*.google.com https://*.gstatic.com https://*.adtrafficquality.google'
 const csp = [
   "default-src 'self'", `script-src 'self' 'unsafe-inline'${adsOn ? ` ${adHosts}` : ''}`, "style-src 'self' 'unsafe-inline'", `img-src 'self' data: blob:${adsOn ? ' https:' : ''}`, "media-src 'self' blob:", "font-src 'self' data:",
-  `connect-src 'self' ws: wss: ${rtUrl}${adsOn ? ` ${adHosts}` : ''}`.trim(), "worker-src 'self' blob:", `frame-src blob:${adsOn ? ` ${adHosts}` : ''}`, "object-src 'none'", "base-uri 'self'", "form-action 'self'", "frame-ancestors 'none'",
+  `connect-src 'self' ws: wss: ${rtUrl}${adsOn ? ` ${adHosts}` : ''}`.trim(), "worker-src 'self' blob:", `frame-src blob: ${blogOrigin}${adsOn ? ` ${adHosts}` : ''}`, "object-src 'none'", "base-uri 'self'", "form-action 'self'", "frame-ancestors 'none'",
 ].join('; ')
 const securityHeaders = { 'Content-Security-Policy': csp, 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'strict-origin-when-cross-origin', 'Permissions-Policy': 'camera=(self), microphone=(), geolocation=()', 'X-Frame-Options': 'DENY' }
 

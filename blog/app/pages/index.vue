@@ -22,11 +22,10 @@ const rest = computed(() => (page.value === 1 ? (data.value?.items.slice(1) ?? [
 
 <template>
   <div class="pt-5 md:pt-10 pb-10">
-    <section class="relative overflow-hidden rounded-[28px] p-6 md:p-10 text-white bg-[linear-gradient(135deg,var(--blue-hi),var(--blue)_55%,var(--pink))] shadow-[0_20px_50px_-20px_rgb(0_88_240/.6)]">
-      <span class="chip !bg-white/20 !text-white">Blog</span>
-      <h1 class="text-3xl md:text-5xl font-bold tracking-tight mt-3 max-w-2xl leading-tight">Guides and ideas for sharing smarter</h1>
-      <p class="mt-3 text-white/90 max-w-xl md:text-lg">Tips, how-tos and news about moving text and files between your devices, privately and instantly.</p>
-      <svg class="absolute -right-6 -bottom-8 w-44 md:w-64 opacity-25" viewBox="0 0 128 104" fill="none" aria-hidden="true"><rect x="8" y="8" width="44" height="88" rx="14" stroke="#fff" stroke-width="10"/><rect x="76" y="8" width="44" height="88" rx="14" stroke="#fff" stroke-width="10"/></svg>
+    <section class="relative overflow-hidden rounded-[24px] px-6 py-8 md:px-12 md:py-14 text-white bg-[#0B1437]">
+      <span class="chip !bg-white/10 !text-white">Blog</span>
+      <h1 class="text-[1.9rem] md:text-5xl font-extrabold tracking-tight mt-4 max-w-2xl leading-[1.12]">Guides and ideas for sharing <span class="text-[#FF5C9A]">smarter</span></h1>
+      <p class="mt-4 text-white/75 max-w-xl text-base md:text-lg leading-relaxed">Tips, how-tos and news about moving text and files between your devices, privately and instantly.</p>
     </section>
     <nav v-if="cats?.length" class="flex gap-2 overflow-x-auto py-4 -mx-3 px-3 md:mx-0 md:px-0 scroll-thin" aria-label="Categories">
       <NuxtLink to="/" class="btn !min-h-9 text-sm btn-soft shrink-0">All</NuxtLink>

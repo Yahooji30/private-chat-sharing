@@ -91,7 +91,7 @@ const steps = [['Open this page', 'On any device on the same Wi-Fi or network. N
 
     <section class="mt-10 max-w-3xl mx-auto px-1" aria-labelledby="how">
       <p class="text-center"><span class="chip">How it works</span></p>
-      <h2 id="how" class="text-2xl md:text-3xl font-bold tracking-tight text-center mt-3">Share between your devices in <span class="grad-text">three steps</span></h2>
+      <h2 id="how" class="text-2xl md:text-3xl font-bold tracking-tight text-center mt-3">Share between your devices in <span class="text-pink">three steps</span></h2>
       <ol class="mt-6 grid sm:grid-cols-3 gap-3 text-sm">
         <li v-for="(st, n) in steps" :key="n" class="card p-5"><span class="size-9 rounded-2xl grid place-items-center font-display font-bold text-white mb-3" :class="n === 1 ? 'btn-pink !min-h-0' : 'btn-accent !min-h-0'">{{ n + 1 }}</span><strong class="font-display text-base">{{ st[0] }}</strong><p class="text-muted mt-1 leading-relaxed">{{ st[1] }}</p></li>
       </ol>
