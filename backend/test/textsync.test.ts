@@ -14,7 +14,7 @@ const fresh = (): void => { net++ }
 /** `legacy` = an older copy of the app, which does not say it understands edits */
 const open = async (suffix: string, legacy = false) => connected(t.sock(device(suffix), '/space', legacy ? undefined : V2))
 const text = async (suffix = 'a') => (await t.call(device(suffix), 'GET', '/api/text')).body as { content: string; rev: number }
-const opsKeys = async (): Promise<string[]> => t.api.redis.keys('sp:*:ops')
+const opsKeys = async (): Promise<string[]> => t.api.redis.keys('sp:*:hist')
 
 describe('text edits', () => {
   it('applies an edit, answers with its revision and tells the other device', async () => {
