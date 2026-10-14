@@ -13,7 +13,7 @@ export const useApp = defineStore('app', () => {
   const ready = ref(false)
   const device = ref<Device | null>(null)
   const ip = ref('')
-  const textMax = ref(LIMITS.textChars) // the server's TEXT_MAX_CHARS, delivered with /space/me
+  const textMax = ref<number>(LIMITS.textChars) // the server's TEXT_MAX_CHARS, delivered with /space/me
   const cfg = useRuntimeConfig().public
   const rtUrl = ref(String(cfg.rtUrl ?? '').replace(/\/$/, ''))
   const blogUrl = ref(String(cfg.blogUrl ?? '').replace(/\/$/, ''))

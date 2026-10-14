@@ -1,13 +1,13 @@
 import type { Namespace, Socket } from 'socket.io'
 import type { Redis } from 'ioredis'
-import { EV, fileMetaSchema, fileIdSchema, fileReadySchema, rtcSignalSchema, textUpdateSchema } from '@sync/shared'
+import { EV, fileMetaSchema, fileIdSchema, fileReadySchema, isOp, rtcSignalSchema, textOpSchema, textSyncSchema, textUpdateSchema, type Op } from '@sync/shared'
 import { env } from '../core/config/env'
 import { sql } from '../core/db/client'
-import { deviceRoom, ipRoom, spaceRoom } from '../core/emitter'
+import { deviceRoom, ipRoom, opRoom, spaceRoom } from '../core/emitter'
 import { hashIp } from '../core/lib/crypto'
 import { addFile, addHolder, clearFiles, markReady, removeFile } from '../core/files'
 import { resolveSpace } from '../core/space'
-import { writeText } from '../core/text'
+import { applyOp, replaceText, syncText } from '../core/text'
 import { clientIp, limiter, parseCookie } from './common'
 
 interface Data { spaceId: string; deviceId: string }
@@ -52,6 +52,8 @@ export function setupSpace(ns: Namespace, redis: Redis): void {
     const { spaceId, deviceId } = socket.data as Data
     const allow = limiter(socket)
     void socket.join([spaceRoom(spaceId), deviceRoom(deviceId), ipRoom((socket.data as { ipHash: string }).ipHash)])
+    // current copies of the app say so when they connect; they get each edit, older ones get the whole text
+    if ((socket.handshake.auth as { v?: number } | undefined)?.v === 2) void socket.join(opRoom(spaceId))
     void sql`update devices set last_seen_at = now() where id = ${deviceId}`.catch(() => undefined)
     schedulePresence(spaceId)
     socket.on('disconnect', () => schedulePresence(spaceId))
@@ -71,12 +73,30 @@ export function setupSpace(ns: Namespace, redis: Redis): void {
     }
     const toOthers = () => socket.to(spaceRoom(spaceId))
 
-    // the schema allows the hard ceiling; the real limit is TEXT_MAX_CHARS
-    const textOk = (v: unknown): { content: string; baseRev: number } | null => { const m = zod(textUpdateSchema)(v); return m && m.content.length <= env.TEXT_MAX_CHARS ? m : null }
-    on(EV.textUpdate, textOk, async (m, ack) => {
-      const rev = await writeText(redis, spaceId, m.content)
-      ack({ rev })
-      toOthers().emit(EV.textChanged, { content: m.content, rev, by: deviceId })
+    // Every change to the shared text goes out twice: as the edit itself to current copies of the app, and as the whole text to older ones.
+    const announce = (rev: number, op: Op, content: string): void => {
+      socket.to(opRoom(spaceId)).emit(EV.textOp, { rev, op })
+      toOthers().except(opRoom(spaceId)).emit(EV.textChanged, { content, rev, by: deviceId })
+    }
+
+    // current copies of the app: one edit, made on revision baseRev
+    const opOk = (v: unknown) => { const m = zod(textOpSchema)(v); return m && isOp(m.op, env.TEXT_MAX_CHARS) ? { ...m, op: m.op as Op } : null }
+    on(EV.textOp, opOk, async (m, ack) => {
+      let r
+      try { r = await applyOp(redis, spaceId, deviceId, m) } catch { return ack({ error: 'BUSY' }) }
+      if (r.kind === 'ok') { ack({ rev: r.rev, opId: m.opId }); announce(r.rev, r.op, r.content); return }
+      if (r.kind === 'dup') return ack({ rev: r.rev, opId: m.opId })
+      if (r.kind === 'stale') return ack({ stale: { content: r.content, rev: r.rev, applied: false } })
+      ack({ error: 'BAD_REQUEST' })
+    })
+    // a device that reconnected, or noticed a message missing, asks what it missed
+    on(EV.textSync, zod(textSyncSchema), async (m, ack) => ack(await syncText(redis, spaceId, deviceId, m.sinceRev, m.opId)))
+    // older copies of the app send the whole text (the real limit is TEXT_MAX_CHARS)
+    const legacyOk = (v: unknown) => { const m = zod(textUpdateSchema)(v); return m && m.content.length <= env.TEXT_MAX_CHARS ? m : null }
+    on(EV.textUpdate, legacyOk, async (m, ack) => {
+      const r = await replaceText(redis, spaceId, m.content)
+      ack({ rev: r.rev })
+      if (r.written) announce(r.rev, r.op, r.content)
     })
 
     on(EV.filesAdd, zod(fileMetaSchema), async (m, ack) => {

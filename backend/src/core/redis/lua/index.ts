@@ -1,12 +1,28 @@
 import type { Redis } from 'ioredis'
 
-// KEYS: text, dirty. ARGV: content, fallbackRev, spaceId. returns new rev
-export const TEXT_UPDATE = `
-local rev = tonumber(redis.call('HGET', KEYS[1], 'r') or ARGV[2]) + 1
+// Writes the next revision of the shared text if nobody else has written since `expectedRev` (compare-and-set), and remembers the
+// edit for devices that are a little behind. KEYS: text, dirty, lastOp, history. ARGV: content, expectedRev, spaceId, lastOp value
+// ('' = none), history entry (json). Returns the new rev, or -1 when someone else wrote first.
+export const TEXT_OP = `
+local rev = tonumber(redis.call('HGET', KEYS[1], 'r') or ARGV[2])
+if rev ~= tonumber(ARGV[2]) then return -1 end
+rev = rev + 1
 redis.call('HSET', KEYS[1], 'c', ARGV[1], 'r', rev)
 redis.call('EXPIRE', KEYS[1], 3600)
 redis.call('SADD', KEYS[2], ARGV[3])
+if ARGV[4] ~= '' then redis.call('SET', KEYS[3], ARGV[4], 'EX', 120) end
+redis.call('RPUSH', KEYS[4], ARGV[5])
+redis.call('LTRIM', KEYS[4], -500, -1)
+redis.call('EXPIRE', KEYS[4], 3600)
 return rev`
+
+// Refuses an edit for good (so a late copy of it can never be applied) unless it already went through.
+// KEYS: lastOp. ARGV: opId, refusal value. Returns the value now stored: 'opId:rev' (rev >= 0) means it was applied.
+export const TEXT_FENCE = `
+local cur = redis.call('GET', KEYS[1])
+if cur and string.sub(cur, 1, string.len(ARGV[1]) + 1) == ARGV[1] .. ':' then return cur end
+redis.call('SET', KEYS[1], ARGV[2], 'EX', 120)
+return ARGV[2]`
 
 // KEYS: slots, msgs, meta. ARGV: tokenHash, idleTtl, maxMembers, palette
 // returns {slot, tailId} or {-1}

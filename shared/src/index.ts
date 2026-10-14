@@ -38,6 +38,9 @@ export interface ApiError { error: { code: ErrCode; message: string } }
 export const EV = {
   textUpdate: 'text:update',
   textChanged: 'text:changed',
+  textOp: 'text:op',
+  textSync: 'text:sync',
+  textReset: 'text:reset',
   presence: 'presence:list',
   filesAdd: 'files:add',
   filesAdded: 'files:added',
@@ -74,10 +77,19 @@ export const settingsSchema = z.object({
 export type Settings = z.infer<typeof settingsSchema>
 export const DEFAULT_SETTINGS: Settings = settingsSchema.parse({})
 
+/** Older copies of the app replace the whole text; the server still accepts that. Current ones send `textOpSchema` (see textsync.ts). */
 export const textUpdateSchema = z.object({
   content: z.string().max(LIMITS.textCharsHard),
   baseRev: z.number().int().min(0),
 })
+/** One edit of the shared text, made on revision `baseRev`. The steps are checked more closely by `isOp`. */
+export const textOpSchema = z.object({
+  opId: z.string().min(1).max(40),
+  baseRev: z.number().int().min(0),
+  op: z.array(z.union([z.number(), z.string()])).max(4000),
+})
+/** A device asks for the current text, and whether the edit it never got an answer for went through. */
+export const textSyncSchema = z.object({ sinceRev: z.number().int().min(-1), opId: z.string().max(40).optional() })
 export const deviceRenameSchema = z.object({ name: z.string().trim().min(1).max(LIMITS.deviceNameChars) })
 
 export const fileMetaSchema = z.object({
@@ -205,3 +217,6 @@ export function chatShareText(template: string | undefined, link: string, passwo
   t = pw ? t.replace(/\{password\}|\*\*/g, () => pw) : t.replace(/the password (\{password\}|\*\*)/gi, 'the password I will send you separately').replace(/\{password\}|\*\*/g, '(sent separately)')
   return t.includes('{link}') ? t.replaceAll('{link}', link) : `${t}\n\n${link}`
 }
+
+export * from './ot'
+export * from './textsync'

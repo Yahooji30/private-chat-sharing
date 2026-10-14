@@ -22,7 +22,7 @@ Specs live in `docs/` (`00-MASTER.md`, `01-FEATURES.md`, `02-ARCHITECTURE.md`).
 | Area | Notes |
 |---|---|
 | Network space | A space per public IP (hashed, never stored raw), device cookie, presence list with device names |
-| Live text | Real-time sync, saved state, offline queue, last write wins, URLs panel, copy/download/clear |
+| Live text | Real-time sync that several people can type into at once. Every change is a small edit (operational transformation, `shared/src/ot.ts` and `textsync.ts`): the server puts edits in one order and fits each to the text as it is, so nobody's keystrokes are lost and each cursor stays with its text. Lost answers, retries, going offline and coming back are handled; older copies of the app keep working. Also saved state, URLs panel, copy/download/clear |
 | Files | Peer to peer over WebRTC, 1 MiB blocks hashed and verified, multi-source, resumable after reload, OPFS storage, preview, zip all. Nothing is stored on the server |
 | Linking | 8 character code, QR (show and camera scan), share link, IP address; linked devices list, unlink. Online devices are moved into the new space at once |
 | Secure chat | Password rooms, max 4, E2EE (PBKDF2 + AES-GCM in the browser), ciphertext only in Redis, no history for joiners, wiped when empty, resume after a drop |
