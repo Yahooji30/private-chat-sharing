@@ -11,7 +11,8 @@ function rtBase(): string {
 
 export function spaceSocket(): Socket {
   if (space) return space
-  space = io(`${rtBase()}/space`, { transports: ['websocket'], withCredentials: true, reconnectionDelayMax: 5000 })
+  // auth.v = 2: this copy of the app understands shared-text edits (older ones are sent the whole text instead)
+  space = io(`${rtBase()}/space`, { transports: ['websocket'], withCredentials: true, reconnectionDelayMax: 5000, auth: { v: 2 } })
   const app = useApp()
   space.on('connect', () => { app.online = true; app.hasConnected = true })
   space.on('disconnect', reason => { app.online = false; if (reason === 'io server disconnect') space?.connect() })

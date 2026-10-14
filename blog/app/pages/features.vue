@@ -10,7 +10,7 @@ await usePageSeo('features', {
   description: `Everything ${name} does: live text sync, device-to-device file transfer, QR linking, end-to-end encrypted chat rooms and more. Free, private, no sign-up.`,
   path: '/features',
   schema: [
-    { '@context': 'https://schema.org', '@type': 'WebApplication', name, url: appUrl, applicationCategory: 'UtilitiesApplication', operatingSystem: 'Any (web browser)', offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' }, featureList: features.map(f => f.title) },
+    { '@context': 'https://schema.org', '@type': 'WebApplication', name, url: appUrl, applicationCategory: 'UtilitiesApplication', operatingSystem: 'Any (web browser)', offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' }, featureList: ['Live text sync', 'Device-to-device file transfer', 'Link any device, anywhere', 'Secure private chat', 'Found links, ready to open', 'Installs like an app'] },
     { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [{ '@type': 'ListItem', position: 1, name: 'Home', item: origin }, { '@type': 'ListItem', position: 2, name: 'Features', item: `${origin}/features` }] },
   ],
 })

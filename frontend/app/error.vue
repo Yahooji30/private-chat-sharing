@@ -2,6 +2,8 @@
 const props = defineProps<{ error: { statusCode?: number; statusMessage?: string; message?: string } }>()
 const code = props.error.statusCode ?? 500
 const text = props.error.statusMessage || props.error.message || (code === 404 ? 'Page not found' : 'Something went wrong')
+// an error page must never be indexed
+useHead({ title: `${code} ${text}`, meta: [{ name: 'robots', content: 'noindex, nofollow' }] })
 </script>
 
 <template>

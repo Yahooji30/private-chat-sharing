@@ -3,6 +3,8 @@ export const K = {
   devCache: (h: string) => `rs:dev:${h}`,
   text: (s: string) => `sp:${s}:text`,
   dirty: 'sp:dirty',
+  textOp: (s: string, d: string) => `sp:${s}:op:${d}`,
+  textOps: (s: string) => `sp:${s}:ops`,
   link: (h: string) => `link:${h}`,
   linkN: (s: string) => `link:n:${s}`,
   chatSlots: (c: string) => `chat:${c}:slots`,

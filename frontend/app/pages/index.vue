@@ -28,13 +28,19 @@ onMounted(async () => {
   if (q.share) { const t = [q.title, q.text, q.url].filter(Boolean).join('\n'); if (t) sync.edit(sync.text.value ? `${sync.text.value}\n${t}` : t); history.replaceState(null, '', '/') }
 })
 
+/** The cursor tells the sync exactly where the typing happened, so two people typing next to each other are never mixed up. */
+function onInput(e: Event): void {
+  const el = e.target as HTMLTextAreaElement
+  sync.edit(el.value, el.selectionStart)
+}
+
 async function paste(): Promise<void> {
   let clip = ''
   try { clip = await navigator.clipboard.readText() } catch { return toast.warn('Allow clipboard access, or press Ctrl+V in the box') }
   if (!clip) return toast.warn('Clipboard is empty')
   const el = ta.value, cur = sync.text.value
   const at = el?.selectionStart ?? cur.length, end = el?.selectionEnd ?? cur.length
-  sync.edit(cur.slice(0, at) + clip + cur.slice(end))
+  sync.edit(cur.slice(0, at) + clip + cur.slice(end), at + clip.length)
   toast.ok('Pasted')
   await nextTick()
   el?.focus(); el?.setSelectionRange(at + clip.length, at + clip.length)
@@ -52,7 +58,7 @@ function download(): void {
 }
 async function clear(): Promise<void> {
   if (!sync.text.value || !await confirmDialog('Clear all text?', 'The text is cleared on every linked device. This cannot be undone.', { confirmLabel: 'Clear text' })) return
-  sync.edit('')
+  sync.edit('', 0)
 }
 const files = useTemplateRef<{ pick: () => void }>('files')
 const dock = 'flex-1 min-w-0 flex items-center justify-center gap-2 min-h-12 text-sm font-medium text-muted hover:text-ink hover:bg-surface-2 transition-colors'
@@ -91,7 +97,7 @@ const steps = [
           </div>
           <textarea ref="ta" :value="sync.text.value" :class="fontClass" :style="{ fontSize: `${app.settings.fontSize}px` }" :spellcheck="app.spellcheck"
             class="block w-full flex-none h-[calc(100dvh-20rem)] md:h-[calc(100dvh-21rem)] min-h-64 flex-none lg:h-auto lg:flex-1 lg:min-h-0 resize-none bg-transparent px-5 py-3 outline-none leading-[1.7]"
-            placeholder="Type or paste here. It shows up on all your devices instantly." aria-label="Shared text" autocapitalize="sentences" @input="sync.edit(($event.target as HTMLTextAreaElement).value)" />
+            placeholder="Type or paste here. It shows up on all your devices instantly." aria-label="Shared text" autocapitalize="sentences" @input="onInput" />
           <div class="flex border-t border-line divide-x divide-line" role="toolbar" aria-label="Text actions">
             <button :class="dock" aria-label="Copy" @click="copy"><Icon name="copy" :size="19" />Copy</button>
             <button :class="dock" aria-label="Paste" @click="paste"><Icon name="paste" :size="19" />Paste</button>

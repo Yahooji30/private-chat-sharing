@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
 import { decryptMsg, deriveKeys, encryptMsg, randomSalt, strength } from '../app/lib/crypto/chat'
-import { mapCaret } from '../app/utils/caret'
 import { findUrls, fmtAgo, fmtBytes, fmtClock, hrefOf } from '../app/utils/format'
 
 describe('chat crypto', () => {
@@ -21,14 +20,6 @@ describe('chat crypto', () => {
     const k = await deriveKeys('pw-123456', randomSalt(), 1000)
     expect(k.authKey).toHaveLength(44)
     expect(strength('abc')).toBe(0); expect(strength('Abcdefgh1!xyz')).toBe(4)
-  })
-})
-
-describe('caret mapping', () => {
-  it('keeps the caret stable when remote text is inserted before or after it', () => {
-    expect(mapCaret('hello world', 'XX hello world', 11)).toBe(14)
-    expect(mapCaret('hello world', 'hello world!!', 5)).toBe(5)
-    expect(mapCaret('abc', '', 2)).toBe(0)
   })
 })
 

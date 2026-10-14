@@ -49,11 +49,12 @@ export function spaceRoutes(app: FastifyInstance): void {
       await sql`delete from space_text where space_id = ${id}`
       await sql`delete from space_settings where space_id = ${id}`
       await sql`delete from public_pages where owner_space_id = ${id}`
-      await app.redis.del(K.text(id), K.linkN(id))
+      await app.redis.del(K.text(id), K.textOps(id), K.linkN(id))
       const ns = spaceEmitter(app.redis).to(spaceRoom(id))
       ns.emit('files:cleared', {})
       ns.emit('settings:changed', DEFAULT_SETTINGS)
       ns.emit('text:changed', { content: '', rev: 0, by: 'reset' })
+      ns.emit('text:reset', { content: '', rev: 0 })
       return { ok: true }
     })
   }

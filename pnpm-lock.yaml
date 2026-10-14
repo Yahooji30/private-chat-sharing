@@ -325,6 +325,9 @@ importers:
 
   shared:
     dependencies:
+      diff-match-patch-es:
+        specifier: ^2.0.1
+        version: 2.0.1
       zod:
         specifier: ^4.0.0
         version: 4.6.5
@@ -3311,6 +3314,9 @@ packages:
   devalue@6.0.2:
     resolution: {integrity: sha512-6V1HzU4to74skg//ScZR2mp9bdz+rESC9jQzVIIG/ha0HYgymHcXIQQCjH0+ivRaSuY82fa9fZ7Ro6QZT4s4uw==}
     engines: {node: '>=22.17'}
+
+  diff-match-patch-es@2.0.1:
+    resolution: {integrity: sha512-+Sl+/H47ArQiKPp8fA307M1RwyCwFqNhggw0mAEFherLNL/J2ZUFZsnELj65Cir91VfVPx3jlNzeKBdr+QAFTw==}
 
   diff@8.0.4:
     resolution: {integrity: sha512-DPi0FmjiSU5EvQV0++GFDOJ9ASQUVFh5kD+OzOnYdi7n3Wpm9hWWGfB/O2blfHcMVTL5WkQXSnRiK9makhrcnw==}
@@ -9596,6 +9602,8 @@ snapshots:
   detect-libc@2.1.2: {}
 
   devalue@6.0.2: {}
+
+  diff-match-patch-es@2.0.1: {}
 
   diff@8.0.4: {}
 

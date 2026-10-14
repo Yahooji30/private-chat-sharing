@@ -30,7 +30,16 @@ beforeAll(async () => {
   await sql`insert into admins (id, email, name, password_hash, role) values ('eng1', 'engage@x.io', 'Eve Engage', ${await hash(PW)}, 'owner')`
   s = await login()
 })
-afterAll(async () => { await t.close() })
+afterAll(async () => {
+  // leave the database as it was found: other test files assume, for example, that there is exactly one owner
+  await sql`delete from admins where id = 'eng1'`
+  await sql`delete from faqs`
+  await sql`delete from feedback`
+  await sql`delete from seo_pages`
+  await sql`delete from media where id = 'm-og'`
+  await sql`delete from site_settings where key = 'chat_share_message'`
+  await t.close()
+})
 
 describe('faq', () => {
   it('needs an admin session to manage questions', async () => {
