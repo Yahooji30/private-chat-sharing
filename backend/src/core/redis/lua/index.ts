@@ -1,7 +1,7 @@
 import type { Redis } from 'ioredis'
 
 // Writes the next revision of the shared text if nobody else has written since `expectedRev` (compare-and-set), and remembers the
-// edit for devices that are a little behind. KEYS: text, dirty, lastOp, history. ARGV: content, expectedRev, spaceId, lastOp value
+// edit (by revision, the last 2000) for devices that are a little behind. KEYS: text, dirty, lastOp, history. ARGV: content, expectedRev, spaceId, lastOp value
 // ('' = none), history entry (json). Returns the new rev, or -1 when someone else wrote first.
 export const TEXT_OP = `
 local rev = tonumber(redis.call('HGET', KEYS[1], 'r') or ARGV[2])
@@ -11,8 +11,8 @@ redis.call('HSET', KEYS[1], 'c', ARGV[1], 'r', rev)
 redis.call('EXPIRE', KEYS[1], 3600)
 redis.call('SADD', KEYS[2], ARGV[3])
 if ARGV[4] ~= '' then redis.call('SET', KEYS[3], ARGV[4], 'EX', 120) end
-redis.call('RPUSH', KEYS[4], ARGV[5])
-redis.call('LTRIM', KEYS[4], -500, -1)
+redis.call('HSET', KEYS[4], rev, ARGV[5])
+if rev > 2000 then redis.call('HDEL', KEYS[4], rev - 2000) end
 redis.call('EXPIRE', KEYS[4], 3600)
 return rev`
 

@@ -4,7 +4,8 @@ export const K = {
   text: (s: string) => `sp:${s}:text`,
   dirty: 'sp:dirty',
   textOp: (s: string, d: string) => `sp:${s}:op:${d}`,
-  textOps: (s: string) => `sp:${s}:ops`,
+  /** recent edits of the shared text, by revision */
+  textHist: (s: string) => `sp:${s}:hist`,
   link: (h: string) => `link:${h}`,
   linkN: (s: string) => `link:n:${s}`,
   chatSlots: (c: string) => `chat:${c}:slots`,

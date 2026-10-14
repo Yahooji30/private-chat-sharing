@@ -43,7 +43,7 @@ export function useTextSync() {
     savedAt.value = Date.now()
   }
 
-  function later(ms = 120): void {
+  function later(ms = 40): void {
     if (sendTimer) return
     sendTimer = setTimeout(() => { sendTimer = undefined; run(send) }, ms)
   }

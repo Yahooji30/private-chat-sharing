@@ -1,5 +1,5 @@
 import type { Redis } from 'ioredis'
-import { diffOp, serverHandleOp, serverSince, type HistoryEntry, type Op } from '@sync/shared'
+import { diffOp, serverHandleOp, serverSince, type DocState, type HistoryEntry, type Op } from '@sync/shared'
 import { env } from './config/env'
 import { sql } from './db/client'
 import { open, seal, spaceKey } from './lib/crypto'
@@ -23,20 +23,32 @@ export async function readText(redis: Redis, spaceId: string): Promise<{ content
   return { content, rev: row.rev }
 }
 
-const HISTORY = 500 // how many recent edits are remembered, for devices that are only a little behind
+const HISTORY = 2000 // how many recent edits are remembered, for devices that are only a little behind
 
-/** The last `count` edits, oldest first. Fewer come back if the server does not have that many (it has just started, say). */
-async function readHistory(redis: Redis, spaceId: string, count: number): Promise<HistoryEntry[] | null> {
-  if (count <= 0 || count > HISTORY) return null
-  const raw = await redis.lrange(K.textOps(spaceId), -count, -1)
-  try { return raw.map(j => { const e = JSON.parse(j) as { r: number; o: Op; i: string }; return { rev: e.r, op: e.o, opId: e.i } }) } catch { return null }
-}
+interface Snapshot { cur: DocState; history: HistoryEntry[] | null; last: { opId: string; rev: number } | undefined }
 
-/** What the server remembers of this device's latest edit: "opId:rev", where a negative rev means the edit was refused. */
-async function lastOp(redis: Redis, spaceId: string, deviceId: string): Promise<{ opId: string; rev: number } | undefined> {
-  const v = await redis.get(K.textOp(spaceId, deviceId))
-  const i = v?.lastIndexOf(':') ?? -1
-  return v && i > 0 ? { opId: v.slice(0, i), rev: Number(v.slice(i + 1)) } : undefined
+/**
+ * One consistent look at the text, its recent history and this device's last edit, read in a single Redis transaction, so another
+ * edit cannot slip in between and make a device look further behind than it is (which would send it down the lossy fallback).
+ * The history is kept by revision, so the edits after `baseRev` are asked for by name: revision baseRev+1, baseRev+2, ...
+ */
+async function snapshot(redis: Redis, spaceId: string, deviceId: string, baseRev: number): Promise<Snapshot> {
+  const from = Math.max(baseRev, 0)
+  let want = 48 // edits to read along with the text: enough for a device that is a few edits behind
+  for (let attempt = 0; attempt < 6; attempt++) {
+    const fields = Array.from({ length: want }, (_, i) => String(from + 1 + i))
+    const res = await redis.multi().hget(K.text(spaceId), 'r').hget(K.text(spaceId), 'c').get(K.textOp(spaceId, deviceId)).hmget(K.textHist(spaceId), ...fields).exec()
+    const rev = res?.[0]?.[1] as string | null | undefined
+    if (rev === null || rev === undefined) { await readText(redis, spaceId); continue } // not in Redis (idle for an hour): bring it back from the database
+    const need = Number(rev) - from
+    if (need > want && need <= HISTORY) { want = Math.min(HISTORY, need + 16); continue } // behind by more than we read: read more, together with the text again
+    const lastRaw = String(res?.[2]?.[1] ?? '')
+    const i = lastRaw.lastIndexOf(':')
+    let history: HistoryEntry[] | null = null
+    try { history = ((res?.[3]?.[1] as (string | null)[] | undefined) ?? []).filter((j): j is string => !!j).map(j => { const e = JSON.parse(j) as { r: number; o: Op; i: string }; return { rev: e.r, op: e.o, opId: e.i } }) } catch { history = null }
+    return { cur: { content: String(res?.[1]?.[1] ?? ''), rev: Number(rev) }, history, last: i > 0 ? { opId: lastRaw.slice(0, i), rev: Number(lastRaw.slice(i + 1)) } : undefined }
+  }
+  return { cur: await readText(redis, spaceId), history: null, last: undefined }
 }
 
 /** Refuse this edit for good, so a copy of it that is still on its way can never be applied. Returns true if it had in fact already gone through. */
@@ -57,19 +69,19 @@ export type ApplyResult =
  * is recognised by its opId and not applied twice. 'stale' = the server cannot fit it any more: the device must take the current text.
  */
 export async function applyOp(redis: Redis, spaceId: string, deviceId: string, req: { opId: string; baseRev: number; op: Op }): Promise<ApplyResult> {
-  for (let attempt = 0; attempt < 8; attempt++) {
-    const cur = await readText(redis, spaceId)
-    const history = await readHistory(redis, spaceId, cur.rev - req.baseRev)
-    const res = serverHandleOp(cur, history, req, await lastOp(redis, spaceId, deviceId), env.TEXT_MAX_CHARS)
+  for (let attempt = 0; attempt < 16; attempt++) {
+    const { cur, history, last } = await snapshot(redis, spaceId, deviceId, req.baseRev)
+    const res = serverHandleOp(cur, history, req, last, env.TEXT_MAX_CHARS)
     if (res.kind === 'dup') return res
     if (res.kind === 'bad') return res
     if (res.kind === 'stale' || res.kind === 'toolarge') {
-      if (await fence(redis, spaceId, deviceId, req.opId)) return { kind: 'dup', rev: (await lastOp(redis, spaceId, deviceId))?.rev ?? cur.rev }
+      if (await fence(redis, spaceId, deviceId, req.opId)) return { kind: 'dup', rev: (await snapshot(redis, spaceId, deviceId, req.baseRev)).last?.rev ?? cur.rev }
       return { kind: 'stale', rev: cur.rev, content: cur.content }
     }
     const entry = JSON.stringify({ r: res.rev, o: res.op, i: req.opId })
-    const rev = Number(await evalLua(redis, TEXT_OP, [K.text(spaceId), K.dirty, K.textOp(spaceId, deviceId), K.textOps(spaceId)], [res.content, cur.rev, spaceId, `${req.opId}:${res.rev}`, entry]))
+    const rev = Number(await evalLua(redis, TEXT_OP, [K.text(spaceId), K.dirty, K.textOp(spaceId, deviceId), K.textHist(spaceId)], [res.content, cur.rev, spaceId, `${req.opId}:${res.rev}`, entry]))
     if (rev > 0) return res
+    // someone else wrote first: fit again against the new text
   }
   throw new Error('text is too busy')
 }
@@ -82,7 +94,7 @@ export async function replaceText(redis: Redis, spaceId: string, content: string
     const op = diffOp(cur.content, content)
     if (!op.length) return { rev: cur.rev, op, content, written: false }
     const entry = JSON.stringify({ r: cur.rev + 1, o: op, i: '' })
-    const rev = Number(await evalLua(redis, TEXT_OP, [K.text(spaceId), K.dirty, K.textOp(spaceId, '-'), K.textOps(spaceId)], [content, cur.rev, spaceId, '', entry]))
+    const rev = Number(await evalLua(redis, TEXT_OP, [K.text(spaceId), K.dirty, K.textOp(spaceId, '-'), K.textHist(spaceId)], [content, cur.rev, spaceId, '', entry]))
     if (rev > 0) return { rev, op, content, written: true }
   }
   throw new Error('text is too busy')
@@ -96,8 +108,8 @@ export type SyncResult = { ops: HistoryEntry[]; rev: number } | { content: strin
  * it had already gone through (`applied`).
  */
 export async function syncText(redis: Redis, spaceId: string, deviceId: string, sinceRev: number, opId: string | undefined): Promise<SyncResult> {
-  const cur = await readText(redis, spaceId)
-  const ops = sinceRev >= 0 ? serverSince(cur, await readHistory(redis, spaceId, cur.rev - sinceRev), sinceRev) : null
+  const { cur, history } = await snapshot(redis, spaceId, deviceId, sinceRev)
+  const ops = sinceRev >= 0 ? serverSince(cur, history, sinceRev) : null
   if (ops) return { ops, rev: cur.rev }
   const applied = opId ? await fence(redis, spaceId, deviceId, opId) : false
   return { content: cur.content, rev: cur.rev, applied }
