@@ -87,9 +87,12 @@ export function robotsTxt(origin: string, blogUrl: string): string {
   ].join('\n')
 }
 
-/** One address for the whole website: it points at the app's sitemap and the blog site's sitemap (the blog lives on its own host, so it keeps its own file). */
-export function sitemapIndexXml(origin: string, blogUrl: string): string {
-  const maps = [`${origin}/sitemap.xml`, ...(blogUrl ? [`${blogUrl}/sitemap.xml`] : [])]
+/**
+ * One address for the whole website: the app's sitemap and every file of the blog site's sitemap. (A sitemap index may not list another index,
+ * so the blog's files are named here one by one.)
+ */
+export function sitemapIndexXml(origin: string, blogUrl: string, blogFiles: string[]): string {
+  const maps = [`${origin}/sitemap.xml`, ...(blogUrl ? blogFiles.map(n => `${blogUrl}/sitemaps/${n}.xml`) : [])]
   return `<?xml version="1.0" encoding="UTF-8"?><sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${maps.map(m => `<sitemap><loc>${esc(m)}</loc></sitemap>`).join('')}</sitemapindex>`
 }
 

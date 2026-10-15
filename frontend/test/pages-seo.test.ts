@@ -2,6 +2,7 @@ import { readdirSync, statSync } from 'node:fs'
 import { join, relative } from 'node:path'
 import type { SeoEntry } from '@sync/shared'
 import { describe, expect, it } from 'vitest'
+import { blogSitemapNames } from '@sync/shared'
 import { applySeo, cleanPath, isKnownRoute, pageInfo, robotsTxt, sitemapIndexXml, sitemapXml, wantsPage } from '../server/utils/seo'
 
 const none: SeoEntry = { title: '', description: '', keywords: '', ogTitle: '', ogDescription: '', ogImage: '', canonical: '', noindex: false }
@@ -103,12 +104,13 @@ describe('robots.txt and sitemap.xml of the app', () => {
     for (const d of ['/api/', '/c/', '/link']) expect(r).toContain(`Disallow: ${d}`)
     expect(robotsTxt('https://jodbox.com', '')).not.toContain('blog')
   })
-  it('the sitemap index points at the app sitemap and the blog sitemap', () => {
-    const x = sitemapIndexXml('https://jodbox.com', 'https://blog.jodbox.com')
+  it('the sitemap index names the app sitemap and every file of the blog sitemap', () => {
+    const x = sitemapIndexXml('https://jodbox.com', 'https://blog.jodbox.com', blogSitemapNames({ articles: 12_000, taxonomy: 40 }))
     expect(x).toContain('<sitemapindex')
     expect(x).toContain('<loc>https://jodbox.com/sitemap.xml</loc>')
-    expect(x).toContain('<loc>https://blog.jodbox.com/sitemap.xml</loc>')
-    expect(sitemapIndexXml('https://jodbox.com', '')).not.toContain('blog')
+    for (const n of ['pages', 'articles-1', 'articles-2', 'articles-3', 'taxonomy-1']) expect(x).toContain(`<loc>https://blog.jodbox.com/sitemaps/${n}.xml</loc>`)
+    expect(x).not.toContain('articles-4')
+    expect(sitemapIndexXml('https://jodbox.com', '', [])).not.toContain('blog')
   })
   it('the sitemap lists the app pages, minus any the admin hid, and only on its own host', () => {
     expect(sitemapXml('https://jodbox.com', {})).toBe('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://jodbox.com/</loc></url><url><loc>https://jodbox.com/chat</loc></url></urlset>')

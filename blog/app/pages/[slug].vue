@@ -7,16 +7,19 @@ if (error.value || !a.value) throw createError({ statusCode: 404, statusMessage:
 const origin = String(cfg.public.siteUrl).replace(/\/$/, '')
 const url = `${origin}/${slug}`
 const art = a.value
+// the article's own canonical address wins when the admin set one (text first published elsewhere)
+const canon = art.seoCanonical || url
 const img = (art.og ?? art.cover)?.variants.at(-1)
 const ogImage = img ? `${origin}${mediaUrl(img)}` : undefined
 const title = art.seoTitle || art.title
 const desc = art.seoDescription || art.excerpt
-useSeoMeta({ title: `${title} | ${cfg.public.appName}`, description: desc, ogTitle: title, ogDescription: desc, ogType: 'article', ogUrl: url, ogImage, twitterCard: 'summary_large_image', articlePublishedTime: art.publishedAt ?? undefined, articleModifiedTime: art.updatedAt })
+useSeoMeta({ title: `${title} | ${cfg.public.appName}`, description: desc, ogTitle: title, ogDescription: desc, ogType: 'article', ogUrl: canon, ogImage, twitterCard: 'summary_large_image', robots: art.seoNoindex ? 'noindex, follow' : undefined, articlePublishedTime: art.publishedAt ?? undefined, articleModifiedTime: art.updatedAt })
 useHead({
-  link: [{ rel: 'canonical', href: url }],
+  meta: art.seoKeywords ? [{ name: 'keywords', content: art.seoKeywords }] : [],
+  link: [{ rel: 'canonical', href: canon }],
   script: [{ type: 'application/ld+json', innerHTML: JSON.stringify([
     { '@context': 'https://schema.org', '@type': 'Article', headline: art.title, description: desc, image: ogImage ? [ogImage] : undefined, datePublished: art.publishedAt, dateModified: art.updatedAt,
-      author: { '@type': 'Person', name: art.author ?? cfg.public.appName }, mainEntityOfPage: url, publisher: { '@type': 'Organization', name: cfg.public.appName } },
+      author: { '@type': 'Person', name: art.author ?? cfg.public.appName }, mainEntityOfPage: canon, publisher: { '@type': 'Organization', name: cfg.public.appName } },
     { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'Home', item: origin }, { '@type': 'ListItem', position: 2, name: 'Blog', item: `${origin}/` }, { '@type': 'ListItem', position: 3, name: art.title, item: url }] },
   ]) }],

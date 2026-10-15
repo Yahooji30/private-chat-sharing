@@ -3,7 +3,7 @@ export interface Cover { id: string; alt: string; width: number; height: number;
 export interface Card { slug: string; title: string; excerpt: string; publishedAt: string | null; readingMin: number; category: { slug: string; name: string } | null; cover: Cover | null }
 export interface ListResult { items: Card[]; total: number; page: number; pages: number }
 export interface Article extends Card {
-  html: string; toc: { id: string; text: string; level: 2 | 3 }[]; seoTitle: string; seoDescription: string; updatedAt: string
+  html: string; toc: { id: string; text: string; level: 2 | 3 }[]; seoTitle: string; seoDescription: string; seoKeywords?: string; seoNoindex?: boolean; seoCanonical?: string; updatedAt: string
   author: string | null; tags: { slug: string; name: string }[]; related: Card[]; og: Cover | null
 }
 export const mediaUrl = (v: Variant): string => `/media/${v.path}`

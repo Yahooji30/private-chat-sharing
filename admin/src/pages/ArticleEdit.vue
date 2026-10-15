@@ -9,7 +9,7 @@ import { confirmDialog, fail, ok } from '../ui'
 const route = useRoute(), router = useRouter()
 const isNew = computed(() => route.params.id === 'new')
 const id = ref<string | null>(isNew.value ? null : String(route.params.id))
-const f = reactive({ title: '', slug: '', excerpt: '', body: '', coverMediaId: null as string | null, ogMediaId: null as string | null, categoryId: '' as string | null, tags: [] as string[], seoTitle: '', seoDescription: '', status: 'draft', publishAt: '' })
+const f = reactive({ title: '', slug: '', excerpt: '', body: '', coverMediaId: null as string | null, ogMediaId: null as string | null, categoryId: '' as string | null, tags: [] as string[], seoTitle: '', seoDescription: '', seoKeywords: '', seoNoindex: false, seoCanonical: '', status: 'draft', publishAt: '' })
 const slugLocked = ref(false), tagInput = ref(''), saving = ref(false), dirty = ref(false), loaded = ref(isNew.value)
 const cats = ref<{ id: string; name: string }[]>([]), allTags = ref<{ name: string }[]>([])
 const picker = ref<null | 'cover' | 'og' | 'inline'>(null)
@@ -23,7 +23,7 @@ const snippetDesc = computed(() => f.seoDescription || f.excerpt || 'The descrip
 
 function payload(status = f.status): Record<string, unknown> {
   return { title: f.title, ...(f.slug ? { slug: f.slug } : {}), excerpt: f.excerpt, body: f.body, coverMediaId: f.coverMediaId, ogMediaId: f.ogMediaId, categoryId: f.categoryId || null, tags: f.tags,
-    seoTitle: f.seoTitle, seoDescription: f.seoDescription, status, publishAt: status === 'scheduled' && f.publishAt ? new Date(f.publishAt).toISOString() : null }
+    seoTitle: f.seoTitle, seoDescription: f.seoDescription, seoKeywords: f.seoKeywords, seoNoindex: f.seoNoindex, seoCanonical: f.seoCanonical.trim(), status, publishAt: status === 'scheduled' && f.publishAt ? new Date(f.publishAt).toISOString() : null }
 }
 async function save(status = f.status, quiet = false): Promise<void> {
   if (!f.title.trim()) { if (!quiet) fail(new Error('Add a title first')); return }
@@ -44,7 +44,7 @@ async function load(): Promise<void> {
   if (!id.value) return
   try {
     const a = await api<Record<string, any>>(`/admin/articles/${id.value}`)
-    Object.assign(f, { title: a.title, slug: a.slug, excerpt: a.excerpt, body: a.body, coverMediaId: a.coverMediaId, ogMediaId: a.ogMediaId, categoryId: a.categoryId ?? '', tags: a.tags, seoTitle: a.seoTitle, seoDescription: a.seoDescription, status: a.status, publishAt: a.publishAt ? new Date(a.publishAt).toISOString().slice(0, 16) : '' })
+    Object.assign(f, { title: a.title, slug: a.slug, excerpt: a.excerpt, body: a.body, coverMediaId: a.coverMediaId, ogMediaId: a.ogMediaId, categoryId: a.categoryId ?? '', tags: a.tags, seoTitle: a.seoTitle, seoDescription: a.seoDescription, seoKeywords: a.seoKeywords ?? '', seoNoindex: !!a.seoNoindex, seoCanonical: a.seoCanonical ?? '', status: a.status, publishAt: a.publishAt ? new Date(a.publishAt).toISOString().slice(0, 16) : '' })
     slugLocked.value = true
     for (const m of [a.coverMediaId, a.ogMediaId]) if (m) void coverUrl(m)
   } catch (e) { fail(e) }
@@ -116,6 +116,9 @@ function addTag(): void {
         <div class="card p-3 space-y-2"><p class="label">SEO</p>
           <div><input v-model="f.seoTitle" class="input" placeholder="SEO title" maxlength="120" aria-label="SEO title"><p class="text-xs mt-1" :class="f.seoTitle.length > 60 ? 'text-accent-ink' : 'text-muted'">{{ f.seoTitle.length }}/60</p></div>
           <div><textarea v-model="f.seoDescription" class="input" rows="3" maxlength="300" placeholder="Meta description" aria-label="SEO description" /><p class="text-xs mt-1" :class="f.seoDescription.length > 160 ? 'text-accent-ink' : 'text-muted'">{{ f.seoDescription.length }}/160</p></div>
+          <div><input v-model="f.seoKeywords" class="input" placeholder="Keywords (comma separated, optional)" maxlength="300" aria-label="SEO keywords"></div>
+          <div><input v-model="f.seoCanonical" class="input" placeholder="Canonical address (leave empty to use this article's own)" maxlength="300" aria-label="Canonical address"><p class="text-xs mt-1 text-muted">Only set this if the same text is published first on another address.</p></div>
+          <label class="flex items-start gap-2 text-sm cursor-pointer"><input v-model="f.seoNoindex" type="checkbox" class="mt-0.5" aria-label="Hide from search engines"><span>Hide this article from search engines<span class="block text-xs text-muted">It stays reachable by its link but is left out of Google and the sitemap.</span></span></label>
           <div class="rounded-lg bg-surface-2 p-3 text-sm" aria-label="Search result preview"><p class="text-[#1a0dab] dark:text-[#8ab4f8] text-base leading-snug truncate">{{ snippetTitle }}</p><p class="text-xs text-ok truncate">/blog/{{ f.slug || 'slug' }}</p><p class="text-xs text-muted line-clamp-2">{{ snippetDesc }}</p></div></div>
       </aside>
     </div>

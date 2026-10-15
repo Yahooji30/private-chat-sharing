@@ -1,4 +1,4 @@
-import { articleInputSchema, type ArticleInput } from '@sync/shared'
+import { SITEMAP_PAGE, articleInputSchema, type ArticleInput, type SitemapMeta } from '@sync/shared'
 import { sql } from './db/client'
 import { AppError } from './lib/errors'
 import { base32 } from './lib/crypto'
@@ -41,8 +41,8 @@ export async function listPublic(q: { page?: number; category?: string; tag?: st
 }
 
 export async function getPublic(slug: string) {
-  const [a] = await sql<(ListRow & { body_html: string; toc_json: unknown; seo_title: string; seo_description: string; updated_at: Date; author: string | null; category_id: string | null; og_id: string | null }) []>`
-    select ${COLS}, a.body_html, a.toc_json, a.seo_title, a.seo_description, a.updated_at, a.category_id, a.og_media_id as og_id,
+  const [a] = await sql<(ListRow & { body_html: string; toc_json: unknown; seo_title: string; seo_description: string; seo_keywords: string; seo_noindex: boolean; seo_canonical: string; updated_at: Date; author: string | null; category_id: string | null; og_id: string | null }) []>`
+    select ${COLS}, a.body_html, a.toc_json, a.seo_title, a.seo_description, a.seo_keywords, a.seo_noindex, a.seo_canonical, a.updated_at, a.category_id, a.og_media_id as og_id,
       (select name from admins where id = a.author_admin_id) as author
     ${JOINS} where a.slug = ${slug} and ${LIVE}`
   if (!a) throw new AppError('NOT_FOUND', 'Article not found', 404)
@@ -52,7 +52,7 @@ export async function getPublic(slug: string) {
     : []
   const [og] = a.og_id ? await sql<{ id: string; alt: string; width: number; height: number; variants_json: Variant[] }[]>`select id, alt, width, height, variants_json from media where id = ${a.og_id}` : []
   return {
-    ...card(a), html: a.body_html, toc: a.toc_json, seoTitle: a.seo_title, seoDescription: a.seo_description, updatedAt: a.updated_at.toISOString(),
+    ...card(a), html: a.body_html, toc: a.toc_json, seoTitle: a.seo_title, seoDescription: a.seo_description, seoKeywords: a.seo_keywords, seoNoindex: a.seo_noindex, seoCanonical: a.seo_canonical, updatedAt: a.updated_at.toISOString(),
     author: a.author, tags, related: related.map(card),
     og: og ? { id: og.id, alt: og.alt, width: og.width, height: og.height, variants: og.variants_json } : null,
   }
@@ -68,16 +68,29 @@ export async function tagArchive(slug: string, page: number) {
   return { tag: t, ...(await listPublic({ tag: slug, page })) }
 }
 
-export async function sitemapData() {
-  const articles = await sql<{ slug: string; updated_at: Date }[]>`select slug, updated_at from articles a where ${LIVE} order by published_at desc`
-  const categories = await sql<{ slug: string }[]>`select slug from categories c where exists (select 1 from articles a where a.category_id = c.id and ${LIVE})`
-  const tags = await sql<{ slug: string }[]>`select t.slug from tags t where exists (select 1 from article_tags at join articles a on a.id = at.article_id where at.tag_id = t.id and ${LIVE})`
-  const pages = await sql<{ slug: string; updated_at: Date }[]>`select slug, updated_at from public_pages where status = 'published' and indexable = true`
-  return {
-    articles: articles.map(a => ({ slug: a.slug, lastmod: a.updated_at.toISOString() })),
-    categories: categories.map(c => c.slug), tags: tags.map(t => t.slug),
-    pages: pages.map(p => ({ slug: p.slug, lastmod: p.updated_at.toISOString() })),
-  }
+const INDEXED = sql`${LIVE} and a.seo_noindex = false`
+const TAXONOMY = sql`
+  select 'category' as kind, c.slug from categories c where exists (select 1 from articles a where a.category_id = c.id and ${LIVE})
+  union all
+  select 'tag' as kind, t.slug from tags t where exists (select 1 from article_tags at join articles a on a.id = at.article_id where at.tag_id = t.id and ${LIVE})`
+
+/** How big the sitemaps are, so the index knows how many files to list. */
+export async function sitemapMeta(): Promise<SitemapMeta & { lastmod: string | null }> {
+  const [a] = await sql<{ n: number; last: Date | null }[]>`select count(*)::int as n, max(a.updated_at) as last from articles a where ${INDEXED}`
+  const [t] = await sql<{ n: number }[]>`select count(*)::int as n from (${TAXONOMY}) x`
+  return { articles: a?.n ?? 0, taxonomy: t?.n ?? 0, lastmod: a?.last?.toISOString() ?? null }
+}
+
+/** One file of article addresses. Oldest first, so the files that are already full never change when a new article is added. */
+export async function sitemapArticles(page: number) {
+  const rows = await sql<{ slug: string; updated_at: Date }[]>`select a.slug, a.updated_at from articles a where ${INDEXED} order by a.published_at, a.id limit ${SITEMAP_PAGE} offset ${(page - 1) * SITEMAP_PAGE}`
+  return rows.map(r => ({ slug: r.slug, lastmod: r.updated_at.toISOString() }))
+}
+
+/** One file of category and tag addresses (only those that have a published article). */
+export async function sitemapTaxonomy(page: number) {
+  const rows = await sql<{ kind: 'category' | 'tag'; slug: string }[]>`select kind, slug from (${TAXONOMY}) x order by kind, slug limit ${SITEMAP_PAGE} offset ${(page - 1) * SITEMAP_PAGE}`
+  return rows
 }
 
 export async function rssData() {
@@ -128,7 +141,7 @@ export async function saveArticle(id: string | null, raw: unknown, adminId: stri
   const cols = {
     slug, title: i.title, excerpt: i.excerpt, body_md: i.body, body_html: html, toc_json: sql.json(toc), cover_media_id: i.coverMediaId ?? null,
     og_media_id: i.ogMediaId ?? null, category_id: i.categoryId ?? null, status: i.status, publish_at: at, published_at: publishedAt,
-    seo_title: i.seoTitle, seo_description: i.seoDescription, reading_min: reading,
+    seo_title: i.seoTitle, seo_description: i.seoDescription, seo_keywords: i.seoKeywords, seo_noindex: i.seoNoindex, seo_canonical: i.seoCanonical, reading_min: reading,
   }
   const articleId = id ?? base32(14)
   await sql.begin(async tx => {

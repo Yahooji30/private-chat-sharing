@@ -27,11 +27,11 @@ export function contentRoutes(app: FastifyInstance): void {
   })
 
   app.get<{ Params: { id: string } }>('/api/admin/articles/:id', async req => {
-    const [a] = await sql<{ id: string; slug: string; title: string; excerpt: string; body_md: string; cover_media_id: string | null; og_media_id: string | null; category_id: string | null; status: string; publish_at: Date | null; published_at: Date | null; seo_title: string; seo_description: string }[]>`select * from articles where id = ${req.params.id}`
+    const [a] = await sql<{ id: string; slug: string; title: string; excerpt: string; body_md: string; cover_media_id: string | null; og_media_id: string | null; category_id: string | null; status: string; publish_at: Date | null; published_at: Date | null; seo_title: string; seo_description: string; seo_keywords: string; seo_noindex: boolean; seo_canonical: string }[]>`select * from articles where id = ${req.params.id}`
     if (!a) throw new AppError(ERR.NOT_FOUND, 'Article not found', 404)
     const tags = await sql<{ name: string }[]>`select t.name from article_tags at join tags t on t.id = at.tag_id where at.article_id = ${a.id} order by t.name`
     return { id: a.id, slug: a.slug, title: a.title, excerpt: a.excerpt, body: a.body_md, coverMediaId: a.cover_media_id, ogMediaId: a.og_media_id, categoryId: a.category_id, tags: tags.map(t => t.name),
-      status: a.status, publishAt: a.publish_at?.toISOString() ?? null, publishedAt: a.published_at?.toISOString() ?? null, seoTitle: a.seo_title, seoDescription: a.seo_description }
+      status: a.status, publishAt: a.publish_at?.toISOString() ?? null, publishedAt: a.published_at?.toISOString() ?? null, seoTitle: a.seo_title, seoDescription: a.seo_description, seoKeywords: a.seo_keywords, seoNoindex: a.seo_noindex, seoCanonical: a.seo_canonical }
   })
 
   app.post('/api/admin/articles', async req => {

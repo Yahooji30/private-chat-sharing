@@ -147,6 +147,10 @@ export const articleInputSchema = z.object({
   tags: z.array(z.string().trim().min(1).max(40)).max(12).default([]),
   seoTitle: z.string().max(120).default(''),
   seoDescription: z.string().max(300).default(''),
+  seoKeywords: z.string().trim().max(300).default(''),
+  /** keep this article out of search results (it stays reachable by its link and leaves the sitemaps) */
+  seoNoindex: z.boolean().default(false),
+  seoCanonical: z.union([z.literal(''), z.string().trim().max(300).regex(/^https?:\/\/\S+$/, 'Must start with http:// or https://')]).default(''),
   status: articleStatus.default('draft'),
   publishAt: z.string().datetime().nullable().optional(),
 })
@@ -216,6 +220,15 @@ export function chatShareText(template: string | undefined, link: string, passwo
   const pw = password?.trim()
   t = pw ? t.replace(/\{password\}|\*\*/g, () => pw) : t.replace(/(the password|PASSWORD:)\s*(\{password\}|\*\*)/gi, (_m, label: string) => (label.endsWith(':') ? label + ' I will send it to you separately' : label + ' I will send you separately')).replace(/\{password\}|\*\*/g, '(sent separately)')
   return t.includes('{link}') ? t.replaceAll('{link}', link) : `${t}\n\n${link}`
+}
+
+/** How many addresses one sitemap file holds (Google's limit is 50,000; smaller files are quicker to build and to read). */
+export const SITEMAP_PAGE = 5000
+export interface SitemapMeta { articles: number; taxonomy: number }
+/** The names of the blog's sitemap files for a blog of this size: `pages`, `articles-1`, `articles-2`, ..., `taxonomy-1`, ... */
+export function blogSitemapNames(m: SitemapMeta): string[] {
+  const n = (count: number): number => Math.max(1, Math.ceil(count / SITEMAP_PAGE))
+  return ['pages', ...Array.from({ length: n(m.articles) }, (_, i) => `articles-${i + 1}`), ...Array.from({ length: n(m.taxonomy) }, (_, i) => `taxonomy-${i + 1}`)]
 }
 
 export * from './ot'
