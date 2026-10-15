@@ -1,6 +1,6 @@
 import type { Namespace, Socket } from 'socket.io'
 import type { Redis } from 'ioredis'
-import { EV, fileMetaSchema, fileIdSchema, fileReadySchema, isOp, rtcSignalSchema, textOpSchema, textSyncSchema, textUpdateSchema, type Op } from '@sync/shared'
+import { EV, fileMetaSchema, fileIdSchema, fileReadySchema, isOp, rtcSignalSchema, textCursorSchema, textOpSchema, textSyncSchema, textUpdateSchema, type Op } from '@sync/shared'
 import { env } from '../core/config/env'
 import { sql } from '../core/db/client'
 import { deviceRoom, ipRoom, opRoom, spaceRoom } from '../core/emitter'
@@ -88,6 +88,12 @@ export function setupSpace(ns: Namespace, redis: Redis): void {
       if (r.kind === 'dup') return ack({ rev: r.rev, opId: m.opId })
       if (r.kind === 'stale') return ack({ stale: { content: r.content, rev: r.rev, applied: false } })
       ack({ error: 'BAD_REQUEST' })
+    })
+    // where this device's cursor is: shown to the others as a coloured caret. Nothing is stored; a lost message is simply replaced by the next one.
+    const cursorAllow = limiter(socket, 15, 30) // its own allowance, so cursor movement can never use up the one for typing
+    socket.on(EV.textCursor, (raw: unknown) => {
+      const m = zod(textCursorSchema)(raw)
+      if (m && cursorAllow()) socket.to(opRoom(spaceId)).volatile.emit(EV.textCursor, { deviceId, start: m.start, end: Math.max(m.start, m.end) })
     })
     // a device that reconnected, or noticed a message missing, asks what it missed
     on(EV.textSync, zod(textSyncSchema), async (m, ack) => ack(await syncText(redis, spaceId, deviceId, m.sinceRev, m.opId)))
