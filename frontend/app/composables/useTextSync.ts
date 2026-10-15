@@ -1,6 +1,8 @@
-import { TextClient, transformPos, type HistoryEntry, type Op } from '@sync/shared'
+import { TextClient, diffOp, transformPos, type HistoryEntry, type Op } from '@sync/shared'
 
 export type SaveState = 'idle' | 'saving' | 'saved' | 'offline'
+/** Where another device's cursor (or selection) is in the text on screen. */
+export interface RemoteCursor { deviceId: string; start: number; end: number; at: number }
 
 type Answer = { rev?: number; opId?: string; stale?: { content: string; rev: number; applied: boolean }; error?: string }
 type Missed = { ops: HistoryEntry[]; rev: number } | { content: string; rev: number; applied: boolean } | { error: string }
@@ -16,6 +18,7 @@ export function useTextSync() {
   const text = ref('')
   const state = ref<SaveState>('idle')
   const savedAt = ref(0)
+  const cursors = ref<Record<string, RemoteCursor>>({})
   const tooBig = computed(() => text.value.length >= useApp().textMax)
   let box: () => HTMLTextAreaElement | null = () => null
   let loaded = false
@@ -31,10 +34,22 @@ export function useTextSync() {
     const el = box()
     const from = el?.selectionStart ?? 0, to = el?.selectionEnd ?? 0
     text.value = client.doc
+    if (moves.length) moveCursors(moves)
     if (el && moves.length && document.activeElement === el) {
       const start = moves.reduce((p, op) => transformPos(p, op), from), end = moves.reduce((p, op) => transformPos(p, op), to)
       void nextTick(() => el.setSelectionRange(start, end))
     }
+  }
+
+  /** The other people's cursors stay with the words around them when text changes before them. */
+  function moveCursors(ops: Op[]): void {
+    const next: Record<string, RemoteCursor> = {}
+    const max = client.doc.length
+    for (const [id, c] of Object.entries(cursors.value)) {
+      const move = (p: number): number => Math.min(max, ops.reduce((x, op) => transformPos(x, op), p))
+      next[id] = { ...c, start: move(c.start), end: move(c.end) }
+    }
+    cursors.value = next
   }
 
   function settled(): void {
@@ -81,6 +96,7 @@ export function useTextSync() {
 
   /** The user changed the text. `caret` = where the cursor is right after the change. */
   function edit(next: string, caret?: number): void {
+    if (Object.keys(cursors.value).length) moveCursors([diffOp(client.doc, next.slice(0, useApp().textMax), caret)])
     client.edit(next.slice(0, useApp().textMax), caret)
     text.value = client.doc
     state.value = 'saving'
@@ -96,6 +112,27 @@ export function useTextSync() {
     savedAt.value = Date.now()
   }
 
+  /** Tells the other devices where this cursor is (at most ~12 times a second). */
+  let cursorTimer: ReturnType<typeof setTimeout> | undefined
+  let lastSent = ''
+  function sendCursor(gone = false): void {
+    const el = box(), sock = spaceSocket()
+    if (!el || !sock.connected || !loaded) return
+    const key = gone || document.activeElement !== el ? 'gone' : `${el.selectionStart}:${el.selectionEnd}`
+    if (key === lastSent) return
+    lastSent = key
+    sock.volatile.emit('text:cursor', key === 'gone' ? { start: -1, end: 0 } : { start: el.selectionStart, end: el.selectionEnd })
+  }
+  function cursorSoon(): void {
+    if (cursorTimer) return
+    cursorTimer = setTimeout(() => { cursorTimer = undefined; sendCursor() }, 80)
+  }
+  const onCursor = (m: { deviceId: string; start: number; end: number }): void => {
+    if (m.start < 0) { const { [m.deviceId]: _gone, ...rest } = cursors.value; cursors.value = rest; return }
+    const max = client.doc.length
+    cursors.value = { ...cursors.value, [m.deviceId]: { deviceId: m.deviceId, start: Math.min(m.start, max), end: Math.min(m.end, max), at: Date.now() } }
+  }
+
   function bind(el: () => HTMLTextAreaElement | null): void {
     box = el
     const sock = spaceSocket()
@@ -104,9 +141,18 @@ export function useTextSync() {
       if (client.gap) watchGap()
     }
     const onReset = (m: { content: string; rev: number }): void => { client.load(m.content, m.rev); show([]) }
-    const onConnect = (): void => { if (loaded) run(() => catchUp()) }
+    const onConnect = (): void => { lastSent = ''; if (loaded) run(() => catchUp()) }
     const onDisconnect = (): void => { if (client.unsent) state.value = 'offline' }
     sock.on('text:op', onOp)
+    sock.on('text:cursor', onCursor)
+    const onSelect = (): void => { if (document.activeElement === box()) cursorSoon() }
+    const onBlur = (e: FocusEvent): void => { if (e.target === box()) sendCursor(true) }
+    document.addEventListener('selectionchange', onSelect)
+    document.addEventListener('focusout', onBlur)
+    const away = (): void => { lastSent = ''; if (document.visibilityState === 'hidden') sendCursor(true) }
+    document.addEventListener('visibilitychange', away)
+    // a cursor not heard from for a minute belongs to a device that went away
+    const sweep = setInterval(() => { const old = Date.now() - 60_000; const keep = Object.values(cursors.value).filter(c => c.at > old); if (keep.length !== Object.keys(cursors.value).length) cursors.value = Object.fromEntries(keep.map(c => [c.deviceId, c])) }, 15_000)
     sock.on('text:reset', onReset)
     sock.on('connect', onConnect)
     sock.on('disconnect', onDisconnect)
@@ -114,11 +160,11 @@ export function useTextSync() {
     window.addEventListener('pagehide', flush)
     window.addEventListener('online', flush)
     onBeforeUnmount(() => {
-      sock.off('text:op', onOp); sock.off('text:reset', onReset); sock.off('connect', onConnect); sock.off('disconnect', onDisconnect)
+      sock.off('text:op', onOp); sock.off('text:cursor', onCursor); document.removeEventListener('selectionchange', onSelect); document.removeEventListener('visibilitychange', away); document.removeEventListener('focusout', onBlur); clearInterval(sweep); clearTimeout(cursorTimer); sock.off('text:reset', onReset); sock.off('connect', onConnect); sock.off('disconnect', onDisconnect)
       window.removeEventListener('pagehide', flush); window.removeEventListener('online', flush)
       clearTimeout(sendTimer); clearTimeout(gapTimer)
     })
   }
 
-  return { text, state, savedAt, tooBig, edit, load, bind }
+  return { text, state, savedAt, cursors, tooBig, edit, load, bind }
 }
