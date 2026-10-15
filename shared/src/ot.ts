@@ -132,12 +132,15 @@ export function compose(a: Op, b: Op): Op {
   return normalize(out)
 }
 
-/** Where a cursor at `pos` ends up after `op`. A cursor at the exact spot of an insert stays in front of it. */
-export function transformPos(pos: number, op: Op): number {
+/**
+ * Where a cursor at `pos` ends up after `op`. A cursor at the exact spot of an insert stays in front of it, unless `follow` is set:
+ * then it moves to the end of what was typed there (for a person who is not typing themselves, so their cursor keeps up with the other person).
+ */
+export function transformPos(pos: number, op: Op, follow = false): number {
   let at = 0 // how much of the old text has been passed
   let out = pos
   for (const c of op) {
-    if (at >= pos) break // everything from here on is at or after the cursor
+    if (at > pos || (at === pos && !(follow && typeof c === 'string'))) break // everything from here on is at or after the cursor
     if (typeof c === 'string') out += c.length
     else if (c > 0) at += c
     else { out -= Math.min(-c, pos - at); at -= c }

@@ -80,6 +80,10 @@ describe('ops', () => {
     expect(transformPos(3, [0, 'ZZZ '].filter(x => x !== 0))).toBe(7) // text typed before the cursor
     expect(transformPos(3, [5, 'tail'])).toBe(3) // after it
     expect(transformPos(5, [5, 'x'])).toBe(5) // exactly at the cursor: stays in front
+    expect(transformPos(5, [5, 'xy'], true)).toBe(7) // an idle cursor follows what is typed at its spot
+    expect(transformPos(5, [5, 'xy', 3], true)).toBe(7)
+    expect(transformPos(4, [5, 'xy'], true)).toBe(4) // but only at its own spot
+    expect(transformPos(5, [2, -3, 'xy'], true)).toBe(4) // text before it removed and replaced
     expect(transformPos(9, [2, -4])).toBe(5) // text before the cursor deleted
     expect(transformPos(4, [2, -6])).toBe(2) // text under the cursor deleted
     expect(transformPos(0, ['abc'])).toBe(0)

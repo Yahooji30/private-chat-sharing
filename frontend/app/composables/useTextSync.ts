@@ -1,5 +1,6 @@
 import { TextClient, transformPos, type HistoryEntry, type Op } from '@sync/shared'
 
+const IDLE_MS = 1200
 export type SaveState = 'idle' | 'saving' | 'saved' | 'offline'
 
 type Answer = { rev?: number; opId?: string; stale?: { content: string; rev: number; applied: boolean }; error?: string }
@@ -19,6 +20,7 @@ export function useTextSync() {
   const tooBig = computed(() => text.value.length >= useApp().textMax)
   let box: () => HTMLTextAreaElement | null = () => null
   let loaded = false
+  let lastTyped = 0 // when this person last changed the text; used to tell "typing" from "just looking"
   let sendTimer: ReturnType<typeof setTimeout> | undefined
   let gapTimer: ReturnType<typeof setTimeout> | undefined
 
@@ -32,7 +34,10 @@ export function useTextSync() {
     const from = el?.selectionStart ?? 0, to = el?.selectionEnd ?? 0
     text.value = client.doc
     if (el && moves.length && document.activeElement === el) {
-      const start = moves.reduce((p, op) => transformPos(p, op), from), end = moves.reduce((p, op) => transformPos(p, op), to)
+      // a person who is only looking (not typing for a moment) keeps up with someone typing at their spot; while both type, nobody's cursor is pushed
+      const follow = from === to && Date.now() - lastTyped > IDLE_MS
+      const start = moves.reduce((p, op) => transformPos(p, op, follow), from)
+      const end = follow ? start : moves.reduce((p, op) => transformPos(p, op), to)
       void nextTick(() => el.setSelectionRange(start, end))
     }
   }
@@ -81,6 +86,7 @@ export function useTextSync() {
 
   /** The user changed the text. `caret` = where the cursor is right after the change. */
   function edit(next: string, caret?: number): void {
+    lastTyped = Date.now()
     client.edit(next.slice(0, useApp().textMax), caret)
     text.value = client.doc
     state.value = 'saving'

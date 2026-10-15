@@ -32,6 +32,7 @@ html, body { overscroll-behavior-y: none; }
 body { min-height: 100dvh; background: var(--bg); }
 @layer base { h1, h2, h3, .font-display { font-family: var(--font-display); font-weight: 650; letter-spacing: -.02em; line-height: 1.25; } }
 button, a, input, textarea, select { touch-action: manipulation; }
+input, textarea { caret-color: var(--accent); } /* the blinking cursor in the theme's blue, not the system colour */
 @layer base {
   button:not(:disabled), [role=button], [role=tab], [role=switch], a[href], summary, label[for], select, input[type=checkbox], input[type=radio], input[type=file] { cursor: pointer; }
   button:disabled { cursor: not-allowed; }
