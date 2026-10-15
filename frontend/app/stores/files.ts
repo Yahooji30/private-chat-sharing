@@ -55,7 +55,17 @@ export const useFiles = defineStore('files', () => {
 
   async function addEntries(list: FileEntry[]): Promise<void> {
     for (const e of list) {
-      if (find(e.fileId)) continue
+      const have = find(e.fileId)
+      if (have) {
+        // a "ready" message missed while offline or in the background: the list from the server is the truth, so catch up (this is what left files without a download button)
+        const holders = [...new Set([...have.entry.holders, ...e.holders])]
+        if (e.rootHash && !have.entry.rootHash) {
+          const entry = { ...have.entry, rootHash: e.rootHash, holders }
+          patch(e.fileId, { entry, status: have.status === 'preparing' ? 'remote' : have.status })
+          maybeAuto(entry)
+        } else if (holders.length !== have.entry.holders.length) patch(e.fileId, { entry: { ...have.entry, holders } })
+        continue
+      }
       items.value.push({ entry: e, status: idleStatus(e), done: 0, speed: 0, sources: 0, hashing: 0 })
       const p = await engine.restore(info(e))
       if (p) applyProgress(p)
@@ -107,7 +117,7 @@ export const useFiles = defineStore('files', () => {
     sock.on('files:removed', (m: { fileId: string }) => void dropLocal(m.fileId))
     sock.on('files:cleared', () => { for (const i of [...items.value]) void dropLocal(i.entry.fileId) })
     sock.on('connect', () => { void reload(); mesh.sync(peerSync()) })
-    setInterval(() => { mesh.sync(peerSync()); engine.announcePartial(); engine.resumeAll() }, 10_000)
+    setInterval(() => { mesh.sync(peerSync()); engine.announcePartial(); engine.resumeAll(); if (items.value.some(i => i.status === 'preparing' && !i.hashing)) void reload().catch(() => undefined) }, 10_000)
     window.addEventListener('pagehide', () => { for (const i of items.value) if (i.status === 'downloading') engine.pause(i.entry.fileId) })
     await reload()
   }

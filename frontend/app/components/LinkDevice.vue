@@ -20,10 +20,10 @@ const left = computed(() => (gen.value ? gen.value.expiresAt - now.value : 0))
 /** the 8 characters of the code, without the dash the server puts in the middle */
 const digits = computed(() => (gen.value?.code ?? '').replace(/[^0-9a-z]/gi, '').split(''))
 
-async function generate(): Promise<void> {
+async function generate(fresh = false): Promise<void> {
   busy.value = true
   try {
-    gen.value = await api('/link/code', { method: 'POST' })
+    gen.value = await api(`/link/code${fresh ? '?fresh=1' : ''}`, { method: 'POST' })
     await nextTick(); await draw()
   } catch (e) { toast.err((e as Error).message) } finally { busy.value = false }
 }
@@ -33,7 +33,7 @@ async function draw(): Promise<void> {
 }
 watch(mode, async m => { if (m === 'qr') { await nextTick(); await draw() } })
 watch(left, l => { if (gen.value && l <= 0) gen.value = null })
-onMounted(generate)
+onMounted(() => void generate())
 
 async function copy(t: string, label: string): Promise<void> {
   if (await copyText(t)) toast.ok(`${label} copied`); else toast.err('Copy failed')
@@ -72,7 +72,7 @@ const modes: { id: Mode; label: string; icon: string }[] = [{ id: 'qr', label: '
         </div>
         <p class="text-sm text-muted text-center">Scan this QR code on the device you want to link.</p>
         <p class="text-xs text-muted" aria-live="off">{{ gen ? `Expires in ${fmtClock(left)}` : 'Code expired' }}</p>
-        <button class="btn" :disabled="busy" @click="generate"><Icon name="refresh" :size="15" />Refresh QR Code</button>
+        <button class="btn" :disabled="busy" @click="generate(true)"><Icon name="refresh" :size="15" />Refresh QR Code</button>
       </div>
 
       <div v-else-if="mode === 'share'" class="pt-3 space-y-3">
@@ -97,7 +97,7 @@ const modes: { id: Mode; label: string; icon: string }[] = [{ id: 'qr', label: '
             </div>
           </div>
         </div>
-        <div class="text-center"><button class="btn" :disabled="busy" @click="generate"><Icon name="refresh" :size="15" />Refresh Code</button></div>
+        <div class="text-center"><button class="btn" :disabled="busy" @click="generate(true)"><Icon name="refresh" :size="15" />Refresh Code</button></div>
       </div>
 
       <div v-else class="pt-4 space-y-3">
