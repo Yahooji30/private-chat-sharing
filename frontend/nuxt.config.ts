@@ -40,7 +40,9 @@ export default defineNuxtConfig({
       htmlAttrs: { lang: 'en' },
       meta: [
         { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
-        { name: 'theme-color', content: '#0058F0' },
+        // the phone's bars follow the page colour (see applyTheme); these two are what they show before the app has started
+        { name: 'theme-color', content: '#F7F8FC', media: '(prefers-color-scheme: light)' },
+        { name: 'theme-color', content: '#0A0E1C', media: '(prefers-color-scheme: dark)' },
         { name: 'description', content: `${appName}: type on one device, see it on every device on your network. Share text and files instantly, privately, with no sign-up.` },
         { name: 'apple-mobile-web-app-capable', content: 'yes' },
         { name: 'apple-mobile-web-app-status-bar-style', content: 'default' },
@@ -49,14 +51,14 @@ export default defineNuxtConfig({
         { rel: 'icon', type: 'image/png', href: '/icons/favicon-48.png' },
         { rel: 'apple-touch-icon', href: '/icons/apple-touch-icon.png' },
       ],
-      script: [{ innerHTML: `try{var t=localStorage.getItem('sync:theme')||'system';var d=t==='dark'||(t==='system'&&matchMedia('(prefers-color-scheme:dark)').matches);document.documentElement.classList.toggle('dark',d)}catch(e){}` }],
+      script: [{ innerHTML: `try{var t=localStorage.getItem('sync:theme')||'system';var d=t==='dark'||(t==='system'&&matchMedia('(prefers-color-scheme:dark)').matches);document.documentElement.classList.toggle('dark',d);var m=document.querySelectorAll('meta[name=theme-color]');for(var i=0;i<m.length;i++){m[i].removeAttribute('media');m[i].setAttribute('content',d?'#0A0E1C':'#F7F8FC')}}catch(e){}` }],
     },
   },
   pwa: {
     registerType: 'autoUpdate',
     manifest: {
       name: appName, short_name: appName, description: 'Instant text and file sharing across your devices.',
-      theme_color: '#0058F0', background_color: '#F4F7FF', display: 'standalone', orientation: 'any', start_url: '/', scope: '/',
+      theme_color: '#0A0E1C', background_color: '#0A0E1C', display: 'standalone', orientation: 'any', start_url: '/', scope: '/',
       icons: [
         { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
         { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },

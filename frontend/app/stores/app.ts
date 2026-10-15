@@ -30,7 +30,8 @@ export const useApp = defineStore('app', () => {
   function applyTheme(): void {
     const dark = theme.value === 'dark' || (theme.value === 'system' && matchMedia('(prefers-color-scheme: dark)').matches)
     document.documentElement.classList.toggle('dark', dark)
-    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#111113' : '#e85a5a')
+    // the bars the phone draws around the page (status bar, and on Android the navigation bar) take the page's own colour, so no stripe shows
+    document.querySelectorAll('meta[name="theme-color"]').forEach(m => { m.removeAttribute('media'); m.setAttribute('content', dark ? '#0A0E1C' : '#F7F8FC') })
   }
   function setTheme(t: ThemePref): void { theme.value = t; ls.set('theme', t); applyTheme() }
   function toggleTheme(): void { setTheme(document.documentElement.classList.contains('dark') ? 'light' : 'dark') }

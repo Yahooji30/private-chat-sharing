@@ -9,7 +9,7 @@ const video = useTemplateRef<HTMLVideoElement>('video')
 let scanner: { stop: () => void; destroy: () => void } | null = null
 
 const clean = computed(() => code.value.replace(/[^0-9a-z]/gi, '').toUpperCase().slice(0, 8))
-const shown = computed(() => (clean.value.length > 4 ? `${clean.value.slice(0, 4)}-${clean.value.slice(4)}` : clean.value))
+const shown = computed(() => clean.value)
 
 async function redeem(c = clean.value): Promise<void> {
   if (c.length !== 8 || busy.value) return
@@ -46,7 +46,7 @@ onMounted(() => { if (props.initial && clean.value.length === 8) void redeem() }
 <template>
   <div class="space-y-3">
     <form class="flex gap-2" @submit.prevent="redeem()">
-      <input :value="shown" class="input font-mono text-lg tracking-[0.2em] text-center uppercase" placeholder="XXXX-XXXX" inputmode="text" autocapitalize="characters"
+      <input :value="shown" class="input font-mono text-lg tracking-[0.2em] text-center uppercase" placeholder="8-character code" inputmode="text" autocapitalize="characters"
         autocomplete="off" spellcheck="false" aria-label="Link code" :autofocus="autofocus" @input="code = ($event.target as HTMLInputElement).value">
       <button class="btn btn-accent !min-h-11 px-5" :disabled="clean.length !== 8 || busy">Link</button>
     </form>

@@ -17,7 +17,8 @@ const timer = setInterval(() => { now.value = Date.now() }, 1000)
 onBeforeUnmount(() => clearInterval(timer))
 
 const left = computed(() => (gen.value ? gen.value.expiresAt - now.value : 0))
-const digits = computed(() => (gen.value?.code ?? '').split(''))
+/** the 8 characters of the code, without the dash the server puts in the middle */
+const digits = computed(() => (gen.value?.code ?? '').replace(/[^0-9a-z]/gi, '').split(''))
 
 async function generate(): Promise<void> {
   busy.value = true
@@ -86,15 +87,13 @@ const modes: { id: Mode; label: string; icon: string }[] = [{ id: 'qr', label: '
           <div class="border-t border-line pt-4">
             <p class="flex items-center gap-2 font-medium"><span class="text-[11px] bg-surface-2 border border-line rounded-md px-1.5 py-0.5">Step 2</span>Enter this code
               <span class="ml-auto text-xs font-normal text-muted">{{ gen ? `Expires in ${fmtClock(left)}` : 'Expired' }}</span></p>
-            <div class="flex items-center gap-2 mt-3 flex-wrap">
-              <div class="flex items-center gap-1 sm:gap-1.5 mx-auto sm:mx-0">
-                <template v-for="(d, i) in digits" :key="i">
-                  <span v-if="i === 4" class="text-muted">-</span>
-                  <span class="size-9 sm:size-10 grid place-items-center rounded-lg border border-line bg-surface text-lg font-semibold">{{ d }}</span>
-                </template>
-                <span v-if="!gen" class="text-muted text-sm">--------</span>
+            <div class="mt-3 space-y-3">
+              <!-- eight boxes that share the width, so the code fits on any screen, from a small phone to a desktop -->
+              <div class="grid grid-cols-8 gap-1 min-[380px]:gap-1.5 w-full max-w-sm mx-auto" role="img" :aria-label="gen ? `Code ${digits.join(' ')}` : 'Code expired'" data-testid="link-code">
+                <span v-for="(d, i) in (gen ? digits : Array.from({ length: 8 }, () => '·'))" :key="i" class="aspect-square min-w-0 grid place-items-center rounded-lg border border-line bg-surface text-base min-[380px]:text-lg font-semibold font-mono"
+                  :class="gen ? '' : 'text-muted'">{{ d }}</span>
               </div>
-              <button class="btn ml-auto" :disabled="!gen" @click="copy(gen?.code ?? '', 'Code')"><Icon name="copy" :size="15" />Copy</button>
+              <button class="btn w-full sm:w-auto sm:mx-auto sm:flex" :disabled="!gen" @click="copy(digits.join(''), 'Code')"><Icon name="copy" :size="15" />Copy code</button>
             </div>
           </div>
         </div>
