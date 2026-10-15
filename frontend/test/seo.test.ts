@@ -49,10 +49,11 @@ describe('applySeo (admin SEO tags in the first HTML)', () => {
 describe('chat invite message', () => {
   const link = 'https://example.com/c/ABCD1234'
   it('is the client wording plus the room link on its own line, with the password only when given', () => {
-    expect(DEFAULT_CHAT_SHARE_MESSAGE).toBe('I have sent you a secret message. Please click on this link, use the password {password} and read the message.')
-    expect(chatShareText(undefined, link, 'hunter22')).toBe(`I have sent you a secret message. Please click on this link, use the password hunter22 and read the message.\n\n${link}`)
-    expect(chatShareText('   ', link)).toBe(`I have sent you a secret message. Please click on this link, use the password I will send you separately and read the message.\n\n${link}`)
-    expect(chatShareText('Use the password ** please', link, 'a$&b')).toBe(`Use the password a$&b please\n\n${link}`)
+    const wanted = (pw: string) => ['🤫 Let’s have a secret chat!', '', 'Click the link below to enter our private chat.', '', '🔑 PASSWORD: ' + pw, '', '🔗 ' + link, '', 'See you inside!'].join('\n')
+    expect(chatShareText(undefined, link, 'Pass@1234')).toBe(wanted('Pass@1234'))
+    expect(chatShareText('   ', link)).toBe(wanted('I will send it to you separately'))
+    expect(chatShareText('Use the password ** please', link, 'a$&b')).toBe('Use the password a$&b please' + '\n\n' + link)
+    expect(chatShareText('Use the password ** please', link)).toBe('Use the password I will send you separately please' + '\n\n' + link)
   })
   it('honours an admin template, with {link} placed anywhere or appended', () => {
     expect(chatShareText('Secret waiting: {link} (ask me for the password)', link)).toBe(`Secret waiting: ${link} (ask me for the password)`)
