@@ -83,8 +83,14 @@ export const wantsPage = (path: string, accept: string): boolean => accept.inclu
 export function robotsTxt(origin: string, blogUrl: string): string {
   return [
     'User-agent: *', 'Allow: /', 'Disallow: /api/', 'Disallow: /c/', 'Disallow: /link', 'Disallow: /settings', '',
-    `Sitemap: ${origin}/sitemap.xml`, ...(blogUrl ? [`Sitemap: ${blogUrl}/sitemap.xml`] : []), '',
+    `Sitemap: ${origin}/sitemap-index.xml`, `Sitemap: ${origin}/sitemap.xml`, ...(blogUrl ? [`Sitemap: ${blogUrl}/sitemap.xml`] : []), '',
   ].join('\n')
+}
+
+/** One address for the whole website: it points at the app's sitemap and the blog site's sitemap (the blog lives on its own host, so it keeps its own file). */
+export function sitemapIndexXml(origin: string, blogUrl: string): string {
+  const maps = [`${origin}/sitemap.xml`, ...(blogUrl ? [`${blogUrl}/sitemap.xml`] : [])]
+  return `<?xml version="1.0" encoding="UTF-8"?><sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${maps.map(m => `<sitemap><loc>${esc(m)}</loc></sitemap>`).join('')}</sitemapindex>`
 }
 
 /** The app's own sitemap. A sitemap may only list addresses on its own host, so the blog's pages are in the blog site's sitemap. */

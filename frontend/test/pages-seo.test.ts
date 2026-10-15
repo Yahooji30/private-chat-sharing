@@ -2,7 +2,7 @@ import { readdirSync, statSync } from 'node:fs'
 import { join, relative } from 'node:path'
 import type { SeoEntry } from '@sync/shared'
 import { describe, expect, it } from 'vitest'
-import { applySeo, cleanPath, isKnownRoute, pageInfo, robotsTxt, sitemapXml, wantsPage } from '../server/utils/seo'
+import { applySeo, cleanPath, isKnownRoute, pageInfo, robotsTxt, sitemapIndexXml, sitemapXml, wantsPage } from '../server/utils/seo'
 
 const none: SeoEntry = { title: '', description: '', keywords: '', ogTitle: '', ogDescription: '', ogImage: '', canonical: '', noindex: false }
 const HEAD = '<meta charset="utf-8"><meta name="description" content="generic"><link rel="icon" href="/i.png">'
@@ -97,10 +97,18 @@ describe('404 for addresses the app does not have', () => {
 describe('robots.txt and sitemap.xml of the app', () => {
   it('robots points search engines at both sitemaps and hides private places', () => {
     const r = robotsTxt('https://jodbox.com', 'https://blog.jodbox.com')
+    expect(r).toContain('Sitemap: https://jodbox.com/sitemap-index.xml')
     expect(r).toContain('Sitemap: https://jodbox.com/sitemap.xml')
     expect(r).toContain('Sitemap: https://blog.jodbox.com/sitemap.xml')
     for (const d of ['/api/', '/c/', '/link']) expect(r).toContain(`Disallow: ${d}`)
     expect(robotsTxt('https://jodbox.com', '')).not.toContain('blog')
+  })
+  it('the sitemap index points at the app sitemap and the blog sitemap', () => {
+    const x = sitemapIndexXml('https://jodbox.com', 'https://blog.jodbox.com')
+    expect(x).toContain('<sitemapindex')
+    expect(x).toContain('<loc>https://jodbox.com/sitemap.xml</loc>')
+    expect(x).toContain('<loc>https://blog.jodbox.com/sitemap.xml</loc>')
+    expect(sitemapIndexXml('https://jodbox.com', '')).not.toContain('blog')
   })
   it('the sitemap lists the app pages, minus any the admin hid, and only on its own host', () => {
     expect(sitemapXml('https://jodbox.com', {})).toBe('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://jodbox.com/</loc></url><url><loc>https://jodbox.com/chat</loc></url></urlset>')
