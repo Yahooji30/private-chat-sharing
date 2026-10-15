@@ -8,6 +8,7 @@ export const K = {
   textHist: (s: string) => `sp:${s}:hist`,
   link: (h: string) => `link:${h}`,
   linkN: (s: string) => `link:n:${s}`,
+  linkCur: (s: string, d: string) => `link:cur:${s}:${d}`,
   chatSlots: (c: string) => `chat:${c}:slots`,
   chatMsgs: (c: string) => `chat:${c}:msgs`,
   chatMeta: (c: string) => `chat:${c}:meta`,

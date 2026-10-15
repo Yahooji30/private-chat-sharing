@@ -40,8 +40,10 @@ describe('device linking', () => {
 
   it('limits active codes and rejects garbage codes', async () => {
     const X = client('2.2.2.2', 'xxxxxxxxxxxxxxxx')
-    for (let i = 0; i < 3; i++) expect((await t.call(X, 'POST', '/api/link/code')).status).toBe(200)
-    expect((await t.call(X, 'POST', '/api/link/code')).body.error.code).toBe('LINK_LIMIT')
+    const first = (await t.call(X, 'POST', '/api/link/code')).body.code
+    for (let i = 0; i < 5; i++) expect((await t.call(X, 'POST', '/api/link/code')).body.code, 'reopening shows the same code').toBe(first)
+    for (let i = 0; i < 14; i++) expect((await t.call(X, 'POST', '/api/link/code?fresh=1')).status).toBe(200)
+    expect((await t.call(X, 'POST', '/api/link/code?fresh=1')).body.error.code).toBe('LINK_LIMIT')
     expect((await t.call(X, 'POST', '/api/link/redeem', { code: 'nope' })).status).toBe(400)
   })
 

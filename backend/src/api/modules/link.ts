@@ -12,7 +12,7 @@ import { invalidateDevice, invalidateIp } from '../../core/space'
 import { SPACE } from '../plugins/context'
 
 const CODE_TTL = 300
-const MAX_ACTIVE = 3
+const MAX_ACTIVE = 15 // new codes per network in 5 minutes (reopening the dialog reuses the current one)
 const redeemLimit = { rateLimit: { max: 5, timeWindow: '1 minute' } }
 
 export function linkRoutes(app: FastifyInstance): void {
@@ -20,12 +20,22 @@ export function linkRoutes(app: FastifyInstance): void {
 
   app.post('/api/link/code', SPACE, async req => {
     const { spaceId, device } = req.ctx
+    const mine = K.linkCur(spaceId, device.id)
+    const show = (code: string, expiresAt: number) => ({ code: `${code.slice(0, 4)}-${code.slice(4)}`, expiresAt, url: `${env.PUBLIC_ORIGIN}/link?c=${code}` })
+    // opening the dialog again shows the code that is still valid instead of making a new one every time
+    const fresh = (req.query as { fresh?: string }).fresh === '1'
+    if (!fresh) {
+      const cur = JSON.parse((await app.redis.get(mine)) ?? 'null') as { code: string; expiresAt: number } | null
+      if (cur && cur.expiresAt - Date.now() > 30_000 && await app.redis.exists(K.link(sha256(cur.code)))) return show(cur.code, cur.expiresAt)
+    }
     const n = await app.redis.incr(K.linkN(spaceId))
     if (n === 1) await app.redis.expire(K.linkN(spaceId), CODE_TTL)
-    if (n > MAX_ACTIVE) throw new AppError(ERR.LINK_LIMIT, 'Too many active codes, wait a few minutes', 429)
+    if (n > MAX_ACTIVE) throw new AppError(ERR.LINK_LIMIT, 'Too many new codes, wait a minute and try again', 429)
     const code = base32(8)
+    const expiresAt = Date.now() + CODE_TTL * 1000
     await app.redis.set(K.link(sha256(code)), JSON.stringify({ spaceId, by: device.id }), 'EX', CODE_TTL)
-    return { code: `${code.slice(0, 4)}-${code.slice(4)}`, expiresAt: Date.now() + CODE_TTL * 1000, url: `${env.PUBLIC_ORIGIN}/link?c=${code}` }
+    await app.redis.set(mine, JSON.stringify({ code, expiresAt }), 'EX', CODE_TTL)
+    return show(code, expiresAt)
   })
 
   app.post('/api/link/redeem', { ...SPACE, config: { space: true, ...redeemLimit } }, async req => {
