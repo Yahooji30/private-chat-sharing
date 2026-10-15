@@ -1,10 +1,9 @@
-import type { SeoEntry } from '@sync/shared'
 import { apiGet, siteOrigin, xml } from '../../utils/site'
 
-const NAME = /^(pages|articles-\d{1,6}|taxonomy-\d{1,6})\.xml$/
+const NAME = /^(articles-\d{1,6}|taxonomy-\d{1,6})\.xml$/
 const wrap = (body: string): string => `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${body}</urlset>`
 
-/** One file of the blog's sitemap: /sitemaps/pages.xml, /sitemaps/articles-1.xml, /sitemaps/taxonomy-1.xml, ... */
+/** One file of the blog's sitemap: /sitemaps/articles-1.xml, /sitemaps/taxonomy-1.xml, ... */
 export default defineEventHandler(async event => {
   const file = String(getRouterParam(event, 'file') ?? '')
   if (!NAME.test(file)) throw createError({ statusCode: 404, statusMessage: 'Not found' })
@@ -12,13 +11,7 @@ export default defineEventHandler(async event => {
   const o = siteOrigin(event)
   const url = (loc: string, lastmod?: string): string => `<url><loc>${xml(o + loc)}</loc>${lastmod ? `<lastmod>${lastmod}</lastmod>` : ''}</url>`
   let body = ''
-  if (kind === 'pages') {
-    // pages the admin hid from search engines (Admin > SEO > noindex) leave the sitemap too. The app's own pages are in the app's
-    // sitemap: a sitemap may only list addresses on its own host.
-    const seo = await apiGet<Record<string, SeoEntry>>(event, '/seo').catch(() => ({}) as Record<string, SeoEntry>)
-    const pages: [string, string][] = [['blog', '/'], ['features', '/features'], ['faq', '/faq'], ['feedback', '/feedback'], ['privacy', '/privacy'], ['terms', '/terms']]
-    body = pages.filter(([key]) => !seo[key]?.noindex).map(([, p]) => url(p)).join('')
-  } else if (kind === 'articles') {
+  if (kind === 'articles') {
     const rows = await apiGet<{ slug: string; lastmod: string }[]>(event, `/sitemap-data/articles/${Number(num)}`).catch(() => [])
     body = rows.map(a => url(`/${a.slug}`, a.lastmod)).join('')
   } else {

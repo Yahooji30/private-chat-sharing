@@ -225,10 +225,10 @@ export function chatShareText(template: string | undefined, link: string, passwo
 /** How many addresses one sitemap file holds (Google's limit is 50,000; smaller files are quicker to build and to read). */
 export const SITEMAP_PAGE = 5000
 export interface SitemapMeta { articles: number; taxonomy: number }
-/** The names of the blog's sitemap files for a blog of this size: `pages`, `articles-1`, `articles-2`, ..., `taxonomy-1`, ... */
+/** The names of the blog's sitemap files for a blog of this size: `articles-1`, `articles-2`, ..., `taxonomy-1`, ... (the blog's fixed pages are not listed) */
 export function blogSitemapNames(m: SitemapMeta): string[] {
   const n = (count: number): number => Math.max(1, Math.ceil(count / SITEMAP_PAGE))
-  return ['pages', ...Array.from({ length: n(m.articles) }, (_, i) => `articles-${i + 1}`), ...Array.from({ length: n(m.taxonomy) }, (_, i) => `taxonomy-${i + 1}`)]
+  return [...Array.from({ length: n(m.articles) }, (_, i) => `articles-${i + 1}`), ...Array.from({ length: n(m.taxonomy) }, (_, i) => `taxonomy-${i + 1}`)]
 }
 
 export * from './ot'
