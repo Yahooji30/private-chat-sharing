@@ -24,7 +24,6 @@ export const useApp = defineStore('app', () => {
   const theme = ref<ThemePref>('light')
   const autoDownload = ref(true)
   const spellcheck = ref(false)
-  const notify = ref(false)
   const settingsOpen = ref(false)
   const settingsTab = ref<'general' | 'link' | 'linked'>('general')
 
@@ -41,7 +40,6 @@ export const useApp = defineStore('app', () => {
     theme.value = ls.get('theme', 'light') as ThemePref
     autoDownload.value = ls.get('autoDownload', '1') === '1'
     spellcheck.value = ls.get('spellcheck', '0') === '1'
-    notify.value = ls.get('notify', '0') === '1' && typeof Notification !== 'undefined' && Notification.permission === 'granted'
     applyTheme()
     matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme)
     const me = await api<{ device: Device; ip: string; settings: Settings; limits?: { textChars: number } }>('/space/me')
@@ -57,25 +55,11 @@ export const useApp = defineStore('app', () => {
     if (k === 'autoDownload') autoDownload.value = v; else spellcheck.value = v
     ls.set(k, v ? '1' : '0')
   }
-  /** Turns notifications for files from your other devices on or off. The browser asks the person for permission the first time. */
-  async function setNotify(v: boolean): Promise<boolean> {
-    if (!v) { notify.value = false; ls.set('notify', '0'); return true }
-    if (typeof Notification === 'undefined') return false
-    const ok = Notification.permission === 'granted' || (Notification.permission !== 'denied' && (await Notification.requestPermission()) === 'granted')
-    notify.value = ok; ls.set('notify', ok ? '1' : '0')
-    return ok
-  }
-  /** shows a notification, but only while the app is not on screen (a message on screen is enough otherwise) */
-  async function tell(title: string, body: string): Promise<void> {
-    if (!notify.value || document.visibilityState === 'visible' || typeof Notification === 'undefined' || Notification.permission !== 'granted') return
-    const opts = { body, icon: '/icons/icon-192.png', badge: '/icons/icon-192.png', tag: 'jodbox' }
-    try { const reg = await navigator.serviceWorker?.getRegistration(); if (reg) return await reg.showNotification(title, opts); new Notification(title, opts) } catch { /* not allowed here */ }
-  }
   async function rename(name: string): Promise<void> {
     await api('/device', { method: 'PATCH', body: { name } })
     if (device.value) device.value = { ...device.value, name }
   }
   function openSettings(tab: 'general' | 'link' | 'linked' = 'general'): void { settingsTab.value = tab; settingsOpen.value = true }
 
-  return { ready, device, ip, textMax, rtUrl, blogUrl, settings, peers, online, hasConnected, theme, autoDownload, spellcheck, notify, setNotify, tell, settingsOpen, settingsTab, load, saveSettings, setLocal, rename, setTheme, toggleTheme, openSettings }
+  return { ready, device, ip, textMax, rtUrl, blogUrl, settings, peers, online, hasConnected, theme, autoDownload, spellcheck, settingsOpen, settingsTab, load, saveSettings, setLocal, rename, setTheme, toggleTheme, openSettings }
 })

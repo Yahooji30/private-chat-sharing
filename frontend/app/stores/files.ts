@@ -100,11 +100,7 @@ export const useFiles = defineStore('files', () => {
     })
     sock.on('rtc:signal', (m: { from: string; data: { sdp?: RTCSessionDescriptionInit; ice?: RTCIceCandidateInit } }) => void mesh.onSignal(m.from, m.data))
     sock.on('presence:list', () => mesh.sync(peerSync()))
-    sock.on('files:added', (l: FileEntry[]) => {
-      void addEntries(l)
-      const theirs = l.filter(e => e.addedBy !== app.device?.id)
-      if (theirs.length) void app.tell('New file on Jodbox', theirs.length === 1 ? theirs[0]!.name : `${theirs.length} files shared with you`)
-    })
+    sock.on('files:added', (l: FileEntry[]) => void addEntries(l))
     sock.on('files:ready', (m: { fileId: string; rootHash: string }) => {
       const it = find(m.fileId)
       if (!it) return
