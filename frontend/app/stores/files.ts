@@ -76,7 +76,7 @@ export const useFiles = defineStore('files', () => {
 
   function maybeAuto(e: FileEntry): void {
     const it = find(e.fileId)
-    if (app.autoDownload && e.size <= AUTO_MAX && e.rootHash && it && (it.status === 'remote') && e.addedBy !== app.device?.id) void download(e.fileId)
+    if (app.autoDownload && e.size <= AUTO_MAX && e.rootHash && it && (it.status === 'remote') && e.addedBy !== app.device?.id) void download(e.fileId, true)
   }
 
   async function init(): Promise<void> {
@@ -199,13 +199,18 @@ export const useFiles = defineStore('files', () => {
     return btoa(String.fromCharCode(...b))
   }
 
-  async function download(id: string): Promise<void> {
+  /** `quiet`: started by the app itself (automatic download, "get all"), so no pop-up; the file's row already says what it is waiting for. */
+  async function download(id: string, quiet = false): Promise<void> {
     const it = find(id)
     if (!it?.entry.rootHash) return
     if (!opfs.value && it.entry.size > NO_OPFS_MAX) return toast.err('This browser cannot store files this large')
     patch(id, { status: 'downloading' })
     await engine.start(info(it.entry))
-    if (!holderOnline(it.entry) && !engine.isLocal(id)) toast.warn('Waiting for a device that has this file to come online')
+    // the server tells who holds the file a moment after it says the file is ready, so look again before claiming nobody has it
+    if (!quiet) setTimeout(() => {
+      const cur = find(id)
+      if (cur && cur.status === 'downloading' && !cur.sources && !holderOnline(cur.entry) && !engine.isLocal(id)) toast.warn('Waiting for a device that has this file to come online')
+    }, 4000)
   }
   /** the other device could not be reached yet: look for it again and restart the download */
   async function retry(id: string): Promise<void> {
@@ -283,7 +288,7 @@ export const useFiles = defineStore('files', () => {
   }
 
   async function downloadMissing(): Promise<void> {
-    for (const i of items.value) if (['remote', 'paused'].includes(i.status) && i.entry.rootHash) await download(i.entry.fileId)
+    for (const i of items.value) if (['remote', 'paused'].includes(i.status) && i.entry.rootHash) await download(i.entry.fileId, true)
   }
 
   const waitFor = async (fn: () => boolean): Promise<void> => { for (let i = 0; i < 100 && !fn(); i++) await new Promise(r => setTimeout(r, 20)) }
