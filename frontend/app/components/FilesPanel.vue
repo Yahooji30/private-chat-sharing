@@ -24,9 +24,34 @@ function onDrop(e: DragEvent): void {
   dragging.value = false; dragDepth = 0
   if (e.dataTransfer?.files.length) void files.addFiles([...e.dataTransfer.files])
 }
+const toast = useToast()
+const isMac = import.meta.client && /Mac|iPhone|iPad/i.test(navigator.platform || navigator.userAgent)
+const pasteKey = isMac ? '⌘V' : 'Ctrl+V'
+const EXT: Record<string, string> = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/gif': 'gif', 'image/webp': 'webp', 'image/avif': 'avif', 'image/bmp': 'bmp', 'image/svg+xml': 'svg', 'application/pdf': 'pdf' }
+const stamp = (): string => new Date().toISOString().slice(0, 19).replace(/[-:]/g, '').replace('T', '-')
+/** a screenshot or copied picture arrives called "image.png": give each its own name so pastes do not look the same */
+function named(f: File, i: number): File {
+  if (!/^image\.\w+$/i.test(f.name)) return f
+  return new File([f], `pasted-image-${stamp()}${i ? `-${i + 1}` : ''}.${f.name.split('.').pop()}`, { type: f.type })
+}
 function onPaste(e: ClipboardEvent): void {
-  const list = [...(e.clipboardData?.files ?? [])]
+  const list = [...(e.clipboardData?.files ?? [])].map(named)
   if (list.length) { e.preventDefault(); void files.addFiles(list) }
+}
+/** The Paste button: for phones and for anyone who would rather click than press keys. Reads files and pictures from the clipboard. */
+async function pasteFromClipboard(): Promise<void> {
+  if (!navigator.clipboard?.read) return toast.warn(`This browser cannot paste from a button. Press ${pasteKey} instead.`)
+  try {
+    const out: File[] = []
+    for (const item of await navigator.clipboard.read()) {
+      const type = item.types.find(t => !t.startsWith('text/'))
+      if (!type) continue
+      const blob = await item.getType(type)
+      out.push(new File([blob], `pasted-${type.startsWith('image/') ? 'image' : 'file'}-${stamp()}${out.length ? `-${out.length + 1}` : ''}.${EXT[type] ?? 'bin'}`, { type }))
+    }
+    if (!out.length) return toast.warn('Nothing to paste. Copy a picture or a file first.')
+    await files.addFiles(out)
+  } catch { toast.warn(`Allow clipboard access to paste, or press ${pasteKey}.`) }
 }
 const enter = (e: DragEvent): void => { if (e.dataTransfer?.types.includes('Files')) { dragDepth++; dragging.value = true } }
 const leave = (): void => { if (--dragDepth <= 0) { dragging.value = false; dragDepth = 0 } }
@@ -84,6 +109,10 @@ defineExpose({ pick })
       <span class="inline-flex items-center gap-2 font-semibold text-sm" :class="sorted.length ? 'text-accent-ink' : 'text-ink'"><Icon name="plus" :size="16" />{{ sorted.length ? 'Add more files' : 'Drop files here or tap to choose' }}</span>
       <span v-if="!sorted.length" class="block text-xs text-muted mt-1">Sent straight to your other devices. Nothing is stored on a server.</span>
     </button>
+    <div class="flex items-center gap-2 px-1" :class="sorted.length ? '-mt-1 mb-3' : 'mt-2 mb-3'">
+      <p class="hidden md:flex items-center gap-1.5 text-xs text-muted" data-testid="paste-hint"><kbd class="rounded-md border border-line bg-surface-2 px-1.5 py-0.5 font-mono text-[11px] text-ink">{{ pasteKey }}</kbd>to paste a copied file or screenshot</p>
+      <button class="btn !min-h-9 !px-3 text-sm ml-auto" data-testid="paste-files" @click="pasteFromClipboard"><Icon name="paste" :size="15" />Paste</button>
+    </div>
 
     <ul class="space-y-2">
       <li v-for="i in sorted" :key="i.entry.fileId" class="card !rounded-2xl p-3 flex items-center gap-3 anim-pop" :data-testid="`file-${i.entry.name}`" :data-status="i.status">
