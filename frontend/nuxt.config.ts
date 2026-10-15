@@ -51,7 +51,7 @@ export default defineNuxtConfig({
         { rel: 'icon', type: 'image/png', href: '/icons/favicon-48.png' },
         { rel: 'apple-touch-icon', href: '/icons/apple-touch-icon.png' },
       ],
-      script: [{ innerHTML: `try{var t=localStorage.getItem('sync:theme')||'system';var d=t==='dark'||(t==='system'&&matchMedia('(prefers-color-scheme:dark)').matches);document.documentElement.classList.toggle('dark',d);var m=document.querySelectorAll('meta[name=theme-color]');for(var i=0;i<m.length;i++){m[i].removeAttribute('media');m[i].setAttribute('content',d?'#0A0E1C':'#F7F8FC')}}catch(e){}` }],
+      script: [{ innerHTML: `try{var t=localStorage.getItem('sync:theme')||'light';var d=t==='dark'||(t==='system'&&matchMedia('(prefers-color-scheme:dark)').matches);document.documentElement.classList.toggle('dark',d);var m=document.querySelectorAll('meta[name=theme-color]');for(var i=0;i<m.length;i++){m[i].removeAttribute('media');m[i].setAttribute('content',d?'#0A0E1C':'#F7F8FC')}}catch(e){}` }],
     },
   },
   pwa: {

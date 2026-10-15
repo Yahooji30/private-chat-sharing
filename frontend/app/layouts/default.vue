@@ -78,6 +78,7 @@ const footer = [['Features', '/features'], ['FAQ', '/faq'], ['Privacy', '/privac
     </nav>
 
     <LazySettingsModal v-if="app.settingsOpen" />
+    <PwaPrompt />
     <FeedbackModal />
     <ConfirmDialog />
     <ToastHost />

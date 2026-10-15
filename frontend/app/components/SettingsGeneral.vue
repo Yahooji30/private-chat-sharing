@@ -15,6 +15,11 @@ async function save(): Promise<void> {
     toast.ok('Settings saved')
   } catch (e) { toast.err((e as Error).message) } finally { saving.value = false }
 }
+const canNotify = import.meta.client && typeof Notification !== 'undefined'
+async function turnNotify(v: boolean): Promise<void> {
+  const ok = await app.setNotify(v)
+  if (v && !ok) toast.warn('Notifications are blocked. Allow them in your browser settings for this site.')
+}
 const sel = 'input !min-h-10 !w-auto pr-8 cursor-pointer'
 </script>
 
@@ -33,6 +38,7 @@ const sel = 'input !min-h-10 !w-auto pr-8 cursor-pointer'
         <input v-model.number="draft.fontSize" type="range" min="12" max="28" step="1" class="w-28 accent-[var(--accent)]" aria-label="Font size">
       </SettingRow>
       <SettingRow title="Spellcheck" desc="Underline spelling mistakes while typing."><Toggle :model-value="app.spellcheck" label="Spellcheck" @update:model-value="app.setLocal('spellcheck', $event)" /></SettingRow>
+      <SettingRow v-if="canNotify" title="Notifications" desc="Tell me when a file arrives from another device while the app is in the background."><Toggle :model-value="app.notify" label="Notifications" @update:model-value="turnNotify" /></SettingRow>
     </section>
 
     <section class="card p-4 space-y-4">
