@@ -153,9 +153,28 @@ describe('blog', () => {
     expect(cats.find((c: any) => c.slug === 'guides').count).toBeGreaterThan(0)
   })
 
+  it('per-article search settings: noindex leaves the sitemap but the article stays readable; bad canonical is refused', async () => {
+    const before = (await pub('/api/sitemap-data')).body.articles
+    const r = await post({ title: 'Hidden from search', slug: 'hidden-from-search', seoKeywords: 'a, b', seoNoindex: true, seoCanonical: 'https://example.com/original' })
+    expect(r.status).toBeLessThan(300)
+    expect((await pub('/api/sitemap-data')).body.articles).toBe(before)
+    expect((await pub('/api/sitemap-data/articles/1')).body.map((a: any) => a.slug)).not.toContain('hidden-from-search')
+    const art = (await pub('/api/blog/articles/hidden-from-search')).body
+    expect([art.seoNoindex, art.seoKeywords, art.seoCanonical]).toEqual([true, 'a, b', 'https://example.com/original'])
+    expect((await post({ title: 'Bad canonical', seoCanonical: 'javascript:alert(1)' })).status).toBe(400)
+    const back = (await call(s, 'GET', '/api/admin/articles/' + r.body.id)).body
+    expect([back.seoNoindex, back.seoKeywords]).toEqual([true, 'a, b'])
+  })
+
   it('serves sitemap and rss data and cache headers; admin list filters', async () => {
-    const sm = (await pub('/api/sitemap-data')).body
-    expect(sm.articles.map((a: any) => a.slug)).toContain('hello-world-2'); expect(sm.categories).toContain('guides'); expect(sm.tags).toContain('bulk')
+    const meta = (await pub('/api/sitemap-data')).body
+    expect(meta.articles).toBeGreaterThan(0); expect(meta.taxonomy).toBeGreaterThan(0)
+    const files = (await pub('/api/sitemap-data/articles/1')).body
+    expect(files.map((a: any) => a.slug)).toContain('hello-world-2')
+    expect((await pub('/api/sitemap-data/articles/2')).body).toEqual([]) // past the end: an empty file, not an error
+    const tax = (await pub('/api/sitemap-data/taxonomy/1')).body
+    expect(tax).toContainEqual({ kind: 'category', slug: 'guides' }); expect(tax).toContainEqual({ kind: 'tag', slug: 'bulk' })
+    expect((await pub('/api/sitemap-data/articles/0')).status).toBe(400)
     expect((await pub('/api/blog/rss-data')).body.length).toBeLessThanOrEqual(30)
     expect((await pub('/api/blog/articles')).headers['cache-control']).toContain('s-maxage=60')
     const l = (await call(s, 'GET', '/api/admin/articles?status=draft')).body

@@ -28,7 +28,7 @@ export default defineNuxtConfig({
   routeRules: {
     ...(isProd ? { '/**': { headers: securityHeaders } } : {}),
     '/blog': { redirect: '/' }, '/blog/**': { redirect: '/**' }, // old addresses
-    '/': { swr: 600 }, '/*': { swr: 600 }, '/_revalidate': { cache: false }, '/rss.xml': { swr: 600 }, '/sitemap.xml': { swr: 600 }, '/robots.txt': { cache: false }, '/category/**': { swr: 600 }, '/tag/**': { swr: 600 }, '/privacy': { swr: 86400 }, '/terms': { swr: 86400 },
+    '/': { swr: 600 }, '/*': { swr: 600 }, '/_revalidate': { cache: false }, '/rss.xml': { swr: 600 }, '/sitemap.xml': { swr: 600 }, '/sitemaps/**': { swr: 600 }, '/robots.txt': { cache: false }, '/category/**': { swr: 600 }, '/tag/**': { swr: 600 }, '/privacy': { swr: 86400 }, '/terms': { swr: 86400 },
     '/api/**': { proxy: `${api}/api/**` }, '/media/**': { proxy: `${api}/media/**` },
   },
   app: {

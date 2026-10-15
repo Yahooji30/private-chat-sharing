@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
-import { getPublic, listCategories, listPublic, rssData, sitemapData, tagArchive } from '../../core/blog'
+import { getPublic, listCategories, listPublic, rssData, sitemapArticles, sitemapMeta, sitemapTaxonomy, tagArchive } from '../../core/blog'
 import { sql } from '../../core/db/client'
 
 const cache = { config: { rateLimit: { max: 120, timeWindow: '1 minute' } } }
@@ -15,7 +15,10 @@ export function blogRoutes(app: FastifyInstance): void {
   app.get('/api/blog/categories', cache, () => listCategories())
   app.get<{ Params: { slug: string }; Querystring: { page?: string } }>('/api/blog/tags/:slug', cache, async req => tagArchive(req.params.slug, Number(req.query.page) || 1))
   app.get('/api/blog/rss-data', cache, () => rssData())
-  app.get('/api/sitemap-data', cache, () => sitemapData())
+  const filePage = z.object({ page: z.coerce.number().int().min(1).max(100_000) })
+  app.get('/api/sitemap-data', cache, () => sitemapMeta())
+  app.get<{ Params: { page: string } }>('/api/sitemap-data/articles/:page', cache, async req => sitemapArticles(filePage.parse(req.params).page))
+  app.get<{ Params: { page: string } }>('/api/sitemap-data/taxonomy/:page', cache, async req => sitemapTaxonomy(filePage.parse(req.params).page))
 
   app.get('/api/site', async () => {
     const rows = await sql<{ key: string; value: string }[]>`select key, value from site_settings where key not in ('privacy_md', 'terms_md')`
