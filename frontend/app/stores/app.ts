@@ -21,7 +21,7 @@ export const useApp = defineStore('app', () => {
   const peers = ref<Peer[]>([])
   const online = ref(false)
   const hasConnected = ref(false)
-  const theme = ref<ThemePref>('system')
+  const theme = ref<ThemePref>('light')
   const autoDownload = ref(true)
   const spellcheck = ref(false)
   const settingsOpen = ref(false)
@@ -37,7 +37,7 @@ export const useApp = defineStore('app', () => {
   function toggleTheme(): void { setTheme(document.documentElement.classList.contains('dark') ? 'light' : 'dark') }
 
   async function load(): Promise<void> {
-    theme.value = ls.get('theme', 'system') as ThemePref
+    theme.value = ls.get('theme', 'light') as ThemePref
     autoDownload.value = ls.get('autoDownload', '1') === '1'
     spellcheck.value = ls.get('spellcheck', '0') === '1'
     applyTheme()

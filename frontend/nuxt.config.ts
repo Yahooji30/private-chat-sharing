@@ -51,29 +51,9 @@ export default defineNuxtConfig({
         { rel: 'icon', type: 'image/png', href: '/icons/favicon-48.png' },
         { rel: 'apple-touch-icon', href: '/icons/apple-touch-icon.png' },
       ],
-      script: [{ innerHTML: `try{var t=localStorage.getItem('sync:theme')||'system';var d=t==='dark'||(t==='system'&&matchMedia('(prefers-color-scheme:dark)').matches);document.documentElement.classList.toggle('dark',d);var m=document.querySelectorAll('meta[name=theme-color]');for(var i=0;i<m.length;i++){m[i].removeAttribute('media');m[i].setAttribute('content',d?'#0A0E1C':'#F7F8FC')}}catch(e){}` }],
+      script: [{ innerHTML: `try{var t=localStorage.getItem('sync:theme')||'light';var d=t==='dark'||(t==='system'&&matchMedia('(prefers-color-scheme:dark)').matches);document.documentElement.classList.toggle('dark',d);var m=document.querySelectorAll('meta[name=theme-color]');for(var i=0;i<m.length;i++){m[i].removeAttribute('media');m[i].setAttribute('content',d?'#0A0E1C':'#F7F8FC')}}catch(e){}` }],
     },
   },
-  pwa: {
-    registerType: 'autoUpdate',
-    manifest: {
-      name: appName, short_name: appName, description: 'Instant text and file sharing across your devices.',
-      theme_color: '#0A0E1C', background_color: '#0A0E1C', display: 'standalone', orientation: 'any', start_url: '/', scope: '/',
-      icons: [
-        { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
-        { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
-        { src: '/icons/maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
-      ],
-      share_target: { action: '/?share=1', method: 'GET', params: { title: 'title', text: 'text', url: 'url' } },
-    },
-    workbox: {
-      navigateFallback: '/200.html', navigateFallbackDenylist: [/^\/api/, /^\/socket\.io/, /^\/media/],
-      // the module lists the SPA shell as the clean url "200" which the server does not serve; precache the real file
-      manifestTransforms: [entries => ({ manifest: entries.map(e => (e.url === '200' ? { ...e, url: '200.html' } : e)), warnings: [] })],
-      globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
-      runtimeCaching: [{ urlPattern: ({ url }: { url: URL }) => /^\/api\/(space\/me|settings|text)$/.test(url.pathname), handler: 'NetworkFirst', options: { cacheName: 'api-meta', networkTimeoutSeconds: 3 } }],
-    },
-    client: { installPrompt: true },
-    devOptions: { enabled: false },
-  },
+  // The app is not installable for now. This tiny service worker removes itself and its caches from devices that already have the old one.
+  pwa: { selfDestroying: true, manifest: false, client: { installPrompt: false }, devOptions: { enabled: false } },
 })

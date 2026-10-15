@@ -207,6 +207,11 @@ export const useFiles = defineStore('files', () => {
     await engine.start(info(it.entry))
     if (!holderOnline(it.entry) && !engine.isLocal(id)) toast.warn('Waiting for a device that has this file to come online')
   }
+  /** the other device could not be reached yet: look for it again and restart the download */
+  async function retry(id: string): Promise<void> {
+    mesh.sync(peerSync())
+    await download(id)
+  }
   function pause(id: string): void { engine.pause(id) }
   async function resume(id: string): Promise<void> { await download(id) }
   async function cancel(id: string): Promise<void> {
@@ -283,5 +288,5 @@ export const useFiles = defineStore('files', () => {
 
   const waitFor = async (fn: () => boolean): Promise<void> => { for (let i = 0; i < 100 && !fn(); i++) await new Promise(r => setTimeout(r, 20)) }
 
-  return { items, opfs, blocked, init, addFiles, download, pause, resume, cancel, remove, clearAll, save, previewUrl, previewText, zipAll, downloadMissing, holderOnline }
+  return { items, opfs, blocked, init, addFiles, download, retry, pause, resume, cancel, remove, clearAll, save, previewUrl, previewText, zipAll, downloadMissing, holderOnline }
 })

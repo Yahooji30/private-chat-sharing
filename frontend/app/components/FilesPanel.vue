@@ -81,7 +81,7 @@ const label = (i: FileItem): string => {
   switch (i.status) {
     case 'preparing': return i.hashing ? `Preparing ${Math.round((i.hashing / i.entry.size) * 100)}%` : 'Preparing...'
     case 'reselect': return 'Re-select this file to keep sharing it'
-    case 'downloading': return `${pct(i)}% · ${i.speed > 0 ? `${fmtBytes(i.speed)}/s · ` : ''}${i.sources ? `${i.sources} source${i.sources === 1 ? '' : 's'}` : 'waiting for a source'}${i.speed > 0 ? ` · ${fmtDuration((i.entry.size - i.done) / i.speed)}` : ''}`
+    case 'downloading': return `${pct(i)}% · ${i.speed > 0 ? `${fmtBytes(i.speed)}/s · ` : ''}${i.sources ? `${i.sources} source${i.sources === 1 ? '' : 's'}` : 'looking for the other device, keep it open'}${i.speed > 0 ? ` · ${fmtDuration((i.entry.size - i.done) / i.speed)}` : ''}`
     case 'paused': return `Paused at ${pct(i)}%`
     case 'complete': return 'On this device'
     default: return files.holderOnline(i.entry) ? 'Available' : 'Waiting for a device that has it'
@@ -128,6 +128,7 @@ defineExpose({ pick })
         <div class="flex items-center gap-1 shrink-0">
           <button v-if="i.status === 'reselect'" class="btn !px-3 text-sm" @click="pick">Select</button>
           <button v-if="i.status === 'remote'" class="btn btn-soft !px-3" :aria-label="`Download ${i.entry.name}`" @click="files.download(i.entry.fileId)"><Icon name="download" :size="17" /></button>
+          <button v-if="i.status === 'downloading' && !i.sources" class="btn btn-soft !px-3 text-sm" :aria-label="`Try again: ${i.entry.name}`" @click="files.retry(i.entry.fileId)"><Icon name="refresh" :size="16" />Retry</button>
           <button v-if="i.status === 'downloading'" class="btn !px-2.5" aria-label="Pause" @click="files.pause(i.entry.fileId)"><Icon name="pause" :size="17" /></button>
           <button v-if="i.status === 'paused'" class="btn btn-soft !px-2.5" aria-label="Resume" @click="files.resume(i.entry.fileId)"><Icon name="play" :size="17" /></button>
           <button v-if="['downloading', 'paused'].includes(i.status)" class="btn !px-2.5" aria-label="Cancel download" @click="files.cancel(i.entry.fileId)"><Icon name="x" :size="17" /></button>
