@@ -208,13 +208,13 @@ export type SeoInput = z.infer<typeof seoInputSchema>
 /** What the public `GET /api/seo` returns per page (only pages the admin has filled in). */
 export interface SeoEntry { title: string; description: string; keywords: string; ogTitle: string; ogDescription: string; ogImage: string; canonical: string; noindex: boolean }
 
-export const DEFAULT_CHAT_SHARE_MESSAGE = 'I have sent you a secret message. Please click on this link, use the password {password} and read the message.'
+export const DEFAULT_CHAT_SHARE_MESSAGE = ['🤫 Let’s have a secret chat!', '', 'Click the link below to enter our private chat.', '', '🔑 PASSWORD: {password}', '', '🔗 {link}', '', 'See you inside!'].join('\n')
 /** Builds the text that is sent through WhatsApp and friends: the admin's template plus the room link on its own line. */
 export function chatShareText(template: string | undefined, link: string, password?: string): string {
   let t = (template ?? '').trim() || DEFAULT_CHAT_SHARE_MESSAGE
   // {password} (or the older ** placeholder) becomes the room password; without one the message says it comes separately
   const pw = password?.trim()
-  t = pw ? t.replace(/\{password\}|\*\*/g, () => pw) : t.replace(/the password (\{password\}|\*\*)/gi, 'the password I will send you separately').replace(/\{password\}|\*\*/g, '(sent separately)')
+  t = pw ? t.replace(/\{password\}|\*\*/g, () => pw) : t.replace(/(the password|PASSWORD:)\s*(\{password\}|\*\*)/gi, (_m, label: string) => (label.endsWith(':') ? label + ' I will send it to you separately' : label + ' I will send you separately')).replace(/\{password\}|\*\*/g, '(sent separately)')
   return t.includes('{link}') ? t.replaceAll('{link}', link) : `${t}\n\n${link}`
 }
 

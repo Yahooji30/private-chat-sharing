@@ -22,7 +22,7 @@ async function save(): Promise<void> {
     <form class="card p-4 space-y-3" @submit.prevent="save">
       <div v-for="k in groups[tab]" :key="k"><label class="label" :for="k">{{ names[k] }}</label>
         <RichEditor v-if="k.endsWith('_md')" :model-value="f[k] ?? ''" @update:model-value="f[k] = $event" :label="names[k] ?? k" placeholder="Write this page. Leave it empty to show the built-in text." min-height="18rem" />
-        <textarea v-else-if="k === 'chat_share_message'" :id="k" v-model="f[k]" class="input" rows="3" maxlength="500" :placeholder="DEFAULT_CHAT_SHARE_MESSAGE" /><input v-else :id="k" v-model="f[k]" class="input">
+        <textarea v-else-if="k === 'chat_share_message'" :id="k" v-model="f[k]" class="input" rows="9" maxlength="500" :placeholder="DEFAULT_CHAT_SHARE_MESSAGE" /><input v-else :id="k" v-model="f[k]" class="input">
         <p v-if="hints[k]" class="text-xs text-muted mt-1">{{ hints[k] }}</p></div>
       <button class="btn btn-accent">Save</button>
     </form>

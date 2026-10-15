@@ -26,11 +26,11 @@ const enc = encodeURIComponent
 const channels = computed(() => [
   { key: 'whatsapp', label: 'WhatsApp', icon: 'whatsapp', href: `https://wa.me/?text=${enc(message.value)}`, show: true },
   { key: 'sms', label: 'SMS', icon: 'chat', href: `sms:?&body=${enc(message.value)}`, show: isMobile },
-  { key: 'email', label: 'Email', icon: 'mail', href: `mailto:?subject=${enc('I have sent you a secret message')}&body=${enc(message.value)}`, show: true },
+  { key: 'email', label: 'Email', icon: 'mail', href: `mailto:?subject=${enc('Let’s have a secret chat 🤫')}&body=${enc(message.value)}`, show: true },
 ].filter(c => c.show))
 async function copyMessage(): Promise<void> { if (await copyText(message.value)) toast.ok('Message copied') }
 async function copyLink(): Promise<void> { if (await copyText(url.value)) toast.ok('Link copied') }
-async function share(): Promise<void> { try { await navigator.share({ title: 'A secret message for you', text: message.value }) } catch { /* dismissed */ } }
+async function share(): Promise<void> { try { await navigator.share({ title: 'Let’s have a secret chat 🤫', text: message.value }) } catch { /* dismissed */ } }
 </script>
 
 <template>
