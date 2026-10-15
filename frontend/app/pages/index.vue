@@ -95,12 +95,9 @@ const steps = [
             </span>
             <button class="size-8 -mr-1.5 grid place-items-center rounded-lg text-muted hover:bg-surface-2 hover:text-ink" aria-label="Reload from server" @click="sync.load()"><Icon name="refresh" :size="17" /></button>
           </div>
-          <div class="relative block w-full flex-none h-[calc(100dvh-20rem)] md:h-[calc(100dvh-21rem)] min-h-64 lg:h-auto lg:flex-1 lg:min-h-0">
-            <textarea ref="ta" :value="sync.text.value" :class="fontClass" :style="{ fontSize: `${app.settings.fontSize}px` }" :spellcheck="app.spellcheck"
-              class="absolute inset-0 block size-full resize-none bg-transparent px-5 py-3 outline-none leading-[1.7]"
-              placeholder="Type or paste here. It shows up on all your devices instantly." aria-label="Shared text" autocapitalize="sentences" @input="onInput" />
-            <RemoteCursors :box="ta" :text="sync.text.value" :cursors="sync.cursors.value" :font-key="`${app.settings.fontFamily}${app.settings.fontSize}`" />
-          </div>
+          <textarea ref="ta" :value="sync.text.value" :class="fontClass" :style="{ fontSize: `${app.settings.fontSize}px` }" :spellcheck="app.spellcheck"
+            class="block w-full flex-none h-[calc(100dvh-20rem)] md:h-[calc(100dvh-21rem)] min-h-64 flex-none lg:h-auto lg:flex-1 lg:min-h-0 resize-none bg-transparent px-5 py-3 outline-none leading-[1.7]"
+            placeholder="Type or paste here. It shows up on all your devices instantly." aria-label="Shared text" autocapitalize="sentences" @input="onInput" />
           <div class="flex border-t border-line divide-x divide-line" role="toolbar" aria-label="Text actions">
             <button :class="dock" aria-label="Copy" @click="copy"><Icon name="copy" :size="19" />Copy</button>
             <button :class="dock" aria-label="Paste" @click="paste"><Icon name="paste" :size="19" />Paste</button>

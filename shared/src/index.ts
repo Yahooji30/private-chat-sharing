@@ -41,7 +41,6 @@ export const EV = {
   textOp: 'text:op',
   textSync: 'text:sync',
   textReset: 'text:reset',
-  textCursor: 'text:cursor',
   presence: 'presence:list',
   filesAdd: 'files:add',
   filesAdded: 'files:added',
@@ -91,8 +90,6 @@ export const textOpSchema = z.object({
 })
 /** A device asks for the current text, and whether the edit it never got an answer for went through. */
 export const textSyncSchema = z.object({ sinceRev: z.number().int().min(-1), opId: z.string().max(40).optional() })
-/** Where a device's cursor (or selection) is in the shared text. `start: -1` means it left the text box. */
-export const textCursorSchema = z.object({ start: z.number().int().min(-1).max(LIMITS.textCharsHard), end: z.number().int().min(0).max(LIMITS.textCharsHard) })
 export const deviceRenameSchema = z.object({ name: z.string().trim().min(1).max(LIMITS.deviceNameChars) })
 
 export const fileMetaSchema = z.object({
