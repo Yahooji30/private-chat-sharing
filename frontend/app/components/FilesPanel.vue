@@ -128,8 +128,8 @@ defineExpose({ pick })
         <div class="flex items-center gap-1 shrink-0">
           <button v-if="i.status === 'reselect'" class="btn !px-3 text-sm" @click="pick">Select</button>
           <button v-if="i.status === 'remote'" class="btn btn-soft !px-3" :aria-label="`Download ${i.entry.name}`" @click="files.download(i.entry.fileId)"><Icon name="download" :size="17" /></button>
-          <button v-if="i.status === 'downloading' && !i.sources" class="btn btn-soft !px-3 text-sm" :aria-label="`Try again: ${i.entry.name}`" @click="files.retry(i.entry.fileId)"><Icon name="refresh" :size="16" />Retry</button>
-          <button v-if="i.status === 'downloading'" class="btn !px-2.5" aria-label="Pause" @click="files.pause(i.entry.fileId)"><Icon name="pause" :size="17" /></button>
+          <button v-if="i.status === 'downloading' && !i.sources" class="btn btn-soft !px-2.5" :aria-label="`Try again: ${i.entry.name}`" title="Look for the other device again" @click="files.retry(i.entry.fileId)"><Icon name="refresh" :size="17" /></button>
+          <button v-if="i.status === 'downloading' && i.sources" class="btn !px-2.5" aria-label="Pause" @click="files.pause(i.entry.fileId)"><Icon name="pause" :size="17" /></button>
           <button v-if="i.status === 'paused'" class="btn btn-soft !px-2.5" aria-label="Resume" @click="files.resume(i.entry.fileId)"><Icon name="play" :size="17" /></button>
           <button v-if="['downloading', 'paused'].includes(i.status)" class="btn !px-2.5" aria-label="Cancel download" @click="files.cancel(i.entry.fileId)"><Icon name="x" :size="17" /></button>
           <button v-if="previewable(i)" class="btn !px-2.5 hidden sm:inline-flex" aria-label="Preview" @click="openPreview(i)"><Icon name="eye" :size="17" /></button>

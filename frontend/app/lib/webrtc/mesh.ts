@@ -9,7 +9,9 @@ export interface MeshHooks {
   onBlocked(peer: string): void
 }
 
-interface Link { since: number; pc: RTCPeerConnection; dc?: RTCDataChannel; queue: RTCIceCandidateInit[]; opened: boolean; timer?: ReturnType<typeof setTimeout> }
+/** a connection that has not opened after this long got no answer (the other device was reloading, or a message was lost): start again */
+const STUCK_MS = 8000
+interface Link { born: number; since: number; pc: RTCPeerConnection; dc?: RTCDataChannel; queue: RTCIceCandidateInit[]; opened: boolean; timer?: ReturnType<typeof setTimeout> }
 
 /** One RTCPeerConnection + ordered reliable DataChannel per remote device. The lower device id initiates. */
 export class Mesh implements Transport {
@@ -38,6 +40,7 @@ export class Mesh implements Transport {
     for (const [p, since] of want) {
       const l = this.links.get(p)
       if (l && since > l.since) this.drop(p)
+      else if (l && !l.opened && Date.now() - l.born > STUCK_MS) this.drop(p) // never got an answer: try again
       if (!this.links.has(p) && this.me < p) this.connect(p, since)
     }
     for (const p of [...this.links.keys()]) if (!want.has(p)) this.drop(p)
@@ -45,7 +48,7 @@ export class Mesh implements Transport {
 
   private connect(peer: string, since = Date.now()): Link {
     const pc = new RTCPeerConnection({ iceServers: this.ice })
-    const l: Link = { since, pc, queue: [], opened: false }
+    const l: Link = { born: Date.now(), since, pc, queue: [], opened: false }
     this.links.set(peer, l)
     pc.onicecandidate = e => { if (e.candidate) this.hooks.signal(peer, { ice: e.candidate.toJSON() }) }
     pc.onconnectionstatechange = () => {
@@ -85,6 +88,9 @@ export class Mesh implements Transport {
       else l.queue.push(data.ice)
     }
   }
+
+  /** Forget connections that never opened, so the next `sync` makes fresh ones (the Retry button). */
+  resetStuck(): void { for (const [p, l] of [...this.links]) if (!l.opened) this.drop(p) }
 
   drop(peer: string): void {
     const l = this.links.get(peer)

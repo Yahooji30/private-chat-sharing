@@ -18,6 +18,10 @@ export interface FileItem {
 
 const AUTO_MAX = 50 * 1024 * 1024
 const NO_OPFS_MAX = 500 * 1024 * 1024
+/** files the person paused on purpose, so a refresh does not restart them (a refresh itself also pauses downloads) */
+const heldKey = 'sync:heldFiles'
+const held = (): Set<string> => { try { return new Set(JSON.parse(localStorage.getItem(heldKey) ?? '[]') as string[]) } catch { return new Set() } }
+const setHeld = (id: string, on: boolean): void => { try { const h = held(); if (on) h.add(id); else h.delete(id); localStorage.setItem(heldKey, JSON.stringify([...h].slice(-200))) } catch { /* storage blocked */ } }
 const newId = (): string => toHex(crypto.getRandomValues(new Uint8Array(10)))
 
 export const useFiles = defineStore('files', () => {
@@ -71,6 +75,8 @@ export const useFiles = defineStore('files', () => {
       if (p) applyProgress(p)
       else if (e.addedBy === app.device?.id && e.rootHash && !engine.isLocal(e.fileId)) patch(e.fileId, { status: 'reselect' })
       if (e.rootHash) maybeAuto(e)
+      // a download that a refresh interrupted carries on by itself, unless the person paused it
+      if (e.rootHash && find(e.fileId)?.status === 'paused' && !held().has(e.fileId)) void download(e.fileId, true)
     }
   }
 
@@ -87,7 +93,7 @@ export const useFiles = defineStore('files', () => {
     const sock = spaceSocket()
     const ice = await api<{ iceServers: RTCIceServer[] }>('/rtc/ice').then(r => r.iceServers, () => [{ urls: 'stun:stun.l.google.com:19302' }])
     mesh = new Mesh(app.device.id, ice, {
-      signal: (to, data) => void emitAck('rtc:signal', { to, data }),
+      signal: (to, data) => void emitAck<{ error?: string }>('rtc:signal', { to, data }).then(r => { if (r?.error === 'PEER_OFFLINE') mesh.drop(to) }, () => undefined), // the other device is not there (yet): forget the attempt so the next check starts a new one
       onOpen: p => engine.onPeerOpen(p), onClose: p => engine.onPeerClose(p),
       onFrame: (p, h, d) => engine.onFrame(p, h, d),
       onBlocked: () => { blocked.value = true },
@@ -214,13 +220,16 @@ export const useFiles = defineStore('files', () => {
   }
   /** the other device could not be reached yet: look for it again and restart the download */
   async function retry(id: string): Promise<void> {
+    mesh.resetStuck()
     mesh.sync(peerSync())
+    setHeld(id, false)
     await download(id)
   }
-  function pause(id: string): void { engine.pause(id) }
-  async function resume(id: string): Promise<void> { await download(id) }
+  function pause(id: string): void { setHeld(id, true); engine.pause(id) }
+  async function resume(id: string): Promise<void> { setHeld(id, false); await download(id) }
   async function cancel(id: string): Promise<void> {
     const it = find(id)
+    setHeld(id, false)
     await engine.cancel(id)
     if (it) patch(id, { status: idleStatus(it.entry), done: 0, speed: 0, sources: 0 })
   }
