@@ -108,8 +108,9 @@ describe('robots.txt and sitemap.xml of the app', () => {
     const x = sitemapIndexXml('https://jodbox.com', 'https://blog.jodbox.com', blogSitemapNames({ articles: 12_000, taxonomy: 40 }))
     expect(x).toContain('<sitemapindex')
     expect(x).toContain('<loc>https://jodbox.com/sitemap.xml</loc>')
-    for (const n of ['pages', 'articles-1', 'articles-2', 'articles-3', 'taxonomy-1']) expect(x).toContain(`<loc>https://blog.jodbox.com/sitemaps/${n}.xml</loc>`)
+    for (const n of ['articles-1', 'articles-2', 'articles-3', 'taxonomy-1']) expect(x).toContain(`<loc>https://blog.jodbox.com/sitemaps/${n}.xml</loc>`)
     expect(x).not.toContain('articles-4')
+    expect(x).not.toContain('sitemaps/pages.xml')
     expect(sitemapIndexXml('https://jodbox.com', '', [])).not.toContain('blog')
   })
   it('the sitemap lists the app pages, minus any the admin hid, and only on its own host', () => {
