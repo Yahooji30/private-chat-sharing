@@ -13,7 +13,7 @@ describe('device linking', () => {
     const s = await connected(t.sock(A, '/space'))
     await emitAck(s, 'text:update', { content: 'from laptop', baseRev: 0 })
     const gen = await t.call(A, 'POST', '/api/link/code')
-    expect(gen.body.code).toMatch(/^[0-9A-Z]{4}-[0-9A-Z]{4}$/)
+    expect(gen.body.code).toMatch(/^[A-Z]{4}-[A-Z]{4}$/)
     expect(gen.body.url).toContain('/link?c=')
     expect((await t.call(P, 'GET', '/api/text')).body.content).toBe('')
     const joined = once(s, 'link:joined')

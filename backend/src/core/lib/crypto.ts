@@ -16,6 +16,14 @@ export function safeEqualHex(a: string, b: string): boolean {
   return x.length === y.length && timingSafeEqual(x, y)
 }
 
+/** Random capital letters only (no I or O, which look like 1 and 0): for codes people read out or type. 240 is a multiple of 24, so every letter is equally likely. */
+export function letters(len: number): string {
+  const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ'
+  let out = ''
+  while (out.length < len) for (const b of randomBytes(len * 2)) if (b < 240 && out.length < len) out += A[b % 24]
+  return out
+}
+
 export function base32(len: number): string {
   const bytes = randomBytes(len)
   let out = ''

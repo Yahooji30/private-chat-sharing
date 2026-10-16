@@ -2,17 +2,19 @@
 const app = useApp()
 const route = useRoute()
 const isOnline = useOnline()
-const base = [{ to: '/', label: 'Home', icon: 'home' }, { to: '/chat', label: 'Secure Chat', icon: 'chat' }]
+// pages the admin switched off (Admin > Site settings > Pages) are left out everywhere
+const off = (key: string): boolean => (app.hiddenPages as string[]).includes(key)
+const base = computed(() => [{ to: '/', label: 'Home', icon: 'home' }, ...(off('chat') ? [] : [{ to: '/chat', label: 'Secure Chat', icon: 'chat' }])])
 // Blog, Features and FAQ are native pages of the app. The server-rendered blog site is the copy search engines index; these pages point to it with a canonical link.
-const pages = computed(() => [{ to: '/blog', label: 'Blog', icon: 'blog' }, { to: '/features', label: 'Features', icon: 'features' }, { to: '/faq', label: 'FAQ', icon: 'faq' }])
-const side = computed(() => [...base, ...pages.value])
+const pages = computed(() => [{ key: 'blog', to: '/blog', label: 'Blog', icon: 'blog' }, { key: 'features', to: '/features', label: 'Features', icon: 'features' }, { key: 'faq', to: '/faq', label: 'FAQ', icon: 'faq' }].filter(p => !off(p.key)))
+const side = computed(() => [...base.value, ...pages.value])
 const active = (to: string): boolean => (to === '/' ? route.path === '/' : route.path.startsWith(to) || (to === '/chat' && route.path.startsWith('/c/')))
 const chatRoute = computed(() => route.path.startsWith('/c/'))
 const feedback = useState('feedback-open', () => false)
 const wide = computed(() => route.path === '/')
 // phone + tablet tab bar: Home, Chat, the raised Link button, then the first two site pages
-const tabs = computed(() => [base[0]!, base[1]!, { fab: true, label: 'Link' }, ...pages.value.slice(0, 2)])
-const footer = [['Features', '/features'], ['FAQ', '/faq'], ['Privacy', '/privacy'], ['Terms', '/terms']] as const
+const tabs = computed(() => [...base.value, { fab: true, label: 'Link' }, ...pages.value.slice(0, 2)])
+const footer = computed(() => ([['Features', '/features', 'features'], ['FAQ', '/faq', 'faq'], ['Privacy', '/privacy', ''], ['Terms', '/terms', '']] as const).filter(f => !f[2] || !off(f[2])))
 </script>
 
 <template>
@@ -26,7 +28,7 @@ const footer = [['Features', '/features'], ['FAQ', '/faq'], ['Privacy', '/privac
           <Icon :name="n.icon" :size="20" :weight="active(n.to) ? 'fill' : 'regular'" />{{ n.label }}
         </NuxtLink>
       </nav>
-      <button class="mt-1 px-3 h-10 inline-flex items-center gap-3 rounded-lg text-[0.9375rem] font-medium text-ink/70 hover:bg-surface-2 hover:text-ink transition-colors" @click="feedback = true"><Icon name="mail" :size="20" />Send feedback</button>
+      <button v-if="!off('feedback')" class="mt-1 px-3 h-10 inline-flex items-center gap-3 rounded-lg text-[0.9375rem] font-medium text-ink/70 hover:bg-surface-2 hover:text-ink transition-colors" @click="feedback = true"><Icon name="mail" :size="20" />Send feedback</button>
       <div class="mt-auto space-y-3">
         <button class="w-full text-left rounded-xl p-4 text-white bg-[var(--accent-btn)] hover:bg-[var(--accent-btn-hover)] transition-colors" @click="app.openSettings('link')">
           <span class="flex items-center gap-2 font-semibold text-[0.9375rem]"><Icon name="link" :size="18" weight="bold" />Link a device</span>
@@ -59,7 +61,7 @@ const footer = [['Features', '/features'], ['FAQ', '/faq'], ['Privacy', '/privac
       </div>
 
       <footer class="text-center text-xs text-muted pt-2 pb-24 lg:pb-6" :class="chatRoute ? 'hidden' : ''">
-        <template v-for="f in footer" :key="f[1]"><NuxtLink :to="f[1]" class="hover:underline">{{ f[0] }}</NuxtLink> · </template><button class="hover:underline" @click="feedback = true">Feedback</button>
+        <template v-for="f in footer" :key="f[1]"><NuxtLink :to="f[1]" class="hover:underline">{{ f[0] }}</NuxtLink> · </template><button v-if="!off('feedback')" class="hover:underline" @click="feedback = true">Feedback</button>
       </footer>
     </div>
 

@@ -97,8 +97,8 @@ export function sitemapIndexXml(origin: string, blogUrl: string, blogFiles: stri
 }
 
 /** The app's own sitemap. A sitemap may only list addresses on its own host, so the blog's pages are in the blog site's sitemap. */
-export function sitemapXml(origin: string, seo: Record<string, SeoEntry>): string {
+export function sitemapXml(origin: string, seo: Record<string, SeoEntry>, off: readonly string[] = []): string {
   const pages = [['home', '/'], ['chat', '/chat']] as const
-  const urls = pages.filter(([key]) => !seo[key]?.noindex).map(([, path]) => `<url><loc>${esc(origin + path)}</loc></url>`)
+  const urls = pages.filter(([key]) => !seo[key]?.noindex && !off.includes(key)).map(([, path]) => `<url><loc>${esc(origin + path)}</loc></url>`)
   return `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls.join('')}</urlset>`
 }

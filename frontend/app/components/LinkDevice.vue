@@ -18,7 +18,7 @@ onBeforeUnmount(() => clearInterval(timer))
 
 const left = computed(() => (gen.value ? gen.value.expiresAt - now.value : 0))
 /** the 8 characters of the code, without the dash the server puts in the middle */
-const digits = computed(() => (gen.value?.code ?? '').replace(/[^0-9a-z]/gi, '').split(''))
+const digits = computed(() => (gen.value?.code ?? '').replace(/[^a-z]/gi, '').split(''))
 
 async function generate(fresh = false): Promise<void> {
   busy.value = true

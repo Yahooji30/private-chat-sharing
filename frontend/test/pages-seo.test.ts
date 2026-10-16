@@ -115,6 +115,7 @@ describe('robots.txt and sitemap.xml of the app', () => {
   })
   it('the sitemap lists the app pages, minus any the admin hid, and only on its own host', () => {
     expect(sitemapXml('https://jodbox.com', {})).toBe('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://jodbox.com/</loc></url><url><loc>https://jodbox.com/chat</loc></url></urlset>')
+    expect(sitemapXml('https://jodbox.com', {}, ['chat'])).not.toContain('/chat')
     const hidden = sitemapXml('https://jodbox.com', { chat: { ...none, noindex: true } })
     expect(hidden).toContain('<loc>https://jodbox.com/</loc>')
     expect(hidden).not.toContain('/chat')

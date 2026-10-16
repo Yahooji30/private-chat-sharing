@@ -166,6 +166,33 @@ describe('blog', () => {
     expect([back.seoNoindex, back.seoKeywords]).toEqual([true, 'a, b'])
   })
 
+  it('IndexNow: tells the search engines about a published article only, and serves the key', async () => {
+    const { env } = await import('../src/core/config/env')
+    const sent: { url: string; body: any }[] = []
+    const real = globalThis.fetch
+    globalThis.fetch = (async (u: any, init: any) => {
+      if (!String(u).includes('indexnow.org')) return real(u, init)
+      sent.push({ url: String(u), body: JSON.parse(init.body) }); return new Response('{}')
+    }) as typeof fetch
+    const wait = () => new Promise(r => setTimeout(r, 80))
+    try {
+      const keyFile = async () => t.api.inject({ method: 'GET', url: '/api/indexnow-key', headers: { 'x-forwarded-for': '91.2.2.2' } })
+      expect((await keyFile()).statusCode).toBe(404) // off until a key is set
+      env.BLOG_ORIGIN = 'https://blog.example.com'; env.INDEXNOW_KEY = 'testkey1234abcd'
+      expect((await keyFile()).body).toBe('testkey1234abcd')
+      await post({ title: 'Only a draft', status: 'draft' }); await wait()
+      expect(sent).toHaveLength(0)
+      const r = await post({ title: 'Tell the engines', slug: 'tell-the-engines' }); await wait()
+      expect(sent).toHaveLength(1)
+      expect(sent[0]!.url).toBe('https://api.indexnow.org/indexnow')
+      expect(sent[0]!.body).toMatchObject({ host: 'blog.example.com', key: 'testkey1234abcd', keyLocation: 'https://blog.example.com/indexnow-key.txt' })
+      expect(sent[0]!.body.urlList).toContain('https://blog.example.com/tell-the-engines')
+      await call(s, 'DELETE', '/api/admin/articles/' + r.body.id); await wait()
+      expect(sent).toHaveLength(2) // taken down: they are told to look again
+      expect(sent[1]!.body.urlList).toContain('https://blog.example.com/tell-the-engines')
+    } finally { globalThis.fetch = real; env.BLOG_ORIGIN = ''; env.INDEXNOW_KEY = '' }
+  })
+
   it('serves sitemap and rss data and cache headers; admin list filters', async () => {
     const meta = (await pub('/api/sitemap-data')).body
     expect(meta.articles).toBeGreaterThan(0); expect(meta.taxonomy).toBeGreaterThan(0)

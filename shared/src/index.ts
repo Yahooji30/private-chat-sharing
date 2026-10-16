@@ -111,7 +111,7 @@ export const fileReadySchema = z.object({ fileId: fileMetaSchema.shape.fileId, r
 export const fileIdSchema = z.object({ fileId: fileMetaSchema.shape.fileId })
 export const rtcSignalSchema = z.object({ to: z.string().min(8).max(80), data: z.unknown() })
 
-export const linkRedeemSchema = z.object({ code: z.string().transform(s => s.replace(/[-\s]/g, '').toUpperCase()).pipe(z.string().regex(/^[0-9A-HJKMNP-TV-Z]{8}$/)) })
+export const linkRedeemSchema = z.object({ code: z.string().transform(s => s.replace(/[-\s]/g, '').toUpperCase()).pipe(z.string().regex(/^[A-Z]{8}$/)) })
 export const linkIpSchema = z.object({ ip: z.string().min(2).max(45) })
 
 export const pageCreateSchema = z.object({
@@ -160,7 +160,17 @@ export const adminLoginSchema = z.object({ email: z.string().email().max(120), p
 export const adminTotpSchema = z.object({ pendingToken: z.string().min(10).max(100), code: z.string().regex(/^\d{6}$/) })
 export const passwordSchema = z.string().min(12).max(200)
 export const adminCreateSchema = z.object({ email: z.string().email().max(120), name: z.string().trim().min(1).max(60), password: passwordSchema, role: z.enum(['owner', 'admin']).default('admin') })
-export const SITE_KEYS = ['site_name', 'tagline', 'default_og_media_id', 'social_x', 'social_facebook', 'social_instagram', 'social_youtube', 'analytics_id', 'chat_share_message', 'privacy_md', 'terms_md'] as const
+export const SITE_KEYS = ['site_name', 'tagline', 'default_og_media_id', 'social_x', 'social_facebook', 'social_instagram', 'social_youtube', 'analytics_id', 'chat_share_message', 'hidden_pages', 'privacy_md', 'terms_md'] as const
+/** Pages of the app the admin can switch off (Admin > Site settings > Pages). `hidden_pages` holds the keys of the switched-off ones, comma separated. */
+export const HIDEABLE_PAGES = [
+  { key: 'chat', label: 'Secure chat', desc: 'The private chat rooms and the invite links to them.' },
+  { key: 'blog', label: 'Blog', desc: 'The Blog link and its pages inside the app.' },
+  { key: 'features', label: 'Features', desc: 'The Features page.' },
+  { key: 'faq', label: 'FAQ', desc: 'The questions and answers page.' },
+  { key: 'feedback', label: 'Feedback', desc: 'The "Send feedback" buttons and form.' },
+] as const
+export type HideablePage = (typeof HIDEABLE_PAGES)[number]['key']
+export const hiddenPageKeys = (value: string | undefined): HideablePage[] => (value ?? '').split(',').map(v => v.trim()).filter((v): v is HideablePage => HIDEABLE_PAGES.some(p => p.key === v))
 export const siteSettingsSchema = z.partialRecord(z.enum(SITE_KEYS), z.string().max(60_000))
 
 // ---- FAQ, feedback, per-page SEO, chat invite message ----

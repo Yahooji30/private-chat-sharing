@@ -400,7 +400,7 @@ A shared space is normally defined by your network. Linking lets you add another
 
 ### Type a short code
 
-If scanning is not convenient, the first device shows an 8-character code. Enter it on the second device. Codes work once and expire quickly, so a leaked code is not a long-term risk.
+If scanning is not convenient, the first device shows an 8-letter code. Enter it on the second device. Codes work once and expire quickly, so a leaked code is not a long-term risk.
 
 ### Share a link
 

@@ -5,6 +5,7 @@ import { base32 } from './lib/crypto'
 import { renderArticle } from './lib/markdown'
 import { slugify, uniqueSlug } from './lib/slug'
 import { revalidate } from './lib/revalidate'
+import { pingIndexNow } from './indexnow'
 
 export const PAGE_SIZE = 12
 export type Variant = { w: number; h: number; path: string; bytes: number }
@@ -151,18 +152,21 @@ export async function saveArticle(id: string | null, raw: unknown, adminId: stri
     for (const t of tagIds) await tx`insert into article_tags (article_id, tag_id) values (${articleId}, ${t}) on conflict do nothing`
   })
   await revalidate()
+  // search engines that support IndexNow are told right away (the old address too when the slug changed, and when an article was taken down)
+  if (i.status === 'published' || cur?.published_at) void pingIndexNow([`/${slug}`, ...(cur && cur.slug !== slug ? [`/${cur.slug}`] : []), '/'])
   return articleId
 }
 
 export async function deleteArticle(id: string): Promise<void> {
-  const r = await sql`delete from articles where id = ${id} returning id`
+  const r = await sql<{ slug: string; status: string }[]>`delete from articles where id = ${id} returning slug, status`
   if (!r.length) throw new AppError('NOT_FOUND', 'Article not found', 404)
   await revalidate()
+  if (r[0]?.status === 'published') void pingIndexNow([`/${r[0].slug}`, '/'])
 }
 
 /** Cron: scheduled articles whose time has come become published. */
 export async function publishDue(): Promise<number> {
-  const r = await sql`update articles set status = 'published', published_at = coalesce(publish_at, now()), updated_at = now() where status = 'scheduled' and publish_at <= now() returning id`
-  if (r.length) await revalidate()
+  const r = await sql`update articles set status = 'published', published_at = coalesce(publish_at, now()), updated_at = now() where status = 'scheduled' and publish_at <= now() returning id, slug`
+  if (r.length) { await revalidate(); void pingIndexNow([...r.map(a => `/${a.slug}`), '/']) }
   return r.length
 }

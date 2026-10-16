@@ -118,7 +118,7 @@ const steps = [
     </div>
 
     <Modal :open="!isDesktop && sheet === 'links'" title="Found URLs" subtitle="Links detected in your text" @close="sheet = null"><UrlsPanel :urls="urls" :new-tab="app.settings.urlsNewTab" bare /></Modal>
-    <Modal :open="!isDesktop && sheet === 'files'" title="Files" subtitle="Shared straight between your devices" @close="sheet = null"><FilesPanel v-if="!isDesktop && sheet === 'files'" /></Modal>
+    <Modal :open="!isDesktop && sheet === 'files'" title="Files" subtitle="Shared straight between your devices" @close="sheet = null"><FilesPanel v-if="!isDesktop && sheet === 'files'" bare /></Modal>
 
     <section class="mt-14 max-w-5xl mx-auto px-1" aria-labelledby="how">
       <div class="text-center"><span class="chip">How it works</span>
@@ -136,7 +136,7 @@ const steps = [
         </li>
       </ol>
       <AdSlot kind="banner" class="mt-10" />
-      <p class="text-center text-sm text-muted mt-8">Need privacy? <NuxtLink to="/chat" class="text-accent-ink font-semibold underline">Start an encrypted chat room</NuxtLink> that disappears when everyone leaves. Anyone on your network shares the space, so avoid putting secrets in the shared text on public Wi-Fi.</p>
+      <p v-if="!(app.hiddenPages as string[]).includes('chat')" class="text-center text-sm text-muted mt-8">Need privacy? <NuxtLink to="/chat" class="text-accent-ink font-semibold underline">Start an encrypted chat room</NuxtLink> that disappears when everyone leaves. Anyone on your network shares the space, so avoid putting secrets in the shared text on public Wi-Fi.</p>
     </section>
 
     <template #fallback>
