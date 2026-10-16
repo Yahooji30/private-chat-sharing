@@ -8,7 +8,7 @@ const scanning = ref(false)
 const video = useTemplateRef<HTMLVideoElement>('video')
 let scanner: { stop: () => void; destroy: () => void } | null = null
 
-const clean = computed(() => code.value.replace(/[^0-9a-z]/gi, '').toUpperCase().slice(0, 8))
+const clean = computed(() => code.value.replace(/[^a-z]/gi, '').toUpperCase().slice(0, 8))
 const shown = computed(() => clean.value)
 
 async function redeem(c = clean.value): Promise<void> {
@@ -27,7 +27,7 @@ async function scan(): Promise<void> {
   try {
     const { default: QrScanner } = await import('qr-scanner')
     const s = new QrScanner(video.value as HTMLVideoElement, r => {
-      const m = /[?&]c=([0-9A-Za-z]{8})/.exec(r.data) ?? /^([0-9A-Za-z]{4}-?[0-9A-Za-z]{4})$/.exec(r.data)
+      const m = /[?&]c=([A-Za-z]{8})/.exec(r.data) ?? /^([A-Za-z]{4}-?[A-Za-z]{4})$/.exec(r.data)
       if (!m?.[1]) return
       stopScan()
       code.value = m[1]
@@ -46,7 +46,7 @@ onMounted(() => { if (props.initial && clean.value.length === 8) void redeem() }
 <template>
   <div class="space-y-3">
     <form class="flex gap-2" @submit.prevent="redeem()">
-      <input :value="shown" class="input font-mono text-lg tracking-[0.2em] text-center uppercase" placeholder="8-character code" inputmode="text" autocapitalize="characters"
+      <input :value="shown" class="input font-mono text-lg tracking-[0.2em] text-center uppercase" placeholder="8-letter code" inputmode="text" autocapitalize="characters"
         autocomplete="off" spellcheck="false" aria-label="Link code" :autofocus="autofocus" @input="code = ($event.target as HTMLInputElement).value">
       <button class="btn btn-accent !min-h-11 px-5" :disabled="clean.length !== 8 || busy">Link</button>
     </form>

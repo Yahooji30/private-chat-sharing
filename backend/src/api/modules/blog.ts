@@ -1,6 +1,7 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { getPublic, listCategories, listPublic, rssData, sitemapArticles, sitemapMeta, sitemapTaxonomy, tagArchive } from '../../core/blog'
+import { env } from '../../core/config/env'
 import { sql } from '../../core/db/client'
 
 const cache = { config: { rateLimit: { max: 120, timeWindow: '1 minute' } } }
@@ -19,6 +20,9 @@ export function blogRoutes(app: FastifyInstance): void {
   app.get('/api/sitemap-data', cache, () => sitemapMeta())
   app.get<{ Params: { page: string } }>('/api/sitemap-data/articles/:page', cache, async req => sitemapArticles(filePage.parse(req.params).page))
   app.get<{ Params: { page: string } }>('/api/sitemap-data/taxonomy/:page', cache, async req => sitemapTaxonomy(filePage.parse(req.params).page))
+
+  // the IndexNow key is public by design: the search engines fetch it from the blog site to check that the key belongs to it
+  app.get('/api/indexnow-key', async (_req, reply) => (env.INDEXNOW_KEY ? reply.type('text/plain').send(env.INDEXNOW_KEY) : reply.code(404).send('')))
 
   app.get('/api/site', async () => {
     const rows = await sql<{ key: string; value: string }[]>`select key, value from site_settings where key not in ('privacy_md', 'terms_md')`

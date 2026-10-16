@@ -26,6 +26,10 @@ const schema = z.object({
   MEDIA_DIR: z.string().default('./media'),
   REVALIDATE_SECRET: z.string().default(''),
   NUXT_INTERNAL_URL: z.string().default(''),
+  /** the blog's public address, e.g. https://blog.jodbox.com (used for IndexNow) */
+  BLOG_ORIGIN: z.string().default(''),
+  /** IndexNow key: 8 to 128 letters, digits or dashes, e.g. from `openssl rand -hex 16`. Empty = IndexNow off. */
+  INDEXNOW_KEY: z.union([z.literal(''), z.string().regex(/^[A-Za-z0-9-]{8,128}$/)]).default(''),
   ADMIN_BOOTSTRAP_EMAIL: z.string().default(''),
   ADMIN_BOOTSTRAP_PASSWORD: z.string().default(''),
   TRUST_PROXY: z.string().default('true'),

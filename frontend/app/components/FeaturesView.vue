@@ -15,7 +15,7 @@ const sections = [
   { id: 'files', icon: 'upload', tone: 'pink', title: 'Device-to-device files', lead: 'Drop in a file and it travels straight from one device to the other. It never touches our servers.',
     points: ['Peer-to-peer over WebRTC, every block verified', 'Big files pause and resume, even after a reload', 'Download everything at once or as a single zip'] },
   { id: 'link', icon: 'qr', tone: 'blue', title: 'Link any device, anywhere', lead: 'A phone on mobile data? Scan a QR code or type a short code and it joins your space in seconds.',
-    points: ['QR code, 8-character code or a link', 'Unlink any device at any time', 'Works across different networks and countries'] },
+    points: ['QR code, 8-letter code or a link', 'Unlink any device at any time', 'Works across different networks and countries'] },
   { id: 'chat', icon: 'lock', tone: 'pink', title: 'Secure private chat', lead: 'Password-protected rooms for up to four people. Messages are encrypted in your browser.',
     points: ['End-to-end encrypted, the server only sees ciphertext', 'No history for newcomers and the room wipes when it empties', 'Invite with WhatsApp, SMS, email or a QR code'] },
   { id: 'links', icon: 'link', tone: 'blue', title: 'Found links, ready to open', lead: 'Every web address in your shared text is collected in a tidy list, so a link typed on your laptop opens on your phone.',

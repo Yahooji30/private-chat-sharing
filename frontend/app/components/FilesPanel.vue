@@ -2,6 +2,9 @@
 import type { FileItem } from '~/stores/files'
 import { fmtBytes, fmtDuration } from '~/utils/format'
 
+/** `bare`: inside a pop-up that already has the title, so the panel does not repeat it */
+defineProps<{ bare?: boolean }>()
+
 const files = useFiles()
 const app = useApp()
 const input = useTemplateRef<HTMLInputElement>('input')
@@ -95,7 +98,7 @@ defineExpose({ pick })
 <template>
   <section aria-label="Shared files">
     <div class="flex items-center gap-2 mb-2 px-1">
-      <h2 class="font-semibold text-base">Files</h2><span v-if="sorted.length" class="chip">{{ sorted.length }}</span>
+      <template v-if="!bare"><h2 class="font-semibold text-base">Files</h2><span v-if="sorted.length" class="chip">{{ sorted.length }}</span></template>
       <div class="ml-auto flex gap-1.5">
         <button v-if="anyMissing" class="btn !min-h-9 !px-2.5 text-sm" aria-label="Get all" @click="files.downloadMissing()"><Icon name="download" :size="15" /><span class="hidden sm:inline">Get all</span></button>
         <button v-if="anyDone" class="btn !min-h-9 !px-2.5 text-sm" aria-label="Zip all" @click="files.zipAll()"><Icon name="zip" :size="15" /><span class="hidden sm:inline">Zip</span></button>
@@ -109,7 +112,8 @@ defineExpose({ pick })
       <span class="inline-flex items-center gap-2 font-semibold text-sm" :class="sorted.length ? 'text-accent-ink' : 'text-ink'"><Icon name="plus" :size="16" />{{ sorted.length ? 'Add more files' : 'Drop files here or tap to choose' }}</span>
       <span v-if="!sorted.length" class="block text-xs text-muted mt-1">Sent straight to your other devices. Nothing is stored on a server.</span>
     </button>
-    <div class="flex items-center gap-2 px-1" :class="sorted.length ? '-mt-1 mb-3' : 'mt-2 mb-3'">
+    <!-- the clipboard button and its hint are for computers; on a phone the box above (or the share sheet) is the way to add files -->
+    <div class="hidden md:flex items-center gap-2 px-1" :class="sorted.length ? '-mt-1 mb-3' : 'mt-2 mb-3'">
       <p class="hidden md:flex items-center gap-1.5 text-xs text-muted" data-testid="paste-hint"><kbd class="rounded-md border border-line bg-surface-2 px-1.5 py-0.5 font-mono text-[11px] text-ink">{{ pasteKey }}</kbd>to paste a copied file or screenshot</p>
       <button class="btn !min-h-9 !px-3 text-sm ml-auto" data-testid="paste-files" @click="pasteFromClipboard"><Icon name="paste" :size="15" />Paste</button>
     </div>

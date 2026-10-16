@@ -5,7 +5,7 @@ import { env } from '../../core/config/env'
 import { sql } from '../../core/db/client'
 import { deviceRoom, ipRoom, spaceRoom } from '../../core/emitter'
 import { AppError } from '../../core/lib/errors'
-import { base32, hashIp, sha256 } from '../../core/lib/crypto'
+import { hashIp, letters, sha256 } from '../../core/lib/crypto'
 import { isPrivateOrReserved, normalizeIp } from '../../core/lib/ip'
 import { K } from '../../core/redis/keys'
 import { invalidateDevice, invalidateIp } from '../../core/space'
@@ -31,7 +31,7 @@ export function linkRoutes(app: FastifyInstance): void {
     const n = await app.redis.incr(K.linkN(spaceId))
     if (n === 1) await app.redis.expire(K.linkN(spaceId), CODE_TTL)
     if (n > MAX_ACTIVE) throw new AppError(ERR.LINK_LIMIT, 'Too many new codes, wait a minute and try again', 429)
-    const code = base32(8)
+    const code = letters(8)
     const expiresAt = Date.now() + CODE_TTL * 1000
     await app.redis.set(K.link(sha256(code)), JSON.stringify({ spaceId, by: device.id }), 'EX', CODE_TTL)
     await app.redis.set(mine, JSON.stringify({ code, expiresAt }), 'EX', CODE_TTL)

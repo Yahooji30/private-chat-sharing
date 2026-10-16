@@ -37,7 +37,7 @@ afterAll(async () => {
   await sql`delete from feedback`
   await sql`delete from seo_pages`
   await sql`delete from media where id = 'm-og'`
-  await sql`delete from site_settings where key = 'chat_share_message'`
+  await sql`delete from site_settings where key in ('chat_share_message', 'hidden_pages')`
   await t.close()
 })
 
@@ -176,5 +176,15 @@ describe('chat invite message', () => {
     expect((await admin('PUT', '/api/admin/site-settings', { chat_share_message: 'Secret for you {link}' })).status).toBe(200)
     expect((await pub('GET', '/api/site')).body.chat_share_message).toBe('Secret for you {link}')
     expect((await admin('PUT', '/api/admin/site-settings', { chat_share_message: 'x'.repeat(501) })).status).toBe(400)
+  })
+})
+
+describe('pages switched off by the admin', () => {
+  it('are saved for the app to read, and only known pages are accepted', async () => {
+    expect((await admin('PUT', '/api/admin/site-settings', { hidden_pages: 'chat,faq' })).status).toBe(200)
+    expect((await pub('GET', '/api/site')).body.hidden_pages).toBe('chat,faq')
+    expect((await admin('PUT', '/api/admin/site-settings', { hidden_pages: 'chat,nope' })).status).toBe(400)
+    expect((await pub('GET', '/api/site')).body.hidden_pages).toBe('chat,faq') // the refused change did not apply
+    expect((await admin('PUT', '/api/admin/site-settings', { hidden_pages: '' })).status).toBe(200)
   })
 })
