@@ -4,9 +4,9 @@ defineProps<{ post: Card; big?: boolean }>()
 </script>
 
 <template>
-  <article class="group card overflow-hidden flex flex-col h-full transition duration-200 hover:border-accent/40" :class="big ? 'md:flex-row' : ''">
-    <NuxtLink :to="`/${post.slug}`" class="block shrink-0" :class="big ? 'md:w-1/2' : ''" :aria-label="post.title" tabindex="-1">
-      <BlogCover v-if="post.cover" :cover="post.cover" :eager="big" sizes="(min-width: 768px) 400px, 100vw" class="!rounded-none" />
+  <article class="group card lift overflow-hidden flex flex-col h-full hover:border-accent/40" :class="big ? 'md:flex-row' : ''">
+    <NuxtLink :to="`/${post.slug}`" class="block shrink-0 overflow-hidden" :class="big ? 'md:w-1/2' : ''" :aria-label="post.title" tabindex="-1">
+      <BlogCover v-if="post.cover" :cover="post.cover" :eager="big" sizes="(min-width: 768px) 400px, 100vw" class="!rounded-none transition-transform duration-500 group-hover:scale-[1.03]" />
       <div v-else class="aspect-[16/9] bg-accent-soft grid place-items-center text-accent-ink"><Icon name="file" :size="36" /></div>
     </NuxtLink>
     <div class="p-4 md:p-5 flex flex-col gap-2 flex-1">

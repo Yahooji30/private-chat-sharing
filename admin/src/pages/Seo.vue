@@ -13,7 +13,7 @@ const saved = ref<Record<string, string>>({})
 const snap = (r: Row): string => JSON.stringify([r.title, r.description, r.keywords, r.ogTitle, r.ogDescription, r.ogMediaId, r.canonical, r.noindex])
 const cur = computed(() => rows.value[sel.value])
 const dirty = (r: Row): boolean => saved.value[r.key] !== snap(r)
-const groups = computed(() => [['App (home and secure chat)', rows.value.filter(r => r.site === 'app')], ['Website (blog, features, FAQ, feedback, legal)', rows.value.filter(r => r.site === 'site')]] as const)
+const groups = computed(() => [['App (home, secure chat, features and FAQ)', rows.value.filter(r => r.site === 'app')], ['Blog website (blog, feedback, legal)', rows.value.filter(r => r.site === 'site')]] as const)
 
 async function load(): Promise<void> {
   try {

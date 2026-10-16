@@ -92,3 +92,12 @@ button, a, input, textarea, select { touch-action: manipulation; }
 .prose-article :is(th, td) { border: 1px solid var(--line); padding: .5rem .7rem; text-align: left; }
 .prose-article pre { font-size: .9rem; }
 
+
+/* blog home: the hero follows the theme, and cards lift a little on hover */
+.hero { position: relative; overflow: hidden; border: 1px solid var(--line); background: linear-gradient(135deg, var(--accent-soft) 0%, var(--surface) 55%, var(--pink-soft) 100%); }
+.hero::before, .hero::after { content: ''; position: absolute; border-radius: 999px; filter: blur(60px); opacity: .55; pointer-events: none; }
+.hero::before { width: 18rem; height: 18rem; right: -4rem; top: -6rem; background: color-mix(in srgb, var(--accent) 35%, transparent); }
+.hero::after { width: 14rem; height: 14rem; left: 30%; bottom: -9rem; background: color-mix(in srgb, var(--pink) 30%, transparent); }
+.dark .hero { background: linear-gradient(135deg, #0F1A45 0%, #0B1230 55%, #24123E 100%); }
+.lift { transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
+@media (hover: hover) { .lift:hover { transform: translateY(-2px); } }
