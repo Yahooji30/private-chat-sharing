@@ -150,7 +150,7 @@ describe('seo', () => {
     expect(map.privacy).toMatchObject({ noindex: true, title: '' })
     expect(map.home).toBeUndefined()
     const back = (await admin('GET', '/api/admin/seo')).body.find((r: any) => r.key === 'faq')
-    expect(back).toMatchObject({ title: 'FAQ - Sync', path: '/faq', site: 'site' })
+    expect(back).toMatchObject({ title: 'FAQ - Sync', path: '/faq', site: 'app' })
   })
 
   it('rejects unknown pages, bad canonicals and unknown images', async () => {

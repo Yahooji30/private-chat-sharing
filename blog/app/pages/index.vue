@@ -21,13 +21,16 @@ const rest = computed(() => (page.value === 1 ? (data.value?.items.slice(1) ?? [
 </script>
 
 <template>
-  <div class="pt-5 md:pt-10 pb-10">
-    <section class="relative overflow-hidden rounded-2xl px-6 py-8 md:px-12 md:py-14 text-white bg-[#0B1437]">
-      <span class="chip !bg-white/10 !text-white">Blog</span>
-      <h1 class="text-[1.9rem] md:text-5xl font-semibold tracking-tight mt-4 max-w-2xl leading-[1.12]">Guides and ideas for sharing <span class="text-[#FF5C9A]">smarter</span></h1>
-      <p class="mt-4 text-white/75 max-w-xl text-base md:text-lg leading-relaxed">Tips, how-tos and news about moving text and files between your devices, privately and instantly.</p>
+  <div class="pt-4 sm:pt-8 pb-10">
+    <section class="hero rounded-3xl px-5 py-8 sm:px-10 sm:py-12 lg:px-14 lg:py-16">
+      <div class="relative">
+        <span class="chip">Blog</span>
+        <h1 class="text-[1.85rem] leading-[1.15] sm:text-5xl lg:text-6xl font-semibold tracking-tight mt-4 max-w-3xl text-balance">Guides and ideas for sharing <span class="text-pink-ink">smarter</span></h1>
+        <p class="mt-4 text-muted max-w-xl text-[1.0625rem] sm:text-lg leading-relaxed">Tips, how-tos and news about moving text and files between your devices, privately and instantly.</p>
+        <div class="mt-6 flex flex-wrap gap-2.5"><a :href="String(cfg.public.appUrl)" class="btn btn-accent !min-h-11 px-5">Open the app<Icon name="external" :size="16" /></a><a href="/rss.xml" class="btn !min-h-11 px-5">RSS feed</a></div>
+      </div>
     </section>
-    <nav v-if="cats?.length" class="flex gap-2 overflow-x-auto py-4 -mx-3 px-3 md:mx-0 md:px-0 scroll-thin" aria-label="Categories">
+    <nav v-if="cats?.length" class="flex gap-2 overflow-x-auto py-4 -mx-4 px-4 sm:mx-0 sm:px-0 scroll-thin" aria-label="Categories">
       <NuxtLink to="/" class="btn !min-h-9 text-sm btn-soft shrink-0">All</NuxtLink>
       <NuxtLink v-for="c in cats" :key="c.slug" :to="`/category/${c.slug}`" class="btn !min-h-9 text-sm shrink-0">{{ c.name }}</NuxtLink>
     </nav>

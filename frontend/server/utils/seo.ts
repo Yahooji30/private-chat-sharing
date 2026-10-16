@@ -61,8 +61,8 @@ export function pageInfo(path: string, name: string): PageInfo | null {
   switch (path) {
     case '/': return { key: 'home', title: `${name}: share text and files across your devices`, description: `${name}: type on one device, see it on every device on your network. Share text and files instantly, privately, with no sign-up.` }
     case '/chat': return { key: 'chat', title: `Secure Chat | ${name}`, description: 'Start a private, end-to-end encrypted chat room in seconds. Password protected, up to four people, no accounts and no history.' }
-    case '/faq': return { key: 'faq', title: `FAQ | ${name}`, description: `Answers to common questions about ${name}: sharing text and files between devices, linking networks, secure chat rooms and privacy.`, blogPath: '/faq' }
-    case '/features': return { key: 'features', title: `Features | ${name}`, description: `Everything ${name} does: live text sync, device-to-device file transfer, QR linking, end-to-end encrypted chat rooms and more. Free, private, no sign-up.`, blogPath: '/features' }
+    case '/faq': return { key: 'faq', title: `FAQ | ${name}`, description: `Answers to common questions about ${name}: sharing text and files between devices, linking networks, secure chat rooms and privacy.` }
+    case '/features': return { key: 'features', title: `Features | ${name}`, description: `Everything ${name} does: live text sync, device-to-device file transfer, QR linking, end-to-end encrypted chat rooms and more. Free, private, no sign-up.` }
     case '/privacy': return { key: 'privacy', title: `Privacy | ${name}`, description: `How ${name} handles your data: no raw IP addresses, encrypted text, peer-to-peer files and end-to-end encrypted chat.`, blogPath: '/privacy' }
     case '/terms': return { key: 'terms', title: `Terms | ${name}`, description: `The terms of using ${name}.`, blogPath: '/terms' }
     case '/blog': return { key: 'blog', title: `Blog | ${name}`, description: `Guides, tips and news from ${name}: sharing text and files between devices, privacy and productivity.`, blogPath: '/' }
@@ -96,9 +96,9 @@ export function sitemapIndexXml(origin: string, blogUrl: string, blogFiles: stri
   return `<?xml version="1.0" encoding="UTF-8"?><sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${maps.map(m => `<sitemap><loc>${esc(m)}</loc></sitemap>`).join('')}</sitemapindex>`
 }
 
-/** The app's own sitemap. A sitemap may only list addresses on its own host, so the blog's pages are in the blog site's sitemap. */
+/** The app's own sitemap (home, chat, features, FAQ). A sitemap may only list addresses on its own host, so the blog's pages are in the blog site's sitemap. */
 export function sitemapXml(origin: string, seo: Record<string, SeoEntry>, off: readonly string[] = []): string {
-  const pages = [['home', '/'], ['chat', '/chat']] as const
+  const pages = [['home', '/'], ['chat', '/chat'], ['features', '/features'], ['faq', '/faq']] as const
   const urls = pages.filter(([key]) => !seo[key]?.noindex && !off.includes(key)).map(([, path]) => `<url><loc>${esc(origin + path)}</loc></url>`)
   return `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls.join('')}</urlset>`
 }

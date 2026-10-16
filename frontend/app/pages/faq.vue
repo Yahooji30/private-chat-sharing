@@ -1,12 +1,8 @@
 <script setup lang="ts">
 interface Faq { id: string; question: string; answerHtml: string; answerText: string; category: string }
 const name = String(useRuntimeConfig().public.appName)
-const blogUrl = useApp().blogUrl
 const feedback = useState('feedback-open', () => false)
 useAppSeo('faq', { title: `FAQ | ${name}`, description: `Answers to common questions about ${name}: sharing text and files between devices, linking networks, secure chat rooms and privacy.` })
-// the server-rendered copy on the blog site is the one search engines index
-useHead({ link: blogUrl ? [{ rel: 'canonical', href: `${blogUrl}/faq` }] : [] })
-
 const items = ref<Faq[]>([])
 const loading = ref(true)
 onMounted(async () => {

@@ -47,7 +47,9 @@ describe('which address is which page', () => {
   it('knows the pages search engines care about, and sends the blog ones to the blog site', () => {
     expect(pageInfo('/', 'Jodbox')?.key).toBe('home')
     expect(pageInfo('/chat', 'Jodbox')?.key).toBe('chat')
-    expect(pageInfo('/faq', 'Jodbox')).toMatchObject({ key: 'faq', blogPath: '/faq', title: 'FAQ | Jodbox' })
+    expect(pageInfo('/faq', 'Jodbox')).toMatchObject({ key: 'faq', title: 'FAQ | Jodbox' })
+    expect(pageInfo('/faq', 'Jodbox')?.blogPath).toBeUndefined() // the blog site has no FAQ page: this one is its own canonical
+    expect(pageInfo('/features', 'Jodbox')?.blogPath).toBeUndefined()
     expect(pageInfo('/blog', 'Jodbox')).toMatchObject({ key: 'blog', blogPath: '/' })
     expect(pageInfo('/home', 'Jodbox')).toBeNull()
     expect(pageInfo('/c/ABCD1234', 'Jodbox')).toBeNull() // private rooms get nothing
@@ -114,8 +116,9 @@ describe('robots.txt and sitemap.xml of the app', () => {
     expect(sitemapIndexXml('https://jodbox.com', '', [])).not.toContain('blog')
   })
   it('the sitemap lists the app pages, minus any the admin hid, and only on its own host', () => {
-    expect(sitemapXml('https://jodbox.com', {})).toBe('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://jodbox.com/</loc></url><url><loc>https://jodbox.com/chat</loc></url></urlset>')
+    expect(sitemapXml('https://jodbox.com', {})).toBe('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://jodbox.com/</loc></url><url><loc>https://jodbox.com/chat</loc></url><url><loc>https://jodbox.com/features</loc></url><url><loc>https://jodbox.com/faq</loc></url></urlset>')
     expect(sitemapXml('https://jodbox.com', {}, ['chat'])).not.toContain('/chat')
+    expect(sitemapXml('https://jodbox.com', {}, ['faq', 'features'])).not.toContain('/faq')
     const hidden = sitemapXml('https://jodbox.com', { chat: { ...none, noindex: true } })
     expect(hidden).toContain('<loc>https://jodbox.com/</loc>')
     expect(hidden).not.toContain('/chat')
