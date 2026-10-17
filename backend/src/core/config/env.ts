@@ -32,7 +32,12 @@ const schema = z.object({
   INDEXNOW_KEY: z.union([z.literal(''), z.string().regex(/^[A-Za-z0-9-]{8,128}$/)]).default(''),
   ADMIN_BOOTSTRAP_EMAIL: z.string().default(''),
   ADMIN_BOOTSTRAP_PASSWORD: z.string().default(''),
+  /** who may tell us the visitor's address: `true` (nginx is the only way in), `false`, a number of proxies, or `loopback` / a list of addresses. See core/lib/proxy.ts */
   TRUST_PROXY: z.string().default('true'),
+  /** the network address the API and realtime server listen on. 127.0.0.1 = only nginx on this machine can reach them (recommended); 0.0.0.0 = every network */
+  BIND_HOST: z.string().default('0.0.0.0'),
+  /** anonymous "public pages" API. Nothing in the apps uses it any more; off unless switched on. */
+  PUBLIC_PAGES: bool,
 })
 export type Env = z.infer<typeof schema>
 export const env: Env = schema.parse(process.env)

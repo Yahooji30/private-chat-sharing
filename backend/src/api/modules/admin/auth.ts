@@ -7,7 +7,7 @@ import { z } from 'zod'
 import { env, isProd } from '../../../core/config/env'
 import { sql } from '../../../core/db/client'
 import { AppError } from '../../../core/lib/errors'
-import { base32, hashIp, open, randomToken, seal, sha256 } from '../../../core/lib/crypto'
+import { base32, hashIp, open, randomToken, safeEqualText, seal, sha256 } from '../../../core/lib/crypto'
 import { K } from '../../../core/redis/keys'
 
 const ARGON = { memoryCost: 19456, timeCost: 2, parallelism: 1 }
@@ -55,7 +55,8 @@ export function adminAuth(app: FastifyInstance): void {
   }
 
   const lockCheck = async (email: string, ip: string): Promise<void> => {
-    const [a, b] = await Promise.all([app.redis.get(K.admLock(email)), app.redis.get(K.admLockIp(ip))])
+    // the attempt counters live in Redis. If they cannot be read, sign-in is refused rather than allowed without its brute-force protection
+    const [a, b] = await Promise.all([app.redis.get(K.admLock(email)), app.redis.get(K.admLockIp(ip))]).catch(() => { throw new AppError(ERR.RATE_LIMITED, 'Sign-in is temporarily unavailable. Try again in a minute.', 503) })
     if (Number(a) >= LOCK_MAX || Number(b) >= LOCK_MAX) throw new AppError(ERR.ACCOUNT_LOCKED, 'Too many attempts. Try again in 15 minutes.', 429)
   }
   const fail = async (email: string, ip: string): Promise<never> => {
@@ -72,7 +73,7 @@ export function adminAuth(app: FastifyInstance): void {
     const [s] = await sql<{ expires_at: Date; csrf: string; id: string; email: string; name: string; role: 'owner' | 'admin'; totp_enabled: boolean }[]>`
       select s.expires_at, s.csrf, a.id, a.email, a.name, a.role, a.totp_enabled from admin_sessions s join admins a on a.id = s.admin_id where s.token_hash = ${sha256(token)}`
     if (!s || s.expires_at.getTime() < Date.now()) throw new AppError(ERR.UNAUTHORIZED, 'Session expired', 401)
-    if (req.method !== 'GET' && req.method !== 'HEAD' && req.headers['x-csrf'] !== s.csrf) throw new AppError(ERR.CSRF, 'Missing or invalid CSRF token', 403)
+    if (req.method !== 'GET' && req.method !== 'HEAD' && !safeEqualText(req.headers['x-csrf'], s.csrf)) throw new AppError(ERR.CSRF, 'Missing or invalid CSRF token', 403)
     if (s.expires_at.getTime() - Date.now() < EXTEND_BELOW_MS) {
       await sql`update admin_sessions set expires_at = ${new Date(Date.now() + SESSION_MS)} where token_hash = ${sha256(token)}`
       reply.setCookie('sid_adm', token, cookieOpts('/api/admin', true))

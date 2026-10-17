@@ -9,6 +9,7 @@ import { env, isProd } from '../core/config/env'
 import { sql } from '../core/db/client'
 import { AppError } from '../core/lib/errors'
 import { hashIp } from '../core/lib/crypto'
+import { parseTrust } from '../core/lib/proxy'
 import { newRedis } from '../core/redis/client'
 import { K } from '../core/redis/keys'
 import { adminAuth } from './modules/admin/auth'
@@ -28,7 +29,7 @@ export async function buildApi() {
   const redis = newRedis()
   const app = Fastify({
     logger: { level: isProd ? 'info' : 'warn', redact: ['req.headers.cookie', 'req.headers.authorization', 'req.remoteAddress'] },
-    trustProxy: env.TRUST_PROXY === 'true' ? true : env.TRUST_PROXY, bodyLimit: 256 * 1024,
+    trustProxy: parseTrust(env.TRUST_PROXY) as boolean /* a number (hops) or address list also works at runtime */, bodyLimit: 256 * 1024,
   })
   app.decorate('redis', redis)
   const routeTable: string[] = []
@@ -52,7 +53,7 @@ export async function buildApi() {
   })
   spaceRoutes(app)
   linkRoutes(app)
-  pageRoutes(app)
+  if (env.PUBLIC_PAGES) pageRoutes(app) // anonymous page hosting: off unless switched on (nothing in the apps uses it)
   chatRoutes(app)
   blogRoutes(app)
   engageRoutes(app)

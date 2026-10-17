@@ -48,7 +48,8 @@ async function loadDevice(redis: Redis, devHash: string, ua: string): Promise<{ 
 
 export async function resolveSpace(redis: Redis, ip: string, deviceCookie: string, ua: string): Promise<Resolved | null> {
   const ipHash = hashIp(ip)
-  if (!ipHash || deviceCookie.length < 16) return null
+  // the cookie is what the server issued: 32 hex characters. Anything of another shape is refused instead of getting a device record.
+  if (!ipHash || !/^[A-Za-z0-9_-]{16,128}$/.test(deviceCookie)) return null
   const devHash = sha256(deviceCookie)
   const dev = await loadDevice(redis, devHash, ua)
   const spaceId = dev.spaceId ?? await spaceForIp(redis, ipHash)
