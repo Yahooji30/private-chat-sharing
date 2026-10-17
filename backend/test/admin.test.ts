@@ -185,7 +185,7 @@ describe('blog', () => {
       const r = await post({ title: 'Tell the engines', slug: 'tell-the-engines' }); await wait()
       expect(sent).toHaveLength(1)
       expect(sent[0]!.url).toBe('https://api.indexnow.org/indexnow')
-      expect(sent[0]!.body).toMatchObject({ host: 'blog.example.com', key: 'testkey1234abcd', keyLocation: 'https://blog.example.com/indexnow-key.txt' })
+      expect(sent[0]!.body).toMatchObject({ host: 'blog.example.com', key: 'testkey1234abcd', keyLocation: 'https://blog.example.com/testkey1234abcd.txt' })
       expect(sent[0]!.body.urlList).toContain('https://blog.example.com/tell-the-engines')
       await call(s, 'DELETE', '/api/admin/articles/' + r.body.id); await wait()
       expect(sent).toHaveLength(2) // taken down: they are told to look again

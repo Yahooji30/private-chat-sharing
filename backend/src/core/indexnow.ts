@@ -13,7 +13,7 @@ export async function pingIndexNow(paths: string[]): Promise<void> {
   try {
     await fetch(ENDPOINT, {
       method: 'POST', headers: { 'content-type': 'application/json; charset=utf-8' }, signal: AbortSignal.timeout(5000),
-      body: JSON.stringify({ host: new URL(origin).host, key: env.INDEXNOW_KEY, keyLocation: `${origin}/indexnow-key.txt`, urlList: [...new Set(paths)].slice(0, 10_000).map(p => origin + p) }),
+      body: JSON.stringify({ host: new URL(origin).host, key: env.INDEXNOW_KEY, keyLocation: `${origin}/${env.INDEXNOW_KEY}.txt`, urlList: [...new Set(paths)].slice(0, 10_000).map(p => origin + p) }),
     })
   } catch { /* the search engines will notice later */ }
 }
