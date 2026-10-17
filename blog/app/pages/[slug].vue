@@ -17,12 +17,13 @@ useSeoMeta({ title: `${title} | ${cfg.public.appName}`, description: desc, ogTit
 useHead({
   meta: art.seoKeywords ? [{ name: 'keywords', content: art.seoKeywords }] : [],
   link: [{ rel: 'canonical', href: canon }],
-  script: [{ type: 'application/ld+json', innerHTML: JSON.stringify([
+  // jsonLd() escapes the less-than sign, so a title cannot close the script tag early
+  script: [jsonLd([
     { '@context': 'https://schema.org', '@type': 'Article', headline: art.title, description: desc, image: ogImage ? [ogImage] : undefined, datePublished: art.publishedAt, dateModified: art.updatedAt,
       author: { '@type': 'Person', name: art.author ?? cfg.public.appName }, mainEntityOfPage: canon, publisher: { '@type': 'Organization', name: cfg.public.appName } },
     { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'Home', item: origin }, { '@type': 'ListItem', position: 2, name: 'Blog', item: `${origin}/` }, { '@type': 'ListItem', position: 3, name: art.title, item: url }] },
-  ]) }],
+  ])],
 })
 const enc = encodeURIComponent
 const shares = [['X', `https://twitter.com/intent/tweet?url=${enc(url)}&text=${enc(art.title)}`], ['Facebook', `https://www.facebook.com/sharer/sharer.php?u=${enc(url)}`],

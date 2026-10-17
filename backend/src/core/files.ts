@@ -1,4 +1,4 @@
-import { LIMITS, type FileEntry, type FileMeta } from '@sync/shared'
+import { LIMITS, isThumb, type FileEntry, type FileMeta } from '@sync/shared'
 import { sql } from './db/client'
 import { open, seal, spaceKey } from './lib/crypto'
 import { getSpaceSalt } from './text'
@@ -7,7 +7,7 @@ interface Row { id: string; meta_sealed: string; size: string; block_size: numbe
 
 async function toEntry(key: Buffer, r: Row): Promise<FileEntry> {
   const m = JSON.parse(open(key, r.meta_sealed)) as { name: string; mime: string; thumb?: string }
-  return { fileId: r.id, name: m.name, mime: m.mime, ...(m.thumb ? { thumb: m.thumb } : {}), size: Number(r.size), blockSize: r.block_size,
+  return { fileId: r.id, name: m.name, mime: m.mime, ...(isThumb(m.thumb) ? { thumb: m.thumb } : {}), size: Number(r.size), blockSize: r.block_size,
     rootHash: r.root_hash, addedBy: r.added_by, addedAt: r.added_at.getTime(), holders: r.holders ?? [] }
 }
 

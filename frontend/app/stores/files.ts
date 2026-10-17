@@ -1,4 +1,4 @@
-import { LIMITS, type FileEntry, type FileMeta } from '@sync/shared'
+import { LIMITS, isThumb, type FileEntry, type FileMeta } from '@sync/shared'
 import { Engine, type EntryInfo, type Progress } from '~/lib/webrtc/engine'
 import { Mesh } from '~/lib/webrtc/mesh'
 import { blockCount, toHex } from '~/lib/webrtc/protocol'
@@ -154,7 +154,7 @@ export const useFiles = defineStore('files', () => {
       c.width = Math.max(1, Math.round(bmp.width * s)); c.height = Math.max(1, Math.round(bmp.height * s))
       c.getContext('2d')?.drawImage(bmp, 0, 0, c.width, c.height)
       const url = c.toDataURL('image/webp', 0.7)
-      return url.length <= 30_000 ? url : undefined
+      return url.length <= 30_000 && isThumb(url) ? url : undefined
     } catch { return undefined }
   }
 

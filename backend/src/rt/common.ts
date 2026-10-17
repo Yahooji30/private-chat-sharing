@@ -1,4 +1,6 @@
 import type { Socket } from 'socket.io'
+import { env } from '../core/config/env'
+import { parseTrust, visitorIp } from '../core/lib/proxy'
 
 /** Token bucket per socket: 20 events/s, burst 40. Returns false when limited. */
 export function limiter(socket: Socket, rate = 20, burst = 40): () => boolean {
@@ -23,8 +25,7 @@ export function parseCookie(header: string | undefined, name: string): string {
   return ''
 }
 
+const trust = parseTrust(env.TRUST_PROXY)
 export function clientIp(socket: Socket): string {
-  const xff = socket.handshake.headers['x-forwarded-for']
-  const first = (Array.isArray(xff) ? xff[0] : xff)?.split(',')[0]?.trim()
-  return first || socket.handshake.address
+  return visitorIp(socket.handshake.address, socket.handshake.headers['x-forwarded-for'], trust)
 }

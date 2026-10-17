@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isThumb } from '@sync/shared'
 import type { FileItem } from '~/stores/files'
 import { fmtBytes, fmtDuration } from '~/utils/format'
 
@@ -120,7 +121,7 @@ defineExpose({ pick })
 
     <ul class="space-y-2">
       <li v-for="i in sorted" :key="i.entry.fileId" class="card !rounded-2xl p-3 flex items-center gap-3 anim-pop" :data-testid="`file-${i.entry.name}`" :data-status="i.status">
-        <img v-if="i.entry.thumb" :src="i.entry.thumb" alt="" class="size-11 rounded-xl object-cover bg-surface-2 shrink-0">
+        <img v-if="isThumb(i.entry.thumb)" :src="i.entry.thumb" alt="" class="size-11 rounded-xl object-cover bg-surface-2 shrink-0">
         <span v-else class="size-11 rounded-xl grid place-items-center shrink-0 text-[11px] font-semibold tracking-wide" :class="warm(i.entry.mime) ? 'bg-pink-soft text-pink-ink' : 'bg-accent-soft text-accent-ink'">{{ ext(i.entry.name) }}</span>
         <div class="min-w-0 flex-1">
           <p class="font-semibold truncate leading-tight" :title="i.entry.name">{{ i.entry.name }}</p>

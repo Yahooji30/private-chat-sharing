@@ -147,3 +147,48 @@ describe('linking moves already connected devices', () => {
     so.close(); again.close()
   })
 })
+
+describe('hardening', () => {
+  it('admin sign-in is refused (not waved through) when the attempt counters cannot be read', async () => {
+    const redis = t.api.redis as unknown as { get: (...a: unknown[]) => Promise<unknown> }
+    const real = redis.get
+    redis.get = async () => { throw new Error('redis is down') }
+    try {
+      const res = await t.api.inject({ method: 'POST', url: '/api/admin/auth/login', headers: { 'x-forwarded-for': '9.9.8.7' }, payload: { email: 'someone@example.com', password: 'whatever-it-is-12' } })
+      expect(res.statusCode).toBe(503)
+      expect(res.json().error.message).toContain('temporarily unavailable')
+    } finally { redis.get = real }
+  })
+
+  it('only a device cookie of the shape the server issues is accepted', async () => {
+    const at = (cookie: string) => t.call({ ip: '31.0.0.1', cookie: `sid_dev=${cookie}` }, 'GET', '/api/text')
+    expect((await at('abcd')).status).toBe(400) // too short
+    expect((await at('a'.repeat(129))).status).toBe(400) // too long
+    expect((await at('has.dots.and spaces!!')).status).toBe(400) // other characters
+    expect((await at(randomBytes(16).toString('hex'))).status).toBe(200) // what the server hands out
+  })
+
+  it('a file preview must be an inline image: addresses, scripts and other data are refused', async () => {
+    const s = await connected(t.sock(client('32.0.0.1', 'thumbtestthumbtest'), '/space'))
+    const meta = (n: number, thumb: unknown) => ({ fileId: `thumb_file_000${n}`, name: 'p.png', mime: 'image/png', size: 5, blockSize: 1048576, thumb })
+    expect((await emitAck(s, 'files:add', meta(1, 'https://tracker.example/pixel.png'))).error).toBeTruthy()
+    expect((await emitAck(s, 'files:add', meta(2, 'javascript:alert(1)'))).error).toBeTruthy()
+    expect((await emitAck(s, 'files:add', meta(3, 'data:text/html;base64,PHNjcmlwdD4='))).error).toBeTruthy()
+    expect((await emitAck(s, 'files:add', meta(4, 'data:image/svg+xml;base64,PHN2Zz4='))).error).toBeTruthy() // svg can carry script
+    expect((await emitAck(s, 'files:add', meta(5, 'data:image/webp;base64,UklGRg=='))).ok).toBe(true)
+    const list = (await t.call(client('32.0.0.1', 'thumbtestthumbtest'), 'GET', '/api/files')).body as { fileId: string; thumb?: string }[]
+    expect(list.find(f => f.fileId === 'thumb_file_0005')?.thumb).toBe('data:image/webp;base64,UklGRg==')
+    s.close()
+  })
+
+  it('anonymous page hosting is not served unless switched on', async () => {
+    const { env } = await import('../src/core/config/env')
+    const { buildApi } = await import('../src/api/server')
+    env.PUBLIC_PAGES = false
+    try {
+      const off = await buildApi()
+      expect(off.routeTable.some(r => r.includes('/api/public-pages') || r.includes('/api/p/'))).toBe(false)
+      expect(t.api.routeTable.some(r => r.includes('/api/public-pages'))).toBe(true) // the test server has it on, as before
+    } finally { env.PUBLIC_PAGES = true }
+  })
+})

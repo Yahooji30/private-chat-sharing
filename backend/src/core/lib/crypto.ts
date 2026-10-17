@@ -11,6 +11,9 @@ export function hashIp(ip: string): string | null {
   return n ? createHmac('sha256', env.IP_PEPPER).update(n).digest('hex') : null
 }
 
+/** Compares two secret strings without leaking, through timing, how many characters matched. */
+export const safeEqualText = (a: unknown, b: string): boolean => typeof a === 'string' && safeEqualHex(a, b)
+
 export function safeEqualHex(a: string, b: string): boolean {
   const x = Buffer.from(a), y = Buffer.from(b)
   return x.length === y.length && timingSafeEqual(x, y)

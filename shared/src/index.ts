@@ -92,13 +92,16 @@ export const textOpSchema = z.object({
 export const textSyncSchema = z.object({ sinceRev: z.number().int().min(-1), opId: z.string().max(40).optional() })
 export const deviceRenameSchema = z.object({ name: z.string().trim().min(1).max(LIMITS.deviceNameChars) })
 
+export const THUMB_RE = /^data:image\/(webp|png|jpeg);base64,[A-Za-z0-9+/]+={0,2}$/
+export const isThumb = (v: unknown): v is string => typeof v === 'string' && v.length <= 40_000 && THUMB_RE.test(v)
 export const fileMetaSchema = z.object({
   fileId: z.string().regex(/^[A-Za-z0-9_-]{8,32}$/),
   name: z.string().min(1).max(LIMITS.fileNameChars),
   mime: z.string().max(100),
   size: z.number().int().min(0).max(4 * 1024 ** 3),
   blockSize: z.number().int().min(64 * 1024).max(16 * 1024 * 1024).default(LIMITS.blockSize),
-  thumb: z.string().max(40_000).optional(),
+  /** a small preview picture. Only an inline image is accepted: any other address would make everybody's browser fetch it. */
+  thumb: z.string().max(40_000).regex(THUMB_RE).optional(),
 })
 export type FileMeta = z.infer<typeof fileMetaSchema>
 export interface FileEntry extends FileMeta {
