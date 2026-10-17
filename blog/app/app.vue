@@ -1,4 +1,5 @@
 <template>
+  <AnalyticsTag />
   <NuxtLayout>
     <NuxtPage />
   </NuxtLayout>

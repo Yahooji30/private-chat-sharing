@@ -1,4 +1,4 @@
-import { DEFAULT_SETTINGS, LIMITS, hiddenPageKeys, type HideablePage, type Settings } from '@sync/shared'
+import { DEFAULT_SETTINGS, LIMITS, gaMeasurementId, hiddenPageKeys, type HideablePage, type Settings } from '@sync/shared'
 
 export interface Device { id: string; name: string; type: string; linked: boolean }
 export interface Peer { deviceId: string; name: string; type: string; self: boolean; since: number }
@@ -26,6 +26,8 @@ export const useApp = defineStore('app', () => {
   const spellcheck = ref(false)
   /** pages the admin switched off (Admin > Site settings > Pages) */
   const hiddenPages = ref<HideablePage[]>([])
+  /** Google Analytics measurement ID from Admin > Site settings ('' = analytics off) */
+  const analyticsId = ref('')
   const settingsOpen = ref(false)
   const settingsTab = ref<'general' | 'link' | 'linked'>('general')
 
@@ -45,7 +47,7 @@ export const useApp = defineStore('app', () => {
     applyTheme()
     matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme)
     // which pages the admin switched off; a failure here must never stop the app, so everything stays visible
-    const siteReady = $fetch<Record<string, string>>('/api/site', { cache: 'no-cache' }).then(r => { hiddenPages.value = hiddenPageKeys(r.hidden_pages) }, () => undefined)
+    const siteReady = $fetch<Record<string, string>>('/api/site', { cache: 'no-cache' }).then(r => { hiddenPages.value = hiddenPageKeys(r.hidden_pages); analyticsId.value = gaMeasurementId(r.analytics_id) }, () => undefined)
     const me = await api<{ device: Device; ip: string; settings: Settings; limits?: { textChars: number } }>('/space/me')
     device.value = me.device; ip.value = me.ip; settings.value = me.settings
     if (me.limits?.textChars) textMax.value = me.limits.textChars
@@ -66,5 +68,5 @@ export const useApp = defineStore('app', () => {
   }
   function openSettings(tab: 'general' | 'link' | 'linked' = 'general'): void { settingsTab.value = tab; settingsOpen.value = true }
 
-  return { ready, device, ip, textMax, rtUrl, blogUrl, settings, peers, online, hasConnected, theme, autoDownload, spellcheck, hiddenPages, settingsOpen, settingsTab, load, saveSettings, setLocal, rename, setTheme, toggleTheme, openSettings }
+  return { ready, device, ip, textMax, rtUrl, blogUrl, settings, peers, online, hasConnected, theme, autoDownload, spellcheck, hiddenPages, analyticsId, settingsOpen, settingsTab, load, saveSettings, setLocal, rename, setTheme, toggleTheme, openSettings }
 })

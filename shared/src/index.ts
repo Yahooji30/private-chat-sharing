@@ -92,6 +92,9 @@ export const textOpSchema = z.object({
 export const textSyncSchema = z.object({ sinceRev: z.number().int().min(-1), opId: z.string().max(40).optional() })
 export const deviceRenameSchema = z.object({ name: z.string().trim().min(1).max(LIMITS.deviceNameChars) })
 
+/** Google Analytics 4 measurement ID, e.g. G-ABC123XYZ4. It goes into a script address, so only this exact shape is ever used. */
+export const GA_ID_RE = /^G-[A-Z0-9]{4,14}$/
+export const gaMeasurementId = (v: unknown): string => { const s = typeof v === 'string' ? v.trim().toUpperCase() : ''; return GA_ID_RE.test(s) ? s : '' }
 export const THUMB_RE = /^data:image\/(webp|png|jpeg);base64,[A-Za-z0-9+/]+={0,2}$/
 export const isThumb = (v: unknown): v is string => typeof v === 'string' && v.length <= 40_000 && THUMB_RE.test(v)
 export const fileMetaSchema = z.object({
