@@ -6,7 +6,7 @@ const api = process.env.NUXT_API_INTERNAL ?? 'http://127.0.0.1:4000'
 const adsOn = !!process.env.NUXT_PUBLIC_ADSENSE_CLIENT
 const adHosts = 'https://*.googlesyndication.com https://*.doubleclick.net https://*.google.com https://*.gstatic.com https://*.adtrafficquality.google'
 // Nuxt inlines its hydration payload, so scripts need 'unsafe-inline'. 
-const csp = ["default-src 'self'", `script-src 'self' 'unsafe-inline'${adsOn ? ` ${adHosts}` : ''}`, "style-src 'self' 'unsafe-inline'", `img-src 'self' data: blob:${adsOn ? ' https:' : ''}`, "font-src 'self' data:", `connect-src 'self'${adsOn ? ` ${adHosts}` : ''}`, `frame-src 'self'${adsOn ? ` ${adHosts}` : ''}`, "object-src 'none'", "base-uri 'self'", "form-action 'self'", "frame-ancestors 'none'"].join('; ')
+const csp = ["default-src 'self'", `script-src 'self' 'unsafe-inline' https://www.googletagmanager.com${adsOn ? ` ${adHosts}` : ''}`, "style-src 'self' 'unsafe-inline'", `img-src 'self' data: blob: https://*.google-analytics.com https://*.googletagmanager.com${adsOn ? ' https:' : ''}`, "font-src 'self' data:", `connect-src 'self' https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com${adsOn ? ` ${adHosts}` : ''}`, `frame-src 'self'${adsOn ? ` ${adHosts}` : ''}`, "object-src 'none'", "base-uri 'self'", "form-action 'self'", "frame-ancestors 'none'"].join('; ')
 const securityHeaders = { 'Content-Security-Policy': csp, 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'strict-origin-when-cross-origin', 'X-Frame-Options': 'DENY' }
 // The blog site is server rendered for search engines: the blog, the feedback page and the legal pages.
 // The interactive app lives in the separate SPA (frontend/).

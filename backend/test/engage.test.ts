@@ -37,7 +37,7 @@ afterAll(async () => {
   await sql`delete from feedback`
   await sql`delete from seo_pages`
   await sql`delete from media where id = 'm-og'`
-  await sql`delete from site_settings where key in ('chat_share_message', 'hidden_pages')`
+  await sql`delete from site_settings where key in ('chat_share_message', 'hidden_pages', 'analytics_id')`
   await t.close()
 })
 
@@ -176,6 +176,17 @@ describe('chat invite message', () => {
     expect((await admin('PUT', '/api/admin/site-settings', { chat_share_message: 'Secret for you {link}' })).status).toBe(200)
     expect((await pub('GET', '/api/site')).body.chat_share_message).toBe('Secret for you {link}')
     expect((await admin('PUT', '/api/admin/site-settings', { chat_share_message: 'x'.repeat(501) })).status).toBe(400)
+  })
+})
+
+describe('analytics id', () => {
+  it('is stored in its clean form for both sites to read, and anything that is not a G- id is refused', async () => {
+    expect((await admin('PUT', '/api/admin/site-settings', { analytics_id: ' g-y7cp6ylmvl ' })).status).toBe(200)
+    expect((await pub('GET', '/api/site')).body.analytics_id).toBe('G-Y7CP6YLMVL')
+    for (const bad of ['UA-1-1', "G-AB');alert(1)//", 'https://evil.example/a.js']) expect((await admin('PUT', '/api/admin/site-settings', { analytics_id: bad })).status, bad).toBe(400)
+    expect((await pub('GET', '/api/site')).body.analytics_id).toBe('G-Y7CP6YLMVL') // refused changes did not apply
+    expect((await admin('PUT', '/api/admin/site-settings', { analytics_id: '' })).status).toBe(200) // empty switches analytics off
+    expect((await pub('GET', '/api/site')).body.analytics_id).toBe('')
   })
 })
 

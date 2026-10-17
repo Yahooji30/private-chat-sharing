@@ -1,5 +1,5 @@
 import type { FastifyInstance } from 'fastify'
-import { ERR, HIDEABLE_PAGES, SITE_KEYS, siteSettingsSchema } from '@sync/shared'
+import { ERR, HIDEABLE_PAGES, SITE_KEYS, gaMeasurementId, siteSettingsSchema } from '@sync/shared'
 import { sql } from '../../../core/db/client'
 import { AppError } from '../../../core/lib/errors'
 import { renderMarkdown } from '../../../core/lib/markdown'
@@ -82,8 +82,9 @@ export function opsRoutes(app: FastifyInstance): void {
     for (const [k, v] of Object.entries(b)) {
       if (!(SITE_KEYS as readonly string[]).includes(k)) continue
       if (k === 'hidden_pages' && v.split(',').some(x => x.trim() && !HIDEABLE_PAGES.some(p => p.key === x.trim()))) throw new AppError(ERR.BAD_REQUEST, 'Unknown page', 400)
+      if (k === 'analytics_id' && v.trim() && !gaMeasurementId(v)) throw new AppError(ERR.BAD_REQUEST, 'The Analytics ID must look like G-XXXXXXXXXX (a Google Analytics 4 measurement ID)', 400)
       if (k === 'chat_share_message' && v.length > 500) throw new AppError(ERR.BAD_REQUEST, 'Invite message is too long (500 characters max)', 400)
-      await sql`insert into site_settings (key, value) values (${k}, ${v}) on conflict (key) do update set value = excluded.value`
+      await sql`insert into site_settings (key, value) values (${k}, ${k === 'analytics_id' ? gaMeasurementId(v) : v}) on conflict (key) do update set value = excluded.value`
       if (k === 'privacy_md' || k === 'terms_md') await sql`insert into site_settings (key, value) values (${k.replace('_md', '_html')}, ${renderMarkdown(v)}) on conflict (key) do update set value = excluded.value`
     }
     await audit(req.admin, 'site.update', Object.keys(b).join(','))
