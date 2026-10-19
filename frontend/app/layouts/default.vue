@@ -6,8 +6,10 @@ const isOnline = useOnline()
 const off = (key: string): boolean => (app.hiddenPages as string[]).includes(key)
 const base = computed(() => [{ to: '/', label: 'Home', icon: 'home' }, ...(off('chat') ? [] : [{ to: '/chat', label: 'Secure Chat', icon: 'chat' }])])
 // Blog, Features and FAQ are native pages of the app. The server-rendered blog site is the copy search engines index; these pages point to it with a canonical link.
-const pages = computed(() => [{ key: 'blog', to: '/blog', label: 'Blog', icon: 'blog' }, { key: 'features', to: '/features', label: 'Features', icon: 'features' }, { key: 'faq', to: '/faq', label: 'FAQ', icon: 'faq' }].filter(p => !off(p.key)))
+const pages = computed(() => [{ key: 'blog', to: '/blog', label: 'Blog', icon: 'blog', external: true }, { key: 'features', to: '/features', label: 'Features', icon: 'features' }, { key: 'faq', to: '/faq', label: 'FAQ', icon: 'faq' }].filter(p => !off(p.key)))
 const side = computed(() => [...base.value, ...pages.value])
+// the Blog is a separate server-rendered site served under /blog: it must be loaded as a new page, not opened inside this single-page app
+const ext = (n: object): boolean => (n as { external?: boolean }).external === true
 const active = (to: string): boolean => (to === '/' ? route.path === '/' : route.path.startsWith(to) || (to === '/chat' && route.path.startsWith('/c/')))
 const chatRoute = computed(() => route.path.startsWith('/c/'))
 const feedback = useState('feedback-open', () => false)
@@ -23,7 +25,7 @@ const footer = computed(() => ([['Features', '/features', 'features'], ['FAQ', '
     <aside class="hidden lg:flex fixed inset-y-0 left-0 w-64 flex-col gap-1 p-4 bg-surface border-r border-line z-30" aria-label="Sidebar">
       <NuxtLink to="/" class="px-2 pt-2 pb-5" aria-label="Home"><BrandLogo :size="50" /></NuxtLink>
       <nav class="flex flex-col gap-1" aria-label="Main">
-        <NuxtLink v-for="n in side" :key="n.to" :to="n.to" class="px-3 h-10 inline-flex items-center gap-3 rounded-lg text-[0.9375rem] font-medium transition-colors"
+        <NuxtLink v-for="n in side" :key="n.to" :to="n.to" :external="ext(n)" class="px-3 h-10 inline-flex items-center gap-3 rounded-lg text-[0.9375rem] font-medium transition-colors"
           :class="active(n.to) ? 'bg-accent-soft text-accent-ink' : 'text-ink/70 hover:bg-surface-2 hover:text-ink'">
           <Icon :name="n.icon" :size="20" :weight="active(n.to) ? 'fill' : 'regular'" />{{ n.label }}
         </NuxtLink>
@@ -72,7 +74,7 @@ const footer = computed(() => ([['Features', '/features', 'features'], ['FAQ', '
           <button v-if="'fab' in t" class="flex flex-col items-center justify-center gap-1 text-[11px] font-medium text-pink-ink" aria-label="Link device" @click="app.openSettings('link')">
             <span class="size-8 rounded-lg grid place-items-center text-white bg-pink"><Icon name="link" :size="18" weight="bold" /></span>Link device
           </button>
-          <NuxtLink v-else :to="t.to!" class="flex flex-col items-center justify-center gap-1 text-[11px] font-medium" :class="active(t.to!) ? 'text-accent-ink' : 'text-muted'">
+          <NuxtLink v-else :to="t.to!" :external="ext(t)" class="flex flex-col items-center justify-center gap-1 text-[11px] font-medium" :class="active(t.to!) ? 'text-accent-ink' : 'text-muted'">
             <span class="h-8 w-14 rounded-full grid place-items-center transition-colors" :class="active(t.to!) ? 'bg-accent-soft' : ''"><Icon :name="t.icon!" :size="21" :weight="active(t.to!) ? 'fill' : 'regular'" /></span>{{ t.label!.replace('Secure ', '') }}
           </NuxtLink>
         </template>

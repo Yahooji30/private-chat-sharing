@@ -1,6 +1,8 @@
 import type { SeoEntry } from '@sync/shared'
 
 const esc = (s: string): string => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+/** https://example.com/blog -> https://example.com */
+export const originOf = (url: string): string => { try { return new URL(url).origin } catch { return url } }
 const meta = (attr: 'name' | 'property', key: string, value: string): string => `<meta ${attr}="${key}" content="${esc(value)}">`
 
 /** What the page itself would say if the admin has not written anything for it. */
@@ -35,7 +37,8 @@ export function applySeo(head: string, entry: SeoEntry | undefined, blogUrl: str
   const extra: string[] = []
   const ogTitle = s.ogTitle || title
   const ogDescription = s.ogDescription || description
-  const image = s.ogImage && blogUrl ? `${blogUrl}${s.ogImage}` : fallback?.image
+  // pictures live at the root of the website; the blog address may carry a folder (https://example.com/blog)
+  const image = s.ogImage && blogUrl ? `${originOf(blogUrl)}${s.ogImage}` : fallback?.image
   if (ogTitle) extra.push(meta('property', 'og:title', ogTitle))
   if (ogDescription) extra.push(meta('property', 'og:description', ogDescription))
   if (image) { extra.push(meta('property', 'og:image', image)); extra.push(meta('name', 'twitter:card', 'summary_large_image')) }

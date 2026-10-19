@@ -97,6 +97,20 @@ describe('404 for addresses the app does not have', () => {
   })
 })
 
+describe('the blog served under /blog of the same site', () => {
+  it('puts the picture at the site root, not under /blog', () => {
+    const o = applySeo(HEAD, { ...none, ogImage: '/media/p.webp' }, 'https://jodbox.com/blog', fallback)
+    expect(o).toContain('<meta property="og:image" content="https://jodbox.com/media/p.webp">')
+    expect(applySeo(HEAD, { ...none, ogImage: '/media/p.webp' }, 'https://blog.jodbox.com', fallback)).toContain('content="https://blog.jodbox.com/media/p.webp"') // own address: as before
+  })
+  it('sitemap index names the blog files under /blog', () => {
+    const x = sitemapIndexXml('https://jodbox.com', 'https://jodbox.com/blog', ['articles-1', 'taxonomy-1'])
+    expect(x).toContain('<loc>https://jodbox.com/sitemap.xml</loc>')
+    expect(x).toContain('<loc>https://jodbox.com/blog/sitemaps/articles-1.xml</loc>')
+    expect(robotsTxt('https://jodbox.com', 'https://jodbox.com/blog')).toContain('Sitemap: https://jodbox.com/blog/sitemap.xml')
+  })
+})
+
 describe('robots.txt and sitemap.xml of the app', () => {
   it('robots points search engines at both sitemaps and hides private places', () => {
     const r = robotsTxt('https://jodbox.com', 'https://blog.jodbox.com')

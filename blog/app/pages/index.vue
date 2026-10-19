@@ -7,9 +7,10 @@ const cfg = useRuntimeConfig()
 const { data } = await useBlogFetch<ListResult>('blog:list', () => `/blog/articles?page=${page.value}`)
 const { data: cats } = await useBlogFetch<{ slug: string; name: string; count: number }[]>('blog:cats', () => '/blog/categories')
 await usePageSeo('blog', { title: `Blog | ${cfg.public.appName}`, description: `Guides, tips and news from ${cfg.public.appName}.`, path: page.value > 1 ? `/?page=${page.value}` : '/', adminCanonical: page.value === 1 })
+const rssHref = withBase('/rss.xml') // read here, in setup: a computed runs later, outside the page's context
 const links = computed(() => {
   const base = `${cfg.public.siteUrl}/`
-  const l: Record<string, string>[] = [{ rel: 'alternate', type: 'application/rss+xml', title: 'RSS', href: '/rss.xml' }]
+  const l: Record<string, string>[] = [{ rel: 'alternate', type: 'application/rss+xml', title: 'RSS', href: rssHref }]
   if (page.value > 1) l.push({ rel: 'prev', href: page.value > 2 ? `${base}?page=${page.value - 1}` : base })
   if (data.value && page.value < data.value.pages) l.push({ rel: 'next', href: `${base}?page=${page.value + 1}` })
   return l
@@ -27,7 +28,7 @@ const rest = computed(() => (page.value === 1 ? (data.value?.items.slice(1) ?? [
         <span class="chip">Blog</span>
         <h1 class="text-[1.85rem] leading-[1.15] sm:text-5xl lg:text-6xl font-semibold tracking-tight mt-4 max-w-3xl text-balance">Guides and ideas for sharing <span class="text-pink-ink">smarter</span></h1>
         <p class="mt-4 text-muted max-w-xl text-[1.0625rem] sm:text-lg leading-relaxed">Tips, how-tos and news about moving text and files between your devices, privately and instantly.</p>
-        <div class="mt-6 flex flex-wrap gap-2.5"><a :href="String(cfg.public.appUrl)" class="btn btn-accent !min-h-11 px-5">Open the app<Icon name="external" :size="16" /></a><a href="/rss.xml" class="btn !min-h-11 px-5">RSS feed</a></div>
+        <div class="mt-6 flex flex-wrap gap-2.5"><a :href="String(cfg.public.appUrl)" class="btn btn-accent !min-h-11 px-5">Open the app<Icon name="external" :size="16" /></a><a :href="withBase('/rss.xml')" class="btn !min-h-11 px-5">RSS feed</a></div>
       </div>
     </section>
     <nav v-if="cats?.length" class="flex gap-2 overflow-x-auto py-4 -mx-4 px-4 sm:mx-0 sm:px-0 scroll-thin" aria-label="Categories">
