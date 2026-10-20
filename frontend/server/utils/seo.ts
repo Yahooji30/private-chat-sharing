@@ -83,19 +83,20 @@ export const isKnownRoute = (path: string): boolean => ROUTES.some(r => r.test(p
 /** True for a request for a page (not a file): such a request for an unknown address should be answered with 404. */
 export const wantsPage = (path: string, accept: string): boolean => accept.includes('text/html') && !/\.[a-z0-9]{1,8}$/i.test(path)
 
-export function robotsTxt(origin: string, blogUrl: string): string {
+export function robotsTxt(origin: string, _blogUrl = ''): string {
   return [
     'User-agent: *', 'Allow: /', 'Disallow: /api/', 'Disallow: /c/', 'Disallow: /link', 'Disallow: /settings', '',
-    `Sitemap: ${origin}/sitemap-index.xml`, `Sitemap: ${origin}/sitemap.xml`, ...(blogUrl ? [`Sitemap: ${blogUrl}/sitemap.xml`] : []), '',
+    // one sitemap for everything: it lists the site pages file and the blog's files
+    `Sitemap: ${origin}/sitemap.xml`, '',
   ].join('\n')
 }
 
 /**
- * One address for the whole website: the app's sitemap and every file of the blog site's sitemap. (A sitemap index may not list another index,
+ * The one sitemap of the whole website: the site pages file (/sitemap-pages.xml) and every file of the blog's sitemap. (A sitemap index may not list another index,
  * so the blog's files are named here one by one.)
  */
 export function sitemapIndexXml(origin: string, blogUrl: string, blogFiles: string[]): string {
-  const maps = [`${origin}/sitemap.xml`, ...(blogUrl ? blogFiles.map(n => `${blogUrl}/sitemaps/${n}.xml`) : [])]
+  const maps = [`${origin}/sitemap-pages.xml`, ...(blogUrl ? blogFiles.map(n => `${blogUrl}/sitemaps/${n}.xml`) : [])]
   return `<?xml version="1.0" encoding="UTF-8"?><sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${maps.map(m => `<sitemap><loc>${esc(m)}</loc></sitemap>`).join('')}</sitemapindex>`
 }
 

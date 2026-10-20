@@ -73,8 +73,8 @@ pm2 restart all --update-env
 
 ## 5. Search engines
 
-- **Google Search Console** (`jodbox.com` domain property already covers `/blog`): submit `https://jodbox.com/sitemap-index.xml`
-  (app + blog files, all on one host now). Later remove the old `blog.jodbox.com` sitemap. Use URL Inspection on a few articles
+- **Google Search Console** (`jodbox.com` domain property already covers `/blog`): submit `https://jodbox.com/sitemap.xml`
+  (the one sitemap: site pages + all blog files, all on one host now; `/sitemap-index.xml` is the same file). Later remove the old `blog.jodbox.com` sitemap. Use URL Inspection on a few articles
   and press Request indexing. The 301 redirects tell Google the pages moved.
 - **Bing Webmaster Tools**: add (or import from Google) the site `https://jodbox.com`. `https://jodbox.com/BingSiteAuth.xml` is served too.
 - **IndexNow**: the key file is now `https://jodbox.com/blog/<key>.txt` (it answers under `/blog`, which is where the articles are).
