@@ -77,8 +77,8 @@ pm2 restart all --update-env
   (the one sitemap: site pages + all blog files, all on one host now; `/sitemap-index.xml` is the same file). Later remove the old `blog.jodbox.com` sitemap. Use URL Inspection on a few articles
   and press Request indexing. The 301 redirects tell Google the pages moved.
 - **Bing Webmaster Tools**: add (or import from Google) the site `https://jodbox.com`. `https://jodbox.com/BingSiteAuth.xml` is served too.
-- **IndexNow**: the key file is now `https://jodbox.com/blog/<key>.txt` (it answers under `/blog`, which is where the articles are).
-  Nothing to do except the `BLOG_ORIGIN` setting above.
+- **IndexNow**: the key file is at `https://jodbox.com/<key>.txt` (the app answers it) and also at `https://jodbox.com/blog/<key>.txt` (the blog answers it).
+  The server tells IndexNow to use the root one, which covers every page below it, `/blog` included. Nothing to do except the `BLOG_ORIGIN` setting above.
 - **Google Analytics**: same ID, nothing to change.
 
 ## Going back

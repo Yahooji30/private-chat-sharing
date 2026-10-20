@@ -190,6 +190,11 @@ describe('blog', () => {
       await call(s, 'DELETE', '/api/admin/articles/' + r.body.id); await wait()
       expect(sent).toHaveLength(2) // taken down: they are told to look again
       expect(sent[1]!.body.urlList).toContain('https://blog.example.com/tell-the-engines')
+      // the blog under a folder of the main site: the key file is at the site root, the pages are below /blog
+      env.BLOG_ORIGIN = 'https://example.com/blog'
+      await post({ title: 'Under a folder', slug: 'under-a-folder' }); await wait()
+      expect(sent[2]!.body).toMatchObject({ host: 'example.com', keyLocation: 'https://example.com/testkey1234abcd.txt' })
+      expect(sent[2]!.body.urlList).toContain('https://example.com/blog/under-a-folder')
     } finally { globalThis.fetch = real; env.BLOG_ORIGIN = ''; env.INDEXNOW_KEY = '' }
   })
 
