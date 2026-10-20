@@ -27,7 +27,7 @@ export async function usePageSeo(key: string, d: Defaults): Promise<SeoEntry | u
   const title = s?.title || d.title
   const description = s?.description || d.description
   const url = (d.adminCanonical !== false && s?.canonical) || `${origin}${d.path}`
-  const ogImage = s?.ogImage ? `${origin}${s.ogImage}` : undefined
+  const ogImage = s?.ogImage ? `${siteRoot()}${s.ogImage}` : undefined // pictures are shared by the whole site: they are not under the blog folder
   // head composables need the Nuxt context, which is gone after the await above
   nuxt.runWithContext(() => {
     useSeoMeta({

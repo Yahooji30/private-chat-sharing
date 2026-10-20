@@ -9,7 +9,7 @@ await usePageSeo('feedback', {
   title: `Feedback | ${name}`,
   description: `Tell us what you think of ${name}. Report a problem, suggest a feature or just say hello. We read every message.`,
   path: '/feedback',
-  schema: [{ '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [{ '@type': 'ListItem', position: 1, name: 'Home', item: origin }, { '@type': 'ListItem', position: 2, name: 'Feedback', item: `${origin}/feedback` }] }],
+  schema: [{ '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [{ '@type': 'ListItem', position: 1, name: 'Home', item: siteRoot() }, { '@type': 'ListItem', position: 2, name: 'Feedback', item: `${origin}/feedback` }] }],
 })
 
 const toast = useToast()

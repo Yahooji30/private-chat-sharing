@@ -8,6 +8,10 @@ const adHosts = 'https://*.googlesyndication.com https://*.doubleclick.net https
 // Nuxt inlines its hydration payload, so scripts need 'unsafe-inline'. 
 const csp = ["default-src 'self'", `script-src 'self' 'unsafe-inline' https://www.googletagmanager.com${adsOn ? ` ${adHosts}` : ''}`, "style-src 'self' 'unsafe-inline'", `img-src 'self' data: blob: https://*.google-analytics.com https://*.googletagmanager.com${adsOn ? ' https:' : ''}`, "font-src 'self' data:", `connect-src 'self' https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com${adsOn ? ` ${adHosts}` : ''}`, `frame-src 'self'${adsOn ? ` ${adHosts}` : ''}`, "object-src 'none'", "base-uri 'self'", "form-action 'self'", "frame-ancestors 'none'"].join('; ')
 const securityHeaders = { 'Content-Security-Policy': csp, 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'strict-origin-when-cross-origin', 'X-Frame-Options': 'DENY' }
+// Normally the blog is at the root of its own address (blog.example.com). To serve it under a folder of the main site (example.com/blog) instead,
+// set NUXT_APP_BASE_URL=/blog/ and NUXT_PUBLIC_SITE_URL=https://example.com/blog before `pnpm build`, and send /blog/ to this server in nginx.
+const folder = (process.env.NUXT_APP_BASE_URL ?? '/').split('/').filter(Boolean).join('/')
+const base = folder ? `/${folder}/` : '/'
 // The blog site is server rendered for search engines: the blog, the feedback page and the legal pages.
 // The interactive app lives in the separate SPA (frontend/).
 export default defineNuxtConfig({
@@ -27,15 +31,16 @@ export default defineNuxtConfig({
     devProxy: { '/api': { target: `${api}/api`, changeOrigin: false }, '/media': { target: `${api}/media`, changeOrigin: false } } },
   routeRules: {
     ...(isProd ? { '/**': { headers: securityHeaders } } : {}),
-    '/blog': { redirect: '/' }, '/blog/**': { redirect: '/**' }, // old addresses
+    ...(base === '/' ? { '/blog': { redirect: '/' }, '/blog/**': { redirect: '/**' } } : {}), // old addresses (not needed when the blog itself lives under /blog)
     '/': { swr: 600 }, '/*': { swr: 600 }, '/_revalidate': { cache: false }, '/rss.xml': { swr: 600 }, '/sitemap.xml': { swr: 600 }, '/sitemaps/**': { swr: 600 }, '/robots.txt': { cache: false }, '/category/**': { swr: 600 }, '/tag/**': { swr: 600 }, '/privacy': { swr: 86400 }, '/terms': { swr: 86400 },
     '/api/**': { proxy: `${api}/api/**` }, '/media/**': { proxy: `${api}/media/**` },
   },
   app: {
+    baseURL: base,
     head: {
       htmlAttrs: { lang: 'en' },
       meta: [{ name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' }, { name: 'theme-color', content: '#F7F8FC' }],
-      link: [{ rel: 'icon', type: 'image/png', href: '/favicon.png' }],
+      link: [{ rel: 'icon', type: 'image/png', href: `${base}favicon.png` }],
       script: [{ innerHTML: `try{var t=localStorage.getItem('sync:theme')||'light';var d=t==='dark'||(t==='system'&&matchMedia('(prefers-color-scheme:dark)').matches);document.documentElement.classList.toggle('dark',d);var m=document.querySelector('meta[name=theme-color]');if(m)m.setAttribute('content',d?'#0A0E1C':'#F7F8FC')}catch(e){}` }],
     },
   },

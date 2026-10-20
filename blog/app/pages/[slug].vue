@@ -10,7 +10,7 @@ const art = a.value
 // the article's own canonical address wins when the admin set one (text first published elsewhere)
 const canon = art.seoCanonical || url
 const img = (art.og ?? art.cover)?.variants.at(-1)
-const ogImage = img ? `${origin}${mediaUrl(img)}` : undefined
+const ogImage = img ? `${siteRoot()}${mediaUrl(img)}` : undefined
 const title = art.seoTitle || art.title
 const desc = art.seoDescription || art.excerpt
 useSeoMeta({ title: `${title} | ${cfg.public.appName}`, description: desc, ogTitle: title, ogDescription: desc, ogType: 'article', ogUrl: canon, ogImage, twitterCard: 'summary_large_image', robots: art.seoNoindex ? 'noindex, follow' : undefined, articlePublishedTime: art.publishedAt ?? undefined, articleModifiedTime: art.updatedAt })
@@ -22,7 +22,7 @@ useHead({
     { '@context': 'https://schema.org', '@type': 'Article', headline: art.title, description: desc, image: ogImage ? [ogImage] : undefined, datePublished: art.publishedAt, dateModified: art.updatedAt,
       author: { '@type': 'Person', name: art.author ?? cfg.public.appName }, mainEntityOfPage: canon, publisher: { '@type': 'Organization', name: cfg.public.appName } },
     { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home', item: origin }, { '@type': 'ListItem', position: 2, name: 'Blog', item: `${origin}/` }, { '@type': 'ListItem', position: 3, name: art.title, item: url }] },
+      { '@type': 'ListItem', position: 1, name: 'Home', item: siteRoot() }, { '@type': 'ListItem', position: 2, name: 'Blog', item: `${origin}/` }, { '@type': 'ListItem', position: 3, name: art.title, item: url }] },
   ])],
 })
 const enc = encodeURIComponent

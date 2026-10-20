@@ -21,7 +21,7 @@ export function useAppSeo(key: string, d: { title: string; description?: string 
     description: () => s.value?.description || d.description,
     ogTitle: () => s.value?.ogTitle || s.value?.title || undefined,
     ogDescription: () => s.value?.ogDescription || s.value?.description || undefined,
-    ogImage: () => (s.value?.ogImage && blogUrl ? `${blogUrl}${s.value.ogImage}` : undefined),
+    ogImage: () => (s.value?.ogImage && blogUrl ? `${(() => { try { return new URL(blogUrl).origin } catch { return blogUrl } })()}${s.value.ogImage}` : undefined), // the picture lives at the site root, not under /blog
     robots: () => (s.value?.noindex ? 'noindex, nofollow' : undefined),
   })
   useHead({
