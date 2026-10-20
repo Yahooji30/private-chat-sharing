@@ -105,25 +105,25 @@ describe('the blog served under /blog of the same site', () => {
   })
   it('sitemap index names the blog files under /blog', () => {
     const x = sitemapIndexXml('https://jodbox.com', 'https://jodbox.com/blog', ['articles-1', 'taxonomy-1'])
-    expect(x).toContain('<loc>https://jodbox.com/sitemap.xml</loc>')
+    expect(x).toContain('<loc>https://jodbox.com/sitemap-pages.xml</loc>')
     expect(x).toContain('<loc>https://jodbox.com/blog/sitemaps/articles-1.xml</loc>')
-    expect(robotsTxt('https://jodbox.com', 'https://jodbox.com/blog')).toContain('Sitemap: https://jodbox.com/blog/sitemap.xml')
+    expect(robotsTxt('https://jodbox.com', 'https://jodbox.com/blog')).toBe(['User-agent: *', 'Allow: /', 'Disallow: /api/', 'Disallow: /c/', 'Disallow: /link', 'Disallow: /settings', '', 'Sitemap: https://jodbox.com/sitemap.xml', ''].join('\n'))
   })
 })
 
 describe('robots.txt and sitemap.xml of the app', () => {
   it('robots points search engines at both sitemaps and hides private places', () => {
     const r = robotsTxt('https://jodbox.com', 'https://blog.jodbox.com')
-    expect(r).toContain('Sitemap: https://jodbox.com/sitemap-index.xml')
-    expect(r).toContain('Sitemap: https://jodbox.com/sitemap.xml')
-    expect(r).toContain('Sitemap: https://blog.jodbox.com/sitemap.xml')
+    expect(r).toContain('Sitemap: https://jodbox.com/sitemap.xml') // the one sitemap; it lists the others
+    expect(r.match(/Sitemap:/g)).toHaveLength(1)
     for (const d of ['/api/', '/c/', '/link']) expect(r).toContain(`Disallow: ${d}`)
     expect(robotsTxt('https://jodbox.com', '')).not.toContain('blog')
   })
   it('the sitemap index names the app sitemap and every file of the blog sitemap', () => {
     const x = sitemapIndexXml('https://jodbox.com', 'https://blog.jodbox.com', blogSitemapNames({ articles: 12_000, taxonomy: 40 }))
     expect(x).toContain('<sitemapindex')
-    expect(x).toContain('<loc>https://jodbox.com/sitemap.xml</loc>')
+    expect(x).toContain('<loc>https://jodbox.com/sitemap-pages.xml</loc>')
+    expect(x).not.toContain('<loc>https://jodbox.com/sitemap.xml</loc>')
     for (const n of ['articles-1', 'articles-2', 'articles-3', 'taxonomy-1']) expect(x).toContain(`<loc>https://blog.jodbox.com/sitemaps/${n}.xml</loc>`)
     expect(x).not.toContain('articles-4')
     expect(x).not.toContain('sitemaps/pages.xml')
