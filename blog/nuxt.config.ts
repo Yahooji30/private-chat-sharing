@@ -31,6 +31,8 @@ export default defineNuxtConfig({
     devProxy: { '/api': { target: `${api}/api`, changeOrigin: false }, '/media': { target: `${api}/media`, changeOrigin: false } } },
   routeRules: {
     ...(isProd ? { '/**': { headers: securityHeaders } } : {}),
+    // pictures that never change under their name: kept by the browser for 30 days instead of being asked for again on every visit
+    ...Object.fromEntries(['/logo.webp', '/logo-mark.webp', '/og-image.jpg', '/favicon.png', '/icon-192.png', '/icons/**'].map(p => [p, { headers: { 'cache-control': 'public, max-age=2592000' } }])),
     ...(base === '/' ? { '/blog': { redirect: '/' }, '/blog/**': { redirect: '/**' } } : {}), // old addresses (not needed when the blog itself lives under /blog)
     '/': { swr: 600 }, '/*': { swr: 600 }, '/_revalidate': { cache: false }, '/rss.xml': { swr: 600 }, '/sitemap.xml': { swr: 600 }, '/sitemaps/**': { swr: 600 }, '/robots.txt': { cache: false }, '/category/**': { swr: 600 }, '/tag/**': { swr: 600 }, '/privacy': { swr: 86400 }, '/terms': { swr: 86400 },
     '/api/**': { proxy: `${api}/api/**` }, '/media/**': { proxy: `${api}/media/**` },
