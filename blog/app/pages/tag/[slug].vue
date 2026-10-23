@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { MIN_TERM_ARTICLES } from '@sync/shared'
 const route = useRoute()
 const slug = String(route.params.slug)
 const page = computed(() => Math.max(1, Number(route.query.page) || 1))
@@ -7,7 +8,9 @@ const { data, error } = await useBlogFetch<ListResult & { tag: { name: string } 
 if (error.value || !data.value) throw createError({ statusCode: 404, statusMessage: 'Tag not found', fatal: true })
 const name = computed(() => data.value?.tag.name ?? slug)
 useSeoMeta({ title: () => `#${name.value} | Blog | ${cfg.public.appName}`, description: () => `Articles tagged ${name.value}.` })
-useHead({ link: [{ rel: 'canonical', href: `${cfg.public.siteUrl}/tag/${slug}` }] })
+// a tag with only a few articles just repeats them: kept out of search results (and out of the sitemap) until it has enough
+const thin = (data.value?.total ?? 0) < MIN_TERM_ARTICLES
+useHead({ link: [{ rel: 'canonical', href: `${cfg.public.siteUrl}/tag/${slug}` }], meta: thin ? [{ name: 'robots', content: 'noindex, follow' }] : [] })
 </script>
 
 <template>

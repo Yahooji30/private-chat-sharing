@@ -198,6 +198,26 @@ describe('blog', () => {
     } finally { globalThis.fetch = real; env.BLOG_ORIGIN = ''; env.INDEXNOW_KEY = '' }
   })
 
+  it('the sitemap lists only what search engines should index, each with when it changed', async () => {
+    const meta = (await pub('/api/sitemap-data')).body
+    expect(meta.articleFiles).toHaveLength(Math.ceil(meta.articles / 5000))
+    expect(Number.isNaN(Date.parse(meta.articleFiles[0]))).toBe(false)
+    expect(Number.isNaN(Date.parse(meta.taxonomyLastmod))).toBe(false)
+    // an article that points its canonical address at another page is not listed: a sitemap lists canonical addresses only
+    expect((await post({ title: 'Canonical elsewhere', slug: 'canonical-elsewhere', seoCanonical: 'https://example.com/original' })).status).toBeLessThan(300)
+    expect((await pub('/api/sitemap-data')).body.articles).toBe(meta.articles)
+    const files = (await pub('/api/sitemap-data/articles/1')).body
+    expect(files.map((a: any) => a.slug)).not.toContain('canonical-elsewhere')
+    expect(files.every((a: any) => typeof a.lastmod === 'string' && 'image' in a)).toBe(true) // the date, and the cover picture (null when there is none)
+    // a tag with only a few articles stays out until it has enough, then it is listed
+    await post({ title: 'Lonely tag one', slug: 'lonely-tag-one', tags: ['lonely-tag'] })
+    const thin = (await pub('/api/sitemap-data/taxonomy/1')).body
+    expect(thin.map((t: any) => t.slug)).not.toContain('lonely-tag')
+    expect(thin.every((t: any) => typeof t.lastmod === 'string')).toBe(true)
+    for (const n of ['two', 'three']) await post({ title: 'Lonely tag ' + n, slug: 'lonely-tag-' + n, tags: ['lonely-tag'] })
+    expect((await pub('/api/sitemap-data/taxonomy/1')).body.map((t: any) => t.slug)).toContain('lonely-tag')
+  })
+
   it('serves sitemap and rss data and cache headers; admin list filters', async () => {
     const meta = (await pub('/api/sitemap-data')).body
     expect(meta.articles).toBeGreaterThan(0); expect(meta.taxonomy).toBeGreaterThan(0)
@@ -205,7 +225,8 @@ describe('blog', () => {
     expect(files.map((a: any) => a.slug)).toContain('hello-world-2')
     expect((await pub('/api/sitemap-data/articles/2')).body).toEqual([]) // past the end: an empty file, not an error
     const tax = (await pub('/api/sitemap-data/taxonomy/1')).body
-    expect(tax).toContainEqual({ kind: 'category', slug: 'guides' }); expect(tax).toContainEqual({ kind: 'tag', slug: 'bulk' })
+    expect(tax.length).toBeGreaterThan(0) // only categories and tags with enough articles are listed (see the test above)
+    expect(tax.every((t: any) => ['category', 'tag'].includes(t.kind) && typeof t.slug === 'string' && typeof t.lastmod === 'string')).toBe(true)
     expect((await pub('/api/sitemap-data/articles/0')).status).toBe(400)
     expect((await pub('/api/blog/rss-data')).body.length).toBeLessThanOrEqual(30)
     expect((await pub('/api/blog/articles')).headers['cache-control']).toContain('s-maxage=60')

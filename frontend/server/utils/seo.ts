@@ -95,9 +95,10 @@ export function robotsTxt(origin: string, _blogUrl = ''): string {
  * The one sitemap of the whole website: the site pages file (/sitemap-pages.xml) and every file of the blog's sitemap. (A sitemap index may not list another index,
  * so the blog's files are named here one by one.)
  */
-export function sitemapIndexXml(origin: string, blogUrl: string, blogFiles: string[]): string {
-  const maps = [`${origin}/sitemap-pages.xml`, ...(blogUrl ? blogFiles.map(n => `${blogUrl}/sitemaps/${n}.xml`) : [])]
-  return `<?xml version="1.0" encoding="UTF-8"?><sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${maps.map(m => `<sitemap><loc>${esc(m)}</loc></sitemap>`).join('')}</sitemapindex>`
+export function sitemapIndexXml(origin: string, blogUrl: string, blogFiles: (string | { name: string; lastmod?: string })[]): string {
+  const entry = (loc: string, lastmod?: string): string => `<sitemap><loc>${esc(loc)}</loc>${lastmod ? `<lastmod>${esc(lastmod)}</lastmod>` : ''}</sitemap>`
+  const blog = blogUrl ? blogFiles.map(f => (typeof f === 'string' ? entry(`${blogUrl}/sitemaps/${f}.xml`) : entry(`${blogUrl}/sitemaps/${f.name}.xml`, f.lastmod))) : []
+  return `<?xml version="1.0" encoding="UTF-8"?><sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${[entry(`${origin}/sitemap-pages.xml`), ...blog].join('')}</sitemapindex>`
 }
 
 /** The app's own sitemap (home, chat, features, FAQ). A sitemap may only list addresses on its own host, so the blog's pages are in the blog site's sitemap. */
