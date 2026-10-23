@@ -1,4 +1,4 @@
-import { SITEMAP_PAGE, articleInputSchema, type ArticleInput, type SitemapMeta } from '@sync/shared'
+import { MIN_TERM_ARTICLES, SITEMAP_PAGE, articleInputSchema, type ArticleInput, type SitemapMeta } from '@sync/shared'
 import { sql } from './db/client'
 import { AppError } from './lib/errors'
 import { base32 } from './lib/crypto'
@@ -69,29 +69,38 @@ export async function tagArchive(slug: string, page: number) {
   return { tag: t, ...(await listPublic({ tag: slug, page })) }
 }
 
-const INDEXED = sql`${LIVE} and a.seo_noindex = false`
+/** What may appear in a sitemap: published, not hidden from search engines, and not pointing its canonical address at another page. */
+const INDEXED = sql`${LIVE} and a.seo_noindex = false and a.seo_canonical = ''`
+/** Category and tag pages with enough articles (MIN_TERM_ARTICLES), and when their newest article changed. */
 const TAXONOMY = sql`
-  select 'category' as kind, c.slug from categories c where exists (select 1 from articles a where a.category_id = c.id and ${LIVE})
+  select 'category' as kind, c.slug, max(a.updated_at) as last from categories c join articles a on a.category_id = c.id where ${LIVE} group by c.slug having count(*) >= ${MIN_TERM_ARTICLES}
   union all
-  select 'tag' as kind, t.slug from tags t where exists (select 1 from article_tags at join articles a on a.id = at.article_id where at.tag_id = t.id and ${LIVE})`
+  select 'tag' as kind, t.slug, max(a.updated_at) as last from tags t join article_tags at on at.tag_id = t.id join articles a on a.id = at.article_id where ${LIVE} group by t.slug having count(*) >= ${MIN_TERM_ARTICLES}`
 
-/** How big the sitemaps are, so the index knows how many files to list. */
-export async function sitemapMeta(): Promise<SitemapMeta & { lastmod: string | null }> {
-  const [a] = await sql<{ n: number; last: Date | null }[]>`select count(*)::int as n, max(a.updated_at) as last from articles a where ${INDEXED}`
-  const [t] = await sql<{ n: number }[]>`select count(*)::int as n from (${TAXONOMY}) x`
-  return { articles: a?.n ?? 0, taxonomy: t?.n ?? 0, lastmod: a?.last?.toISOString() ?? null }
+/** How big the sitemaps are and when each file last changed, so the index can list them. */
+export async function sitemapMeta(): Promise<SitemapMeta & { articleFiles: string[]; taxonomyLastmod: string | null; lastmod: string | null }> {
+  const files = await sql<{ part: number; last: Date }[]>`select part, max(updated_at) as last from (
+    select a.updated_at, ((row_number() over (order by a.published_at, a.id)) - 1) / ${SITEMAP_PAGE}::int as part from articles a where ${INDEXED}) x group by part order by part`
+  const [a] = await sql<{ n: number }[]>`select count(*)::int as n from articles a where ${INDEXED}`
+  const [t] = await sql<{ n: number; last: Date | null }[]>`select count(*)::int as n, max(last) as last from (${TAXONOMY}) x`
+  const newest = files.reduce<Date | null>((m, f) => (!m || f.last > m ? f.last : m), null)
+  return { articles: a?.n ?? 0, taxonomy: t?.n ?? 0, articleFiles: files.map(f => f.last.toISOString()), taxonomyLastmod: t?.last?.toISOString() ?? null, lastmod: newest?.toISOString() ?? null }
 }
 
-/** One file of article addresses. Oldest first, so the files that are already full never change when a new article is added. */
+/** One file of article addresses, with their cover picture. Oldest first, so the files that are already full never change when a new article is added. */
 export async function sitemapArticles(page: number) {
-  const rows = await sql<{ slug: string; updated_at: Date }[]>`select a.slug, a.updated_at from articles a where ${INDEXED} order by a.published_at, a.id limit ${SITEMAP_PAGE} offset ${(page - 1) * SITEMAP_PAGE}`
-  return rows.map(r => ({ slug: r.slug, lastmod: r.updated_at.toISOString() }))
+  const rows = await sql<{ slug: string; updated_at: Date; image: string | null }[]>`
+    select a.slug, a.updated_at,
+      (select v->>'path' from jsonb_array_elements(m.variants_json) v order by (v->>'w')::int desc limit 1) as image
+    from articles a left join media m on m.id = coalesce(a.cover_media_id, a.og_media_id)
+    where ${INDEXED} order by a.published_at, a.id limit ${SITEMAP_PAGE} offset ${(page - 1) * SITEMAP_PAGE}`
+  return rows.map(r => ({ slug: r.slug, lastmod: r.updated_at.toISOString(), image: r.image }))
 }
 
-/** One file of category and tag addresses (only those that have a published article). */
+/** One file of category and tag addresses (only those with enough articles). */
 export async function sitemapTaxonomy(page: number) {
-  const rows = await sql<{ kind: 'category' | 'tag'; slug: string }[]>`select kind, slug from (${TAXONOMY}) x order by kind, slug limit ${SITEMAP_PAGE} offset ${(page - 1) * SITEMAP_PAGE}`
-  return rows
+  const rows = await sql<{ kind: 'category' | 'tag'; slug: string; last: Date }[]>`select kind, slug, last from (${TAXONOMY}) x order by kind, slug limit ${SITEMAP_PAGE} offset ${(page - 1) * SITEMAP_PAGE}`
+  return rows.map(r => ({ kind: r.kind, slug: r.slug, lastmod: r.last.toISOString() }))
 }
 
 export async function rssData() {

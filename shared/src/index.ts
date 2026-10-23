@@ -240,12 +240,20 @@ export function chatShareText(template: string | undefined, link: string, passwo
 
 /** How many addresses one sitemap file holds (Google's limit is 50,000; smaller files are quicker to build and to read). */
 export const SITEMAP_PAGE = 5000
-export interface SitemapMeta { articles: number; taxonomy: number }
-/** The names of the blog's sitemap files for a blog of this size: `articles-1`, `articles-2`, ..., `taxonomy-1`, ... (the blog's fixed pages are not listed) */
-export function blogSitemapNames(m: SitemapMeta): string[] {
-  const n = (count: number): number => Math.max(1, Math.ceil(count / SITEMAP_PAGE))
-  return [...Array.from({ length: n(m.articles) }, (_, i) => `articles-${i + 1}`), ...Array.from({ length: n(m.taxonomy) }, (_, i) => `taxonomy-${i + 1}`)]
+/** A category or tag page is only worth listing and indexing once it has this many articles: with fewer it just repeats one or two. */
+export const MIN_TERM_ARTICLES = 3
+export interface SitemapMeta { articles: number; taxonomy: number; /** when each articles-N file last changed */ articleFiles?: string[]; taxonomyLastmod?: string | null }
+export interface SitemapEntry { name: string; lastmod?: string }
+/** The blog's sitemap files for a blog of this size, with when each last changed: `articles-1`, `articles-2`, ..., `taxonomy-1`, ... (the blog's fixed pages are not listed) */
+export function blogSitemapEntries(m: SitemapMeta): SitemapEntry[] {
+  const parts = (count: number): number => Math.ceil(count / SITEMAP_PAGE) // an empty file is not listed
+  const named = (name: string, lastmod?: string | null): SitemapEntry => (lastmod ? { name, lastmod } : { name })
+  return [
+    ...Array.from({ length: parts(m.articles) }, (_, i) => named(`articles-${i + 1}`, m.articleFiles?.[i])),
+    ...Array.from({ length: parts(m.taxonomy) }, (_, i) => named(`taxonomy-${i + 1}`, m.taxonomyLastmod)),
+  ]
 }
+export const blogSitemapNames = (m: SitemapMeta): string[] => blogSitemapEntries(m).map(e => e.name)
 
 export * from './ot'
 export * from './textsync'

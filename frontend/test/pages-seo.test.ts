@@ -2,7 +2,7 @@ import { readdirSync, statSync } from 'node:fs'
 import { join, relative } from 'node:path'
 import type { SeoEntry } from '@sync/shared'
 import { describe, expect, it } from 'vitest'
-import { blogSitemapNames } from '@sync/shared'
+import { blogSitemapEntries, blogSitemapNames } from '@sync/shared'
 import { applySeo, cleanPath, isKnownRoute, pageInfo, robotsTxt, sitemapIndexXml, sitemapXml, wantsPage } from '../server/utils/seo'
 
 const none: SeoEntry = { title: '', description: '', keywords: '', ogTitle: '', ogDescription: '', ogImage: '', canonical: '', noindex: false }
@@ -102,6 +102,12 @@ describe('the blog served under /blog of the same site', () => {
     const o = applySeo(HEAD, { ...none, ogImage: '/media/p.webp' }, 'https://jodbox.com/blog', fallback)
     expect(o).toContain('<meta property="og:image" content="https://jodbox.com/media/p.webp">')
     expect(applySeo(HEAD, { ...none, ogImage: '/media/p.webp' }, 'https://blog.jodbox.com', fallback)).toContain('content="https://blog.jodbox.com/media/p.webp"') // own address: as before
+  })
+  it('the sitemap index gives each blog file its date, and lists no empty file', () => {
+    const x = sitemapIndexXml('https://jodbox.com', 'https://jodbox.com/blog', [{ name: 'articles-1', lastmod: '2026-02-02T00:00:00.000Z' }, { name: 'taxonomy-1' }])
+    expect(x).toContain('<loc>https://jodbox.com/blog/sitemaps/articles-1.xml</loc><lastmod>2026-02-02T00:00:00.000Z</lastmod>')
+    expect(x).toContain('<loc>https://jodbox.com/blog/sitemaps/taxonomy-1.xml</loc></sitemap>')
+    expect(sitemapIndexXml('https://jodbox.com', 'https://jodbox.com/blog', blogSitemapEntries({ articles: 0, taxonomy: 0 }))).not.toContain('/blog/')
   })
   it('sitemap index names the blog files under /blog', () => {
     const x = sitemapIndexXml('https://jodbox.com', 'https://jodbox.com/blog', ['articles-1', 'taxonomy-1'])

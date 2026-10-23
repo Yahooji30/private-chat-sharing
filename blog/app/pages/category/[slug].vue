@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { MIN_TERM_ARTICLES } from '@sync/shared'
 const route = useRoute()
 const slug = String(route.params.slug)
 const page = computed(() => Math.max(1, Number(route.query.page) || 1))
@@ -8,7 +9,9 @@ const { data: cats } = await useBlogFetch<{ slug: string; name: string }[]>('blo
 const name = computed(() => cats.value?.find(c => c.slug === slug)?.name ?? slug)
 if (error.value || (cats.value && !cats.value.some(c => c.slug === slug))) throw createError({ statusCode: 404, statusMessage: 'Category not found', fatal: true })
 useSeoMeta({ title: () => `${name.value} | Blog | ${cfg.public.appName}`, description: () => `Articles about ${name.value}.` })
-useHead({ link: [{ rel: 'canonical', href: `${cfg.public.siteUrl}/category/${slug}` }] })
+// a category with only a few articles just repeats them: kept out of search results (and out of the sitemap) until it has enough
+const thin = (data.value?.total ?? 0) < MIN_TERM_ARTICLES
+useHead({ link: [{ rel: 'canonical', href: `${cfg.public.siteUrl}/category/${slug}` }], meta: thin ? [{ name: 'robots', content: 'noindex, follow' }] : [] })
 </script>
 
 <template>
