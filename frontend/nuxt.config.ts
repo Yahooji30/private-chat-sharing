@@ -32,6 +32,8 @@ export default defineNuxtConfig({
   },
   routeRules: {
     ...(isProd ? { '/**': { headers: securityHeaders } } : {}),
+    // pictures that never change under their name: kept by the browser for 30 days instead of being asked for again on every visit
+    ...Object.fromEntries(['/logo.webp', '/logo-mark.webp', '/og-image.jpg', '/favicon.png', '/icon-192.png', '/icons/**'].map(p => [p, { headers: { 'cache-control': 'public, max-age=2592000' } }])),
     '/api/**': { proxy: `${process.env.NUXT_API_INTERNAL ?? 'http://127.0.0.1:4000'}/api/**` },
     '/media/**': { proxy: `${process.env.NUXT_API_INTERNAL ?? 'http://127.0.0.1:4000'}/media/**` },
   },
